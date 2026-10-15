@@ -1,0 +1,10 @@
+{
+  "description": "Experience real-time Formula 1 race data with live telemetry, pitwall updates, and championship standings, designed for passionate F1 fans.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
