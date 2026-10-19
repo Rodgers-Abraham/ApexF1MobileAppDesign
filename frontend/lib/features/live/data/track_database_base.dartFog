@@ -1,0 +1,30 @@
+library track_database;
+
+import 'dart:math' as math;
+import 'dart:ui';
+
+/// ─────────────────────────────────────────────────────────────────
+///  F1 CIRCUIT DATABASE
+///  Contains all 24 FIA Formula 1 circuits for the 2026 season.
+///  Each circuit includes: track shape, sector boundaries, corners.
+/// ─────────────────────────────────────────────────────────────────
+
+/// Represents a named corner on a circuit
+typedef Corner = ({String name, int number, Offset apex, String type});
+
+/// Represents a DRS zone
+typedef DRSZone = ({double start, double end});
+
+/// Represents an FIA F1 circuit
+typedef F1Circuit = {
+  final String name;
+  final String location;
+  final String countryCode;
+  final double lengthKm;
+  final int laps;
+  final int corners;
+  final List<Offset> trackPoints;
+  final List<({double start, double end, Color color})> sectors;
+  final List<Corner> namedCorners;
+  final List<DRSZone> drsZones;
+};

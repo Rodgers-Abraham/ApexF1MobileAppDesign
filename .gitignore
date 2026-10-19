@@ -1,3 +1,4 @@
+# Web & Figma Prototype
 node_modules/
 dist/
 build/
@@ -12,10 +13,45 @@ logs/
 .claude-replay.*
 .tmp-*
 /.figma/design-context/
-
-# Platform-managed agentplat state, not project source. In the
-# client-initiated single-repo workspace layout (make's `Path: "."` spec) the
-# repo root IS the workspace root, so these land inside this repo rather than
-# beside it.
 /.plugins/
 /.opencode-skills/
+
+# Python / FastAPI Backend
+backend/.venv/
+backend/.env
+**/*.db
+*.db
+**/*.sqlite3
+*.sqlite3
+backend/__pycache__/
+backend/*/__pycache__/
+backend/*/*/__pycache__/
+backend/.pytest_cache/
+backend/*.html
+.pytest_cache/
+
+# Flutter / Frontend
+frontend/build/
+frontend/.dart_tool/
+frontend/.flutter-plugins-dependencies
+frontend/.pub-cache/
+frontend/.pub/
+frontend/coverage/
+frontend/.env
+frontend/android/app/debug/
+frontend/android/app/profile/
+frontend/android/app/release/
+frontend/ios/Flutter/.last_build_id
+
+# IDE & OS
+.idea/
+.vscode/
+.claude/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+Thumbs.db
+
+# Temp scratch screenshots
+/figma_thumb*.png

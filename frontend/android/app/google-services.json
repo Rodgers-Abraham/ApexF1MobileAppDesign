@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "986052833183",
+    "project_id": "f1-iq-2026",
+    "storage_bucket": "f1-iq-2026.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:986052833183:android:9b98e5c7cdf35865b917aa",
+        "android_client_info": {
+          "package_name": "com.antigravity.f1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD09ztuxeNS_tXcnE2E8hMstL8oXQ9ghpM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
