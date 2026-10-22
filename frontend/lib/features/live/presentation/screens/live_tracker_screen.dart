@@ -349,7 +349,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
 
               // Lap Progress Header Box & Interactive Replay Controls
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 decoration: BoxDecoration(
                   color: const Color(0xFF141419),
                   borderRadius: const BorderRadius.only(
@@ -392,15 +392,18 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                             ),
                           ],
                         ),
-                        Text(
-                          isLive
-                              ? '58.6%'
-                              : '${((replayState.currentLap / (replayState.totalLaps > 0 ? replayState.totalLaps : 1)) * 100).toStringAsFixed(1)}%',
-                          style: TextStyle(
-                            fontFamily: 'Formula1Wide',
-                            fontSize: 11,
-                            fontWeight: FontWeight.w900,
-                            color: isLive ? accentColor : Colors.cyanAccent,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            isLive
+                                ? '58.6%'
+                                : '${((replayState.currentLap / (replayState.totalLaps > 0 ? replayState.totalLaps : 1)) * 100).toStringAsFixed(1)}%',
+                            style: TextStyle(
+                              fontFamily: 'Formula1Wide',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              color: isLive ? accentColor : Colors.cyanAccent,
+                            ),
                           ),
                         ),
                       ],
@@ -430,102 +433,110 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                       ),
                     ),
                     if (!isLive) ...[
-                      const SizedBox(height: 12),
-                      // Interactive Replay Scrubber & Playback Controls
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.first_page_rounded, color: Colors.cyanAccent, size: 20),
-                                tooltip: 'Jump to Lap 1',
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                onPressed: () => ref.read(raceReplayProvider.notifier).setLap(1),
-                              ),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                icon: const Icon(Icons.chevron_left_rounded, color: Colors.cyanAccent, size: 22),
-                                tooltip: 'Previous Lap',
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                onPressed: () => ref.read(raceReplayProvider.notifier).prevLap(),
-                              ),
-                            ],
-                          ),
-                          // Play / Pause Button
-                          GestureDetector(
-                            onTap: () => ref.read(raceReplayProvider.notifier).togglePlay(),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: replayState.isPlaying
-                                    ? const Color(0xFFFF9100).withValues(alpha: 0.2)
-                                    : Colors.cyanAccent.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: replayState.isPlaying ? const Color(0xFFFF9100) : Colors.cyanAccent,
-                                  width: 1.2,
+                      const SizedBox(height: 10),
+                      // Interactive Replay Scrubber & Playback Controls (Overflow immune)
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.first_page_rounded, color: Colors.cyanAccent, size: 18),
+                                  tooltip: 'Jump to Lap 1',
+                                  padding: const EdgeInsets.all(4),
+                                  constraints: const BoxConstraints(),
+                                  onPressed: () => ref.read(raceReplayProvider.notifier).setLap(1),
                                 ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    replayState.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                                    size: 14,
+                                const SizedBox(width: 4),
+                                IconButton(
+                                  icon: const Icon(Icons.chevron_left_rounded, color: Colors.cyanAccent, size: 20),
+                                  tooltip: 'Previous Lap',
+                                  padding: const EdgeInsets.all(4),
+                                  constraints: const BoxConstraints(),
+                                  onPressed: () => ref.read(raceReplayProvider.notifier).prevLap(),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 8),
+                            // Play / Pause Button
+                            GestureDetector(
+                              onTap: () => ref.read(raceReplayProvider.notifier).togglePlay(),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: replayState.isPlaying
+                                      ? const Color(0xFFFF9100).withValues(alpha: 0.2)
+                                      : Colors.cyanAccent.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
                                     color: replayState.isPlaying ? const Color(0xFFFF9100) : Colors.cyanAccent,
+                                    width: 1.2,
                                   ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    replayState.isPlaying ? 'PAUSE' : 'PLAY REPLAY',
-                                    style: TextStyle(
-                                      fontFamily: 'Formula1Wide',
-                                      fontSize: 8.5,
-                                      fontWeight: FontWeight.w900,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      replayState.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                                      size: 13,
                                       color: replayState.isPlaying ? const Color(0xFFFF9100) : Colors.cyanAccent,
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      replayState.isPlaying ? 'PAUSE' : 'PLAY REPLAY',
+                                      style: TextStyle(
+                                        fontFamily: 'Formula1Wide',
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.w900,
+                                        color: replayState.isPlaying ? const Color(0xFFFF9100) : Colors.cyanAccent,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.chevron_right_rounded, color: Colors.cyanAccent, size: 22),
-                                tooltip: 'Next Lap',
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                onPressed: () => ref.read(raceReplayProvider.notifier).nextLap(),
-                              ),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                icon: const Icon(Icons.last_page_rounded, color: Colors.cyanAccent, size: 20),
-                                tooltip: 'Jump to Finish',
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                onPressed: () => ref.read(raceReplayProvider.notifier).setLap(replayState.totalLaps),
+                            const SizedBox(width: 8),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.chevron_right_rounded, color: Colors.cyanAccent, size: 20),
+                                  tooltip: 'Next Lap',
+                                  padding: const EdgeInsets.all(4),
+                                  constraints: const BoxConstraints(),
+                                  onPressed: () => ref.read(raceReplayProvider.notifier).nextLap(),
+                                ),
+                                const SizedBox(width: 4),
+                                IconButton(
+                                  icon: const Icon(Icons.last_page_rounded, color: Colors.cyanAccent, size: 18),
+                                  tooltip: 'Jump to Finish',
+                                  padding: const EdgeInsets.all(4),
+                                  constraints: const BoxConstraints(),
+                                  onPressed: () => ref.read(raceReplayProvider.notifier).setLap(replayState.totalLaps),
+                                ),
+                              ],
+                            ),
+                            if (replayState.isLoading) ...[
+                              const SizedBox(width: 6),
+                              const SizedBox(
+                                width: 11,
+                                height: 11,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.cyanAccent),
                               ),
                             ],
-                          ),
-                          if (replayState.isLoading)
-                            const SizedBox(
-                              width: 12,
-                              height: 12,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.cyanAccent),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
                       // Lap Slider
                       SliderTheme(
                         data: SliderTheme.of(context).copyWith(
                           trackHeight: 3,
-                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                          overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+                          overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
                           activeTrackColor: Colors.cyanAccent,
                           inactiveTrackColor: const Color(0xFF252530),
                           thumbColor: Colors.cyanAccent,
@@ -963,17 +974,23 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'SELECT RACE WEEK REPLAY',
-                      style: TextStyle(
-                        fontFamily: 'Formula1Wide',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
+                    const Expanded(
+                      child: Text(
+                        'SELECT RACE WEEK REPLAY',
+                        style: TextStyle(
+                          fontFamily: 'Formula1Wide',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.grey, size: 20),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                       onPressed: () => Navigator.pop(ctx),
                     ),
                   ],
@@ -2225,109 +2242,107 @@ class _FigmaTelemetryStrip extends StatelessWidget {
     final teamColor = getTeamColor(driverMeta?.team ?? '');
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
         color: const Color(0xFF141419),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFF202028)),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Onboard Driver info
-          Row(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF222228),
-                  border: Border.all(color: teamColor.withValues(alpha: 0.6), width: 1),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: driverMeta != null && driverMeta.portraitAsset.isNotEmpty
-                    ? Image.asset(
-                        driverMeta.portraitAsset,
-                        fit: BoxFit.cover,
-                        alignment: Alignment.topCenter,
-                        errorBuilder: (context, error, stackTrace) => Center(
-                          child: Text(
-                            driverCode,
-                            style: TextStyle(
-                              fontFamily: 'Formula1',
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              color: teamColor,
-                            ),
-                          ),
-                        ),
-                      )
-                    : Center(
-                        child: Text(
-                          driverCode,
-                          style: TextStyle(
-                            fontFamily: 'Formula1',
-                            fontSize: 9,
-                            fontWeight: FontWeight.w900,
-                            color: teamColor,
-                          ),
+          Container(
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF222228),
+              border: Border.all(color: teamColor.withValues(alpha: 0.6), width: 1),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: driverMeta != null && driverMeta.portraitAsset.isNotEmpty
+                ? Image.asset(
+                    driverMeta.portraitAsset,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
+                    errorBuilder: (context, error, stackTrace) => Center(
+                      child: Text(
+                        driverCode,
+                        style: TextStyle(
+                          fontFamily: 'Formula1',
+                          fontSize: 8,
+                          fontWeight: FontWeight.w900,
+                          color: teamColor,
                         ),
                       ),
+                    ),
+                  )
+                : Center(
+                    child: Text(
+                      driverCode,
+                      style: TextStyle(
+                        fontFamily: 'Formula1',
+                        fontSize: 8,
+                        fontWeight: FontWeight.w900,
+                        color: teamColor,
+                      ),
+                    ),
+                  ),
+          ),
+          const SizedBox(width: 6),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'ONBOARD',
+                style: TextStyle(
+                  fontFamily: 'Formula1Wide',
+                  fontSize: 7,
+                  color: Color(0xFF8F909A),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'ONBOARD',
-                    style: TextStyle(
-                      fontFamily: 'Formula1Wide',
-                      fontSize: 7.5,
-                      color: Color(0xFF8F909A),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    driverCode,
-                    style: const TextStyle(
-                      fontFamily: 'Formula1',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+              Text(
+                driverCode,
+                style: const TextStyle(
+                  fontFamily: 'Formula1',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
               ),
             ],
           ),
+          const SizedBox(width: 8),
 
-          // Speed
-          _buildStatCol(
-            isDnf ? '0' : speedKph,
-            'KM/H',
-            const Color(0xFF00E676),
-          ),
-
-          // Gear
-          _buildStatCol(
-            isDnf ? 'N' : gear,
-            'GEAR',
-            Colors.white,
-          ),
-
-          // Throttle
-          _buildStatCol(
-            isDnf ? '0%' : '$throttlePct%',
-            'THR %',
-            const Color(0xFFFFD600),
-          ),
-
-          // ERS
-          _buildStatCol(
-            '$ersPct%',
-            'ERS %',
-            const Color(0xFF00E5FF),
+          // Distributed stat columns inside Expanded flex row
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildStatCol(
+                  isDnf ? '0' : speedKph,
+                  'KM/H',
+                  const Color(0xFF00E676),
+                ),
+                _buildStatCol(
+                  isDnf ? 'N' : gear,
+                  'GEAR',
+                  Colors.white,
+                ),
+                _buildStatCol(
+                  isDnf ? '0%' : '$throttlePct%',
+                  'THR %',
+                  const Color(0xFFFFD600),
+                ),
+                _buildStatCol(
+                  '$ersPct%',
+                  'ERS %',
+                  const Color(0xFF00E5FF),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -2335,28 +2350,37 @@ class _FigmaTelemetryStrip extends StatelessWidget {
   }
 
   Widget _buildStatCol(String value, String label, Color valueColor) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontFamily: 'Formula1Wide',
-            fontSize: 12,
-            fontWeight: FontWeight.w900,
-            color: valueColor,
+    return Flexible(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontFamily: 'Formula1Wide',
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                color: valueColor,
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: 1),
-        Text(
-          label,
-          style: const TextStyle(
-            fontFamily: 'Formula1',
-            fontSize: 7.5,
-            color: Color(0xFF8F909A),
-            fontWeight: FontWeight.bold,
+          const SizedBox(height: 1),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontFamily: 'Formula1',
+                fontSize: 7,
+                color: Color(0xFF8F909A),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

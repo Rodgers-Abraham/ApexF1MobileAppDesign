@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/providers/session_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../shared/widgets/pro_gate.dart';
 import '../../../../shared/constants/f1_data.dart';
@@ -529,34 +528,44 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'SAFETY CARS',
-                          style: TextStyle(
-                            fontFamily: 'Formula1Wide',
-                            fontSize: 9.5,
-                            color: Color(0xFF8F909A),
-                            fontWeight: FontWeight.bold,
+                        const Expanded(
+                          child: Text(
+                            'SAFETY CARS',
+                            style: TextStyle(
+                              fontFamily: 'Formula1Wide',
+                              fontSize: 9,
+                              color: Color(0xFF8F909A),
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.remove_circle_outline, color: Colors.white70, size: 22),
+                              icon: const Icon(Icons.remove_circle_outline, color: Colors.white70, size: 20),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
                               onPressed: _isLocked || _safetyCars <= 0
                                   ? null
                                   : () => setState(() => _safetyCars--),
                             ),
-                            Text(
-                              '$_safetyCars',
-                              style: const TextStyle(
-                                fontFamily: 'Formula1Wide',
-                                fontSize: 13,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              child: Text(
+                                '$_safetyCars',
+                                style: const TextStyle(
+                                  fontFamily: 'Formula1Wide',
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.add_circle_outline, color: Colors.white70, size: 22),
+                              icon: const Icon(Icons.add_circle_outline, color: Colors.white70, size: 20),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
                               onPressed: _isLocked || _safetyCars >= 5
                                   ? null
                                   : () => setState(() => _safetyCars++),
@@ -819,33 +828,74 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontFamily: 'Formula1Wide',
-            fontSize: 9.5,
-            color: Color(0xFF8F909A),
-            fontWeight: FontWeight.bold,
+        Expanded(
+          flex: 5,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Formula1Wide',
+              fontSize: 9,
+              color: Color(0xFF8F909A),
+              fontWeight: FontWeight.bold,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
-        DropdownButton<String>(
-          value: options.contains(currentValue) ? currentValue : options.first,
-          dropdownColor: const Color(0xFF1E1E26),
-          underline: const SizedBox(),
-          style: const TextStyle(
-            fontFamily: 'Formula1',
-            fontSize: 12,
-            fontWeight: FontWeight.w900,
-            color: Colors.white,
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 6,
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: DropdownButton<String>(
+              isExpanded: true,
+              value: options.contains(currentValue) ? currentValue : options.first,
+              dropdownColor: const Color(0xFF1E1E26),
+              underline: const SizedBox(),
+              style: const TextStyle(
+                fontFamily: 'Formula1',
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+              ),
+              icon: const Icon(Icons.arrow_drop_down, color: Colors.white70, size: 20),
+              selectedItemBuilder: (BuildContext context) {
+                return options.map<Widget>((String item) {
+                  return Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      item,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'Formula1',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                  );
+                }).toList();
+              },
+              items: options.map((opt) {
+                return DropdownMenuItem<String>(
+                  value: opt,
+                  child: Text(
+                    opt,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Formula1',
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: _isLocked ? null : onChanged,
+            ),
           ),
-          icon: const Icon(Icons.arrow_drop_down, color: Colors.white70),
-          items: options.map((opt) {
-            return DropdownMenuItem<String>(
-              value: opt,
-              child: Text(opt),
-            );
-          }).toList(),
-          onChanged: _isLocked ? null : onChanged,
         ),
       ],
     );
