@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react"
+import { testAllNeonServices, type NeonServiceHealth } from "./services/neon"
 import {
   drivers,
   news,
@@ -1387,6 +1388,8 @@ function SettingsScreen({
             </div>
           ))}
         </div>
+        <SectionTitle title="Neon Cloud Services" meta="PRODUCTION" />
+        <NeonServicesCard />
         <div className="about-card">
           <div className="about-icon">
             <Logo />
@@ -1401,6 +1404,183 @@ function SettingsScreen({
           </div>
         </div>
       </main>
+    </div>
+  )
+}
+
+function NeonServicesCard() {
+  const [health, setHealth] = useState<NeonServiceHealth | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [lastCheck, setLastCheck] = useState<string>("")
+
+  const runDiagnostics = async () => {
+    setLoading(true)
+    try {
+      const res = await testAllNeonServices()
+      setHealth(res)
+      setLastCheck(new Date().toLocaleTimeString())
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    runDiagnostics()
+  }, [])
+
+  const services = [
+    {
+      name: "Lakebase Postgres",
+      desc: "Autoscaling PostgreSQL 18 with connection pooling",
+      status: health?.postgres.status ?? "loading",
+      badge: health?.postgres.status === "ok" ? "CONNECTED" : "OFFLINE",
+      detail: "aws-eu-central-1 · neondb",
+    },
+    {
+      name: "Neon Auth",
+      desc: "Managed Better Auth identity layer & JWKS verification",
+      status: health?.auth.status ?? "loading",
+      badge: health?.auth.status === "ok" ? "ACTIVE" : "OFFLINE",
+      detail: "production branch auth",
+    },
+    {
+      name: "Neon Functions",
+      desc: "Long-running serverless Node.js HTTP handlers",
+      status: health?.functions.status ?? "loading",
+      badge: health?.functions.status === "ok" ? "ONLINE" : "OFFLINE",
+      detail: "slug: hello",
+    },
+    {
+      name: "Neon Object Storage",
+      desc: "S3-compatible branchable asset & bucket storage",
+      status: health?.objectStorage.status ?? "loading",
+      badge: health?.objectStorage.status === "ok" ? "READY" : "OFFLINE",
+      detail: "buckets: assets, uploads",
+    },
+  ]
+
+  return (
+    <div
+      style={{
+        background: "#141419",
+        border: "1px solid #202028",
+        borderRadius: "10px",
+        padding: "14px",
+        marginBottom: "20px",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "12px",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span
+            style={{
+              display: "inline-block",
+              width: "8px",
+              height: "8px",
+              borderRadius: "50%",
+              background: "#00E676",
+              boxShadow: "0 0 8px #00E676",
+            }}
+          />
+          <strong
+            style={{
+              fontFamily: "Formula1Wide",
+              fontSize: "10px",
+              color: "#FFF",
+              letterSpacing: "1px",
+            }}
+          >
+            NEON CLOUD INFRASTRUCTURE
+          </strong>
+        </div>
+        <button
+          onClick={runDiagnostics}
+          disabled={loading}
+          style={{
+            background: "rgba(0, 230, 118, 0.15)",
+            border: "1px solid #00E676",
+            color: "#00E676",
+            padding: "4px 8px",
+            borderRadius: "4px",
+            fontSize: "9px",
+            fontFamily: "Formula1",
+            fontWeight: "bold",
+            cursor: "pointer",
+          }}
+        >
+          {loading ? "TESTING..." : "TEST SERVICES"}
+        </button>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        {services.map((s) => (
+          <div
+            key={s.name}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              background: "#0F0F13",
+              border: "1px solid rgba(255, 255, 255, 0.05)",
+              borderRadius: "6px",
+              padding: "8px 10px",
+            }}
+          >
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontSize: "11px", fontWeight: "bold", color: "#FFF" }}>
+                  {s.name}
+                </span>
+                <span style={{ fontSize: "8.5px", color: "#8F909A" }}>
+                  ({s.detail})
+                </span>
+              </div>
+              <p style={{ margin: "2px 0 0", fontSize: "9px", color: "#6C6C78" }}>
+                {s.desc}
+              </p>
+            </div>
+            <span
+              style={{
+                fontSize: "8px",
+                fontFamily: "Formula1Wide",
+                fontWeight: "900",
+                padding: "2px 6px",
+                borderRadius: "3px",
+                background:
+                  s.status === "ok"
+                    ? "rgba(0, 230, 118, 0.15)"
+                    : "rgba(255, 82, 82, 0.15)",
+                color: s.status === "ok" ? "#00E676" : "#FF5252",
+                border: `1px solid ${
+                  s.status === "ok" ? "#00E676" : "#FF5252"
+                }`,
+              }}
+            >
+              {s.badge}
+            </span>
+          </div>
+        ))}
+      </div>
+      {lastCheck && (
+        <div
+          style={{
+            marginTop: "8px",
+            textAlign: "right",
+            fontSize: "8px",
+            color: "#555",
+          }}
+        >
+          Last verified: {lastCheck}
+        </div>
+      )}
     </div>
   )
 }

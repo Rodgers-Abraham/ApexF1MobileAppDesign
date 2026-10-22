@@ -12,6 +12,15 @@ export default defineConfig(({ mode }) => {
   const emitSourcemaps = mode === 'development'
 
   return {
+    envPrefix: ['VITE_', 'NEON_', 'DATABASE_', 'AWS_'],
+    define: {
+      'process.env.DATABASE_URL': JSON.stringify(process.env.DATABASE_URL || ''),
+      'process.env.NEON_AUTH_BASE_URL': JSON.stringify(process.env.NEON_AUTH_BASE_URL || ''),
+      'process.env.NEON_AUTH_JWKS_URL': JSON.stringify(process.env.NEON_AUTH_JWKS_URL || ''),
+      'process.env.NEON_FUNCTION_HELLO_BASE_URL': JSON.stringify(process.env.NEON_FUNCTION_HELLO_BASE_URL || ''),
+      'process.env.AWS_ENDPOINT_URL_S3': JSON.stringify(process.env.AWS_ENDPOINT_URL_S3 || ''),
+      'process.env.AWS_REGION': JSON.stringify(process.env.AWS_REGION || ''),
+    },
     base: process.env.FIGMA_PUBLIC_URL ? `${process.env.FIGMA_PUBLIC_URL}/` : '/',
     build: {
       sourcemap: emitSourcemaps ? 'inline' : false,
