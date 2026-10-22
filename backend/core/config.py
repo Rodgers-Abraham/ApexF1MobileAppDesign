@@ -3,6 +3,10 @@ from pydantic_settings import BaseSettings
 from functools import lru_cache
 
 
+_BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_ENV_PATH = os.path.join(_BACKEND_DIR, ".env")
+
+
 class Settings(BaseSettings):
     app_name: str = "F1 Apex API"
     app_version: str = "1.0.0"
@@ -31,10 +35,16 @@ class Settings(BaseSettings):
     # RevenueCat (for webhook verification)
     revenuecat_webhook_secret: str | None = None
 
+    # Neon Services
+    neon_auth_base_url: str | None = None
+    neon_function_hello_base_url: str | None = None
+    aws_endpoint_url_s3: str | None = None
+
     class Config:
-        env_file = ".env"
+        env_file = (_ENV_PATH, ".env")
         env_file_encoding = "utf-8"
         case_sensitive = False
+        extra = "ignore"
 
         @classmethod
         def parse_env_var(cls, field_name: str, raw_val: str) -> any:

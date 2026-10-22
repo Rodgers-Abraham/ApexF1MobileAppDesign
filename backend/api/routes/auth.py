@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Request, status
 from pydantic import BaseModel, EmailStr
 from typing import Optional
-from core.database import get_db_connection
+from core.database import get_db_connection, DBIntegrityError
 from core.auth import hash_password, verify_password, create_access_token, get_current_user
 import sqlite3
 
@@ -77,7 +77,7 @@ async def register(user_in: UserRegister):
                 (user_in.email.lower(), pwd_hash, user_in.name, user_in.favourite_team, user_in.favourite_driver),
             )
             conn.commit()
-        except sqlite3.IntegrityError:
+        except DBIntegrityError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={"error": "Email is already registered", "code": "EMAIL_ALREADY_REGISTERED"},

@@ -164,13 +164,21 @@ class F1PollerService:
         # Generate simulated standings results for this session
         results = self._generate_simulated_results(next_session)
         
-        # Save session results to SQLite using context manager
+        # Save session results to database using context manager
         with get_db_connection() as conn:
             conn.execute(
                 """
-                INSERT OR REPLACE INTO session_states
+                INSERT INTO session_states
                 (session_key, meeting_name, session_name, session_type, status, date_start, results_json)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT (session_key) DO UPDATE SET
+                    meeting_name = EXCLUDED.meeting_name,
+                    session_name = EXCLUDED.session_name,
+                    session_type = EXCLUDED.session_type,
+                    status = EXCLUDED.status,
+                    date_start = EXCLUDED.date_start,
+                    results_json = EXCLUDED.results_json,
+                    last_updated = CURRENT_TIMESTAMP
                 """,
                 (
                     next_key,
@@ -332,13 +340,21 @@ class F1PollerService:
                     "time_or_gap": gap
                 })
                 
-            # Save session to SQLite using context manager
+            # Save session to database using context manager
             with get_db_connection() as conn:
                 conn.execute(
                     """
-                    INSERT OR REPLACE INTO session_states
+                    INSERT INTO session_states
                     (session_key, meeting_name, session_name, session_type, status, date_start, results_json)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT (session_key) DO UPDATE SET
+                        meeting_name = EXCLUDED.meeting_name,
+                        session_name = EXCLUDED.session_name,
+                        session_type = EXCLUDED.session_type,
+                        status = EXCLUDED.status,
+                        date_start = EXCLUDED.date_start,
+                        results_json = EXCLUDED.results_json,
+                        last_updated = CURRENT_TIMESTAMP
                     """,
                     (
                         session_key,
@@ -450,13 +466,21 @@ class F1PollerService:
                     "time_or_gap": time_str
                 })
                 
-            # Save session to SQLite using context manager
+            # Save session to database using context manager
             with get_db_connection() as conn:
                 conn.execute(
                     """
-                    INSERT OR REPLACE INTO session_states
+                    INSERT INTO session_states
                     (session_key, meeting_name, session_name, session_type, status, date_start, results_json)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT (session_key) DO UPDATE SET
+                        meeting_name = EXCLUDED.meeting_name,
+                        session_name = EXCLUDED.session_name,
+                        session_type = EXCLUDED.session_type,
+                        status = EXCLUDED.status,
+                        date_start = EXCLUDED.date_start,
+                        results_json = EXCLUDED.results_json,
+                        last_updated = CURRENT_TIMESTAMP
                     """,
                     (
                         session_key,
