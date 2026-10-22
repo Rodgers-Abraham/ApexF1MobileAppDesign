@@ -1,0 +1,126 @@
+name: Create GitHub Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release Tag (e.g. v1.0.0). Leave empty to use version from pubspec.yaml'
+        required: false
+        default: ''
+      prerelease:
+        description: 'Mark as pre-release'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Publish Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Determine Release Tag & Version
+        id: versioning
+        run: |
+          RAW_VERSION=$(grep '^version:' frontend/pubspec.yaml | awk '{print $2}' | tr -d '\r')
+          CLEAN_VERSION="${RAW_VERSION%%+*}"
+          
+          if [ -n "${{ github.event.inputs.tag_name }}" ]; then
+            TAG="${{ github.event.inputs.tag_name }}"
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          else
+            TAG="v${CLEAN_VERSION}"
+          fi
+
+          echo "RELEASE_TAG=${TAG}" >> $GITHUB_ENV
+          echo "APP_VERSION=${RAW_VERSION}" >> $GITHUB_ENV
+          echo "Determined release tag: ${TAG} (app version: ${RAW_VERSION})"
+
+      - name: Cache pub dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('frontend/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-pub-
+
+      - name: Ensure environment file exists
+        working-directory: frontend
+        run: |
+          if [ ! -f .env ]; then
+            echo "API_URL=https://f1-backend-41t9.onrender.com" > .env
+          fi
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: flutter pub get
+
+      - name: Build Release APK
+        working-directory: frontend
+        run: flutter build apk --release --android-skip-build-dependency-validation
+
+      - name: Prepare Named Release APK
+        run: |
+          APK_DIR="frontend/build/app/outputs/flutter-apk"
+          NAMED_APK="${APK_DIR}/apex-f1-${{ env.RELEASE_TAG }}.apk"
+          cp "${APK_DIR}/app-release.apk" "${NAMED_APK}"
+          echo "Created named APK: ${NAMED_APK}"
+
+      - name: Upload APK as Workflow Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-f1-${{ env.RELEASE_TAG }}
+          path: |
+            frontend/build/app/outputs/flutter-apk/apex-f1-${{ env.RELEASE_TAG }}.apk
+            frontend/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: Apex F1 ${{ env.RELEASE_TAG }}
+          body: |
+            ## 🏁 Apex F1 Mobile - ${{ env.RELEASE_TAG }}
+            
+            ### 📱 Download Android APK
+            * **[Download apex-f1-${{ env.RELEASE_TAG }}.apk](https://github.com/${{ github.repository }}/releases/download/${{ env.RELEASE_TAG }}/apex-f1-${{ env.RELEASE_TAG }}.apk)**
+            
+            ### 🚀 Highlights
+            * Live F1 Timing & Telemetry powered by production Render cloud backend
+            * Real-time race weekend updates, predictions, and standings
+            * Connected to Neon PostgreSQL cloud database
+          files: |
+            frontend/build/app/outputs/flutter-apk/apex-f1-${{ env.RELEASE_TAG }}.apk
+            frontend/build/app/outputs/flutter-apk/app-release.apk
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease || false }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
