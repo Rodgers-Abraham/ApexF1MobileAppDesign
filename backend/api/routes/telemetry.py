@@ -32,6 +32,7 @@ class LiveDriverTelemetry(BaseModel):
     tyreLife: str
     last_lap: str = ""
     best_lap: str = ""
+    is_fastest_lap: bool = False
     pit_stops: int = 0
     drs: bool = False
     speed: str
@@ -172,6 +173,29 @@ async def get_track_conditions_endpoint():
 async def get_tire_strategy_endpoint():
     data = f1_api_client.get_tire_strategy()
     return TireStrategyResponse(**data)
+
+class RaceReplayResponse(BaseModel):
+    meeting_name: str
+    circuit_name: str
+    current_lap: int
+    total_laps: int
+    is_completed: bool
+    telemetry: List[LiveDriverTelemetry]
+    flag_status: RaceFlagStatus
+
+@router.get("/telemetry/replay", response_model=RaceReplayResponse)
+async def get_race_replay_endpoint(meeting: str = "Singapore Grand Prix", lap: int = 1):
+    data = f1_api_client.get_race_replay(meeting, lap)
+    return RaceReplayResponse(
+        meeting_name=data.get("meeting_name", meeting),
+        circuit_name=data.get("circuit_name", ""),
+        current_lap=data.get("current_lap", lap),
+        total_laps=data.get("total_laps", 60),
+        is_completed=data.get("is_completed", False),
+        telemetry=[LiveDriverTelemetry(**t) for t in data.get("telemetry", [])],
+        flag_status=RaceFlagStatus(**data.get("flag_status", {}))
+    )
+
 
 
 

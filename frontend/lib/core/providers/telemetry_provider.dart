@@ -67,6 +67,7 @@ class LiveTelemetry {
   final String tyreLife;
   final String lastLap;
   final String bestLap;
+  final bool isFastestLap;
   final int pitStops;
   final bool drs;
   final String speed;
@@ -89,6 +90,7 @@ class LiveTelemetry {
     required this.tyreLife,
     this.lastLap = '',
     this.bestLap = '',
+    this.isFastestLap = false,
     this.pitStops = 0,
     this.drs = false,
     required this.speed,
@@ -113,6 +115,7 @@ class LiveTelemetry {
       tyreLife: json['tyreLife']?.toString() ?? '1 lap',
       lastLap: json['last_lap']?.toString() ?? '',
       bestLap: json['best_lap']?.toString() ?? '',
+      isFastestLap: json['is_fastest_lap'] as bool? ?? false,
       pitStops: (json['pit_stops'] as num?)?.toInt() ?? 0,
       drs: json['drs'] as bool? ?? false,
       speed: json['speed']?.toString() ?? '300 km/h',
@@ -368,6 +371,168 @@ class TelemetryNotifier extends StateNotifier<AsyncValue<List<LiveTelemetry>>> {
 
 final liveTelemetryFeedProvider = StateNotifierProvider.autoDispose<TelemetryNotifier, AsyncValue<List<LiveTelemetry>>>((ref) {
   return TelemetryNotifier(ref);
+});
+
+class RaceReplayState {
+  final String meetingName;
+  final String circuitName;
+  final int currentLap;
+  final int totalLaps;
+  final bool isPlaying;
+  final bool isLoading;
+  final List<LiveTelemetry> telemetry;
+  final RaceFlagStatus flagStatus;
+
+  const RaceReplayState({
+    required this.meetingName,
+    required this.circuitName,
+    required this.currentLap,
+    required this.totalLaps,
+    this.isPlaying = false,
+    this.isLoading = false,
+    required this.telemetry,
+    this.flagStatus = RaceFlagStatus.defaultStatus,
+  });
+
+  RaceReplayState copyWith({
+    String? meetingName,
+    String? circuitName,
+    int? currentLap,
+    int? totalLaps,
+    bool? isPlaying,
+    bool? isLoading,
+    List<LiveTelemetry>? telemetry,
+    RaceFlagStatus? flagStatus,
+  }) {
+    return RaceReplayState(
+      meetingName: meetingName ?? this.meetingName,
+      circuitName: circuitName ?? this.circuitName,
+      currentLap: currentLap ?? this.currentLap,
+      totalLaps: totalLaps ?? this.totalLaps,
+      isPlaying: isPlaying ?? this.isPlaying,
+      isLoading: isLoading ?? this.isLoading,
+      telemetry: telemetry ?? this.telemetry,
+      flagStatus: flagStatus ?? this.flagStatus,
+    );
+  }
+}
+
+class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
+  final Ref _ref;
+  Timer? _playTimer;
+
+  RaceReplayNotifier(this._ref)
+      : super(RaceReplayState(
+          meetingName: 'Singapore Grand Prix',
+          circuitName: 'Marina Bay Street Circuit',
+          currentLap: 1,
+          totalLaps: 62,
+          telemetry: _defaultTelemetryData,
+        )) {
+    loadLap('Singapore Grand Prix', 1);
+  }
+
+  Future<void> selectMeeting(String meetingName) async {
+    _playTimer?.cancel();
+    state = state.copyWith(
+      meetingName: meetingName,
+      currentLap: 1,
+      isPlaying: false,
+      isLoading: true,
+    );
+    await loadLap(meetingName, 1);
+  }
+
+  Future<void> setLap(int lap) async {
+    final clamped = lap.clamp(1, state.totalLaps);
+    if (clamped == state.currentLap && state.telemetry.isNotEmpty && !state.isLoading) return;
+    await loadLap(state.meetingName, clamped);
+  }
+
+  Future<void> nextLap() async {
+    if (state.currentLap < state.totalLaps) {
+      await loadLap(state.meetingName, state.currentLap + 1);
+    } else {
+      pause();
+    }
+  }
+
+  Future<void> prevLap() async {
+    if (state.currentLap > 1) {
+      await loadLap(state.meetingName, state.currentLap - 1);
+    }
+  }
+
+  void togglePlay() {
+    if (state.isPlaying) {
+      pause();
+    } else {
+      play();
+    }
+  }
+
+  void play() {
+    _playTimer?.cancel();
+    state = state.copyWith(isPlaying: true);
+    _playTimer = Timer.periodic(const Duration(milliseconds: 1500), (timer) {
+      if (state.currentLap < state.totalLaps) {
+        nextLap();
+      } else {
+        pause();
+      }
+    });
+  }
+
+  void pause() {
+    _playTimer?.cancel();
+    state = state.copyWith(isPlaying: false);
+  }
+
+  Future<void> loadLap(String meetingName, int lap) async {
+    try {
+      final client = _ref.read(apiClientProvider);
+      final response = await client.get(
+        '/api/f1/telemetry/replay',
+        queryParameters: {'meeting': meetingName, 'lap': lap},
+      );
+      final data = response.data as Map<String, dynamic>;
+      final list = (data['telemetry'] as List?) ?? [];
+      final telemetryItems = list
+          .map((i) => LiveTelemetry.fromJson(i as Map<String, dynamic>))
+          .toList();
+      final total = (data['total_laps'] as num?)?.toInt() ?? 60;
+      final circuit = data['circuit_name']?.toString() ?? '';
+      final flagData = data['flag_status'] as Map<String, dynamic>?;
+
+      if (mounted) {
+        state = state.copyWith(
+          meetingName: data['meeting_name']?.toString() ?? meetingName,
+          circuitName: circuit,
+          currentLap: lap,
+          totalLaps: total,
+          isLoading: false,
+          telemetry: telemetryItems.isNotEmpty ? telemetryItems : state.telemetry,
+          flagStatus: flagData != null ? RaceFlagStatus.fromJson(flagData) : state.flagStatus,
+        );
+      }
+    } catch (e) {
+      debugPrint('Replay load lap notice: $e');
+      if (mounted) {
+        state = state.copyWith(isLoading: false);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _playTimer?.cancel();
+    super.dispose();
+  }
+}
+
+final raceReplayProvider =
+    StateNotifierProvider<RaceReplayNotifier, RaceReplayState>((ref) {
+  return RaceReplayNotifier(ref);
 });
 
 class TeamRadioNotifier extends StateNotifier<AsyncValue<List<TeamRadioItem>>> {

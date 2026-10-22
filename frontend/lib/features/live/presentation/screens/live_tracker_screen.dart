@@ -122,6 +122,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
     final latestSessionAsync = ref.watch(latestSessionProvider);
     final sessionStatusAsync = ref.watch(sessionLiveStatusProvider);
     final flagStatusAsync = ref.watch(raceFlagStatusProvider);
+    final replayState = ref.watch(raceReplayProvider);
 
     final sessionStatus = sessionStatusAsync.value;
     final isLive = sessionStatus?.isLive ?? false;
@@ -129,7 +130,13 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
         ? (sessionStatus?.meetingName ??
             latestSessionAsync.value?.meetingName ??
             'Singapore Grand Prix')
-        : _selectedReplayMeeting;
+        : replayState.meetingName;
+    final telemetryList = isLive
+        ? (telemetryAsync.value ?? [])
+        : (replayState.telemetry.isNotEmpty ? replayState.telemetry : (telemetryAsync.value ?? []));
+    final effectiveFlagStatus = isLive
+        ? flagStatusAsync.value
+        : replayState.flagStatus;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B0B0E),
@@ -342,7 +349,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               ),
               const SizedBox(height: 12),
 
-              // Lap Progress Header Box
+              // Lap Progress Header Box & Interactive Replay Controls
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
@@ -353,7 +360,9 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                     bottomLeft: Radius.circular(3),
                     bottomRight: Radius.circular(10),
                   ),
-                  border: Border.all(color: const Color(0xFF202028)),
+                  border: Border.all(
+                    color: isLive ? const Color(0xFF202028) : Colors.cyanAccent.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Column(
                   children: [
@@ -364,9 +373,9 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                           crossAxisAlignment: CrossAxisAlignment.baseline,
                           textBaseline: TextBaseline.alphabetic,
                           children: [
-                            const Text(
-                              'LAP 34',
-                              style: TextStyle(
+                            Text(
+                              isLive ? 'LAP 34' : 'LAP ${replayState.currentLap}',
+                              style: const TextStyle(
                                 fontFamily: 'Formula1',
                                 fontSize: 16,
                                 fontWeight: FontWeight.w900,
@@ -375,7 +384,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              '/ 58',
+                              isLive ? '/ 58' : '/ ${replayState.totalLaps}',
                               style: TextStyle(
                                 fontFamily: 'Formula1',
                                 fontSize: 12,
@@ -386,12 +395,14 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                           ],
                         ),
                         Text(
-                          '58.6%',
+                          isLive
+                              ? '58.6%'
+                              : '${((replayState.currentLap / (replayState.totalLaps > 0 ? replayState.totalLaps : 1)) * 100).toStringAsFixed(1)}%',
                           style: TextStyle(
                             fontFamily: 'Formula1Wide',
                             fontSize: 11,
                             fontWeight: FontWeight.w900,
-                            color: accentColor,
+                            color: isLive ? accentColor : Colors.cyanAccent,
                           ),
                         ),
                       ],
@@ -405,24 +416,134 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                         color: const Color(0xFF202028),
                         child: FractionallySizedBox(
                           alignment: Alignment.centerLeft,
-                          widthFactor: 0.586,
+                          widthFactor: isLive
+                              ? 0.586
+                              : (replayState.currentLap / (replayState.totalLaps > 0 ? replayState.totalLaps : 1)).clamp(0.01, 1.0),
                           child: Container(
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
-                                colors: [accentColor.withValues(alpha: 0.6), accentColor],
+                                colors: isLive
+                                    ? [accentColor.withValues(alpha: 0.6), accentColor]
+                                    : [Colors.cyanAccent.withValues(alpha: 0.6), Colors.cyanAccent],
                               ),
                             ),
                           ),
                         ),
                       ),
                     ),
+                    if (!isLive) ...[
+                      const SizedBox(height: 12),
+                      // Interactive Replay Scrubber & Playback Controls
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.first_page_rounded, color: Colors.cyanAccent, size: 22),
+                            tooltip: 'Jump to Lap 1',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () => ref.read(raceReplayProvider.notifier).setLap(1),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(Icons.chevron_left_rounded, color: Colors.cyanAccent, size: 24),
+                            tooltip: 'Previous Lap',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () => ref.read(raceReplayProvider.notifier).prevLap(),
+                          ),
+                          const SizedBox(width: 8),
+                          // Play / Pause Button
+                          GestureDetector(
+                            onTap: () => ref.read(raceReplayProvider.notifier).togglePlay(),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: replayState.isPlaying
+                                    ? const Color(0xFFFF9100).withValues(alpha: 0.2)
+                                    : Colors.cyanAccent.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: replayState.isPlaying ? const Color(0xFFFF9100) : Colors.cyanAccent,
+                                  width: 1.2,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    replayState.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                                    size: 16,
+                                    color: replayState.isPlaying ? const Color(0xFFFF9100) : Colors.cyanAccent,
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    replayState.isPlaying ? 'PAUSE' : 'PLAY REPLAY',
+                                    style: TextStyle(
+                                      fontFamily: 'Formula1Wide',
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w900,
+                                      color: replayState.isPlaying ? const Color(0xFFFF9100) : Colors.cyanAccent,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(Icons.chevron_right_rounded, color: Colors.cyanAccent, size: 24),
+                            tooltip: 'Next Lap',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () => ref.read(raceReplayProvider.notifier).nextLap(),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(Icons.last_page_rounded, color: Colors.cyanAccent, size: 22),
+                            tooltip: 'Jump to Finish',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () => ref.read(raceReplayProvider.notifier).setLap(replayState.totalLaps),
+                          ),
+                          const Spacer(),
+                          if (replayState.isLoading)
+                            const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.cyanAccent),
+                            ),
+                        ],
+                      ),
+                      // Lap Slider
+                      SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 3,
+                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                          overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                          activeTrackColor: Colors.cyanAccent,
+                          inactiveTrackColor: const Color(0xFF252530),
+                          thumbColor: Colors.cyanAccent,
+                          overlayColor: Colors.cyanAccent.withValues(alpha: 0.2),
+                        ),
+                        child: Slider(
+                          value: replayState.currentLap.toDouble().clamp(1.0, replayState.totalLaps.toDouble()),
+                          min: 1.0,
+                          max: replayState.totalLaps.toDouble(),
+                          divisions: replayState.totalLaps > 1 ? replayState.totalLaps - 1 : 1,
+                          label: 'Lap ${replayState.currentLap}',
+                          onChanged: (val) {
+                            ref.read(raceReplayProvider.notifier).setLap(val.round());
+                          },
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
               const SizedBox(height: 10),
 
               // Live Flag / Race Control Banner
-              _FigmaSessionFlagBanner(status: flagStatusAsync.value),
+              _FigmaSessionFlagBanner(status: effectiveFlagStatus),
               const SizedBox(height: 12),
 
               // Figma Mode Switcher (TIMING, MAP, RADIO, TYRES)
@@ -446,9 +567,9 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
 
               // View Body based on Mode Switcher
               if (_selectedMode == LiveMode.timing) ...[
-                _buildTimingTower(telemetryAsync),
+                _buildTimingTower(telemetryList, isLive ? telemetryAsync.isLoading : replayState.isLoading),
               ] else if (_selectedMode == LiveMode.map) ...[
-                _buildTrackMapPanel(telemetryAsync, effectiveMeetingName, accentColor, isLive),
+                _buildTrackMapPanel(telemetryList, effectiveMeetingName, accentColor, isLive),
               ] else if (_selectedMode == LiveMode.radio) ...[
                 _buildTeamRadioPanel(radioAsync, accentColor),
               ] else if (_selectedMode == LiveMode.tyres) ...[
@@ -501,145 +622,169 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   // ---------------------------------------------------------
   // 1. TIMING TOWER
   // ---------------------------------------------------------
-  Widget _buildTimingTower(AsyncValue<List<LiveTelemetry>> telemetryAsync) {
-    return telemetryAsync.when(
-      loading: () => const Center(
+  Widget _buildTimingTower(List<LiveTelemetry> telemetryList, bool isLoading) {
+    if (isLoading && telemetryList.isEmpty) {
+      return const Center(
         child: Padding(
           padding: EdgeInsets.all(40),
           child: CircularProgressIndicator(),
         ),
-      ),
-      error: (err, stack) => _buildTimingFallbackTower(),
-      data: (telemetryList) {
-        if (telemetryList.isEmpty) {
-          return _buildTimingFallbackTower();
+      );
+    }
+    if (telemetryList.isEmpty) {
+      return _buildTimingFallbackTower();
+    }
+
+    // Determine the single fastest lap driver in the session
+    String overallFastestLapTime = '';
+    for (final item in telemetryList) {
+      if (item.isFastestLap) {
+        overallFastestLapTime = item.bestLap.isNotEmpty ? item.bestLap : item.lastLap;
+        break;
+      }
+    }
+    if (overallFastestLapTime.isEmpty) {
+      double minSec = 999999.0;
+      for (final item in telemetryList) {
+        final t = item.bestLap.isNotEmpty ? item.bestLap : item.lastLap;
+        if (t.isNotEmpty && t.contains(':')) {
+          final parts = t.split(':');
+          final sec = (double.tryParse(parts[0]) ?? 0) * 60 + (double.tryParse(parts[1]) ?? 0);
+          if (sec > 50 && sec < minSec) {
+            minSec = sec;
+            overallFastestLapTime = t;
+          }
         }
+      }
+    }
 
-        // Identify selected driver data
-        final selectedDriver = telemetryList.firstWhere(
-          (d) =>
-              (getDriverData(d.name)?.code ?? '').toUpperCase() ==
-                  _selectedDriverCode ||
-              d.name.toLowerCase().contains(_selectedDriverCode.toLowerCase()),
-          orElse: () => telemetryList.first,
-        );
+    // Identify selected driver data
+    final selectedDriver = telemetryList.firstWhere(
+      (d) =>
+          (getDriverData(d.name)?.code ?? '').toUpperCase() ==
+              _selectedDriverCode ||
+          d.name.toLowerCase().contains(_selectedDriverCode.toLowerCase()),
+      orElse: () => telemetryList.first,
+    );
 
-        return Column(
-          children: [
-            // Tower column labels
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              child: Row(
-                children: [
-                  const SizedBox(
-                    width: 72,
-                    child: Text(
-                      'POS / DRIVER',
-                      style: TextStyle(
-                        fontFamily: 'Formula1',
-                        color: Color(0xFF5F606B),
-                        fontSize: 8.5,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+    return Column(
+      children: [
+        // Tower column labels
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: Row(
+            children: [
+              const SizedBox(
+                width: 72,
+                child: Text(
+                  'POS / DRIVER',
+                  style: TextStyle(
+                    fontFamily: 'Formula1',
+                    color: Color(0xFF5F606B),
+                    fontSize: 8.5,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const Spacer(),
-                  const Text(
-                    'GAP / INT',
-                    style: TextStyle(
-                      fontFamily: 'Formula1',
-                      color: Color(0xFF5F606B),
-                      fontSize: 8.5,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(width: 24),
-                  const Text(
-                    'TYRE',
-                    style: TextStyle(
-                      fontFamily: 'Formula1',
-                      color: Color(0xFF5F606B),
-                      fontSize: 8.5,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(width: 28),
-                  const Text(
-                    'LAST LAP',
-                    style: TextStyle(
-                      fontFamily: 'Formula1',
-                      color: Color(0xFF5F606B),
-                      fontSize: 8.5,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
+              const Spacer(),
+              const Text(
+                'GAP / INT',
+                style: TextStyle(
+                  fontFamily: 'Formula1',
+                  color: Color(0xFF5F606B),
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 24),
+              const Text(
+                'TYRE',
+                style: TextStyle(
+                  fontFamily: 'Formula1',
+                  color: Color(0xFF5F606B),
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 28),
+              const Text(
+                'LAST LAP',
+                style: TextStyle(
+                  fontFamily: 'Formula1',
+                  color: Color(0xFF5F606B),
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 2),
 
-            // Rows list
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: telemetryList.length,
-              itemBuilder: (context, index) {
-                final d = telemetryList[index];
-                final driverMeta = getDriverData(d.name);
-                final code = driverMeta?.code ?? d.name.split(' ').last.substring(0, 3).toUpperCase();
-                final isSelected = code == _selectedDriverCode;
+        // Rows list
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: telemetryList.length,
+          itemBuilder: (context, index) {
+            final d = telemetryList[index];
+            final driverMeta = getDriverData(d.name);
+            final code = driverMeta?.code ?? d.name.split(' ').last.substring(0, 3).toUpperCase();
+            final isSelected = code == _selectedDriverCode;
 
-                Color teamColor = Colors.white;
-                try {
-                  final hex = d.color.replaceAll('#', '');
-                  teamColor = Color(int.parse('FF$hex', radix: 16));
-                } catch (_) {
-                  teamColor = getDriverTeamColor(d.name);
-                }
+            Color teamColor = Colors.white;
+            try {
+              final hex = d.color.replaceAll('#', '');
+              teamColor = Color(int.parse('FF$hex', radix: 16));
+            } catch (_) {
+              teamColor = getDriverTeamColor(d.name);
+            }
 
-                return _FigmaTimingRowWidget(
-                  pos: d.pos,
-                  code: code,
-                  name: d.name,
-                  team: d.team,
-                  driverNumber: d.driverNumber,
-                  gap: d.gap,
-                  interval: d.interval,
-                  positionsGained: d.positionsGained,
-                  status: d.status,
-                  dnfReason: d.dnfReason,
-                  tyre: d.tyre,
-                  tyreLife: d.tyreLife,
-                  pitStops: d.pitStops,
-                  lastLap: d.lastLap,
-                  isFastestLap: d.bestLap.isNotEmpty && d.bestLap != '-',
-                  drs: d.drs,
-                  teamColor: teamColor,
-                  isSelected: isSelected,
-                  portraitAsset: driverMeta?.portraitAsset ?? '',
-                  onTap: () => setState(() => _selectedDriverCode = code),
-                );
-              },
-            ),
-            const SizedBox(height: 12),
+            final isFastest = d.isFastestLap ||
+                (overallFastestLapTime.isNotEmpty &&
+                    (d.bestLap == overallFastestLapTime || d.lastLap == overallFastestLapTime));
 
-            // Pinned Onboard Telemetry Strip
-            _FigmaTelemetryStrip(
-              driverName: selectedDriver.name,
-              driverCode: _selectedDriverCode,
-              speedKph: selectedDriver.speed.isNotEmpty && selectedDriver.speed != '-'
-                  ? selectedDriver.speed.replaceAll(' km/h', '')
-                  : '294',
-              gear: selectedDriver.gear.isNotEmpty && selectedDriver.gear != '-'
-                  ? selectedDriver.gear
-                  : '8',
-              throttlePct: '97',
-              ersPct: '61',
-              isDnf: selectedDriver.status == 'DNF' || selectedDriver.status == 'RETIRED',
-            ),
-          ],
-        );
-      },
+            return _FigmaTimingRowWidget(
+              pos: d.pos,
+              code: code,
+              name: d.name,
+              team: d.team,
+              driverNumber: d.driverNumber,
+              gap: d.gap,
+              interval: d.interval,
+              positionsGained: d.positionsGained,
+              status: d.status,
+              dnfReason: d.dnfReason,
+              tyre: d.tyre,
+              tyreLife: d.tyreLife,
+              pitStops: d.pitStops,
+              lastLap: d.lastLap.isNotEmpty ? d.lastLap : (d.bestLap.isNotEmpty ? d.bestLap : '-'),
+              isFastestLap: isFastest,
+              drs: d.drs,
+              teamColor: teamColor,
+              isSelected: isSelected,
+              portraitAsset: driverMeta?.portraitAsset ?? '',
+              onTap: () => setState(() => _selectedDriverCode = code),
+            );
+          },
+        ),
+        const SizedBox(height: 12),
+
+        // Pinned Onboard Telemetry Strip
+        _FigmaTelemetryStrip(
+          driverName: selectedDriver.name,
+          driverCode: _selectedDriverCode,
+          speedKph: selectedDriver.speed.isNotEmpty && selectedDriver.speed != '-'
+              ? selectedDriver.speed.replaceAll(' km/h', '')
+              : '294',
+          gear: selectedDriver.gear.isNotEmpty && selectedDriver.gear != '-'
+              ? selectedDriver.gear
+              : '8',
+          throttlePct: '97',
+          ersPct: '61',
+          isDnf: selectedDriver.status == 'DNF' || selectedDriver.status == 'RETIRED',
+        ),
+      ],
     );
   }
 
@@ -850,6 +995,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                           setState(() {
                             _selectedReplayMeeting = race;
                           });
+                          ref.read(raceReplayProvider.notifier).selectMeeting(race);
                           Navigator.pop(ctx);
                         },
                       );
@@ -868,12 +1014,11 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   // 2. TRACK MAP VIEW
   // ---------------------------------------------------------
   Widget _buildTrackMapPanel(
-    AsyncValue<List<LiveTelemetry>> telemetryAsync,
+    List<LiveTelemetry> telemetryList,
     String meetingName,
     Color accentColor,
     bool isLive,
   ) {
-    final telemetryList = telemetryAsync.value ?? [];
     return Column(
       children: [
         Container(
@@ -967,8 +1112,6 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                           child: Image.asset(
                             getCircuitAssetPath(meetingName),
                             fit: BoxFit.contain,
-                            color: Colors.white.withValues(alpha: 0.35),
-                            colorBlendMode: BlendMode.srcIn,
                             errorBuilder: (_, __, ___) => const SizedBox(),
                           ),
                         ),
@@ -2366,7 +2509,7 @@ class _FigmaSessionFlagBanner extends StatelessWidget {
 }
 
 // -------------------------------------------------------------
-// TRACK PAINTER
+// TRACK PAINTER (Official Broadcast Map Overlay)
 // -------------------------------------------------------------
 class _TrackPainter extends CustomPainter {
   final Color accentColor;
@@ -2378,62 +2521,95 @@ class _TrackPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final trackPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.12)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 6
-      ..strokeCap = StrokeCap.round;
-
-    final path = Path();
+    // Note: The authentic high-resolution circuit diagram from assets/circuits/*.png
+    // is rendered directly beneath this canvas. We do NOT draw any artificial
+    // oval or circular path stroke. Instead, we render official broadcast sector
+    // checkpoints, Start/Finish badge, DRS/Speed Trap, and top driver markers.
     final circuit = findCircuitByName(meetingName) ?? circuitSingapore;
     final points = circuit.trackPoints.isNotEmpty ? circuit.trackPoints : circuitSingapore.trackPoints;
 
-    path.moveTo(points.first.dx * size.width, points.first.dy * size.height);
-    for (int i = 0; i < points.length; i++) {
-      final p0 = points[i];
-      final p1 = points[(i + 1) % points.length];
-      final midX = ((p0.dx + p1.dx) / 2) * size.width;
-      final midY = ((p0.dy + p1.dy) / 2) * size.height;
-      path.quadraticBezierTo(p0.dx * size.width, p0.dy * size.height, midX, midY);
-    }
-    path.close();
+    if (points.isNotEmpty) {
+      // 1. Start / Finish Line Badge
+      final sf = Offset(points.first.dx * size.width, points.first.dy * size.height);
+      _drawBadge(canvas, sf, 'S/F', Colors.white, Colors.black);
 
-    canvas.drawPath(path, trackPaint);
+      // 2. Sector 1, Sector 2, Sector 3 Badges
+      if (points.length >= 7) {
+        final s1 = Offset(points[2].dx * size.width, points[2].dy * size.height);
+        _drawBadge(canvas, s1, 'S1', const Color(0xFFFFD600), Colors.black);
 
-    // Draw driver dots along path
-    final pathMetrics = path.computeMetrics().toList();
-    if (pathMetrics.isNotEmpty) {
-      final metric = pathMetrics.first;
-      final totalLen = metric.length;
+        final s2 = Offset(points[5].dx * size.width, points[5].dy * size.height);
+        _drawBadge(canvas, s2, 'S2', const Color(0xFF00E5FF), Colors.black);
 
-      final count = drivers.isNotEmpty ? drivers.length : 12;
-      for (int i = 0; i < count; i++) {
-        final progress = (0.05 + (i * 0.08)) % 1.0;
-        final tangent = metric.getTangentForOffset(totalLen * progress);
-        if (tangent != null) {
-          Color dotColor = accentColor;
-          if (i < drivers.length) {
-            try {
-              final hex = drivers[i].color.replaceAll('#', '');
-              dotColor = Color(int.parse('FF$hex', radix: 16));
-            } catch (_) {}
-          } else {
-            dotColor = i % 3 == 0 ? Colors.red : (i % 3 == 1 ? Colors.orange : Colors.blue);
-          }
+        final s3 = Offset(points[points.length - 2].dx * size.width, points[points.length - 2].dy * size.height);
+        _drawBadge(canvas, s3, 'S3', const Color(0xFFB388FF), Colors.black);
+      }
 
-          final dotPaint = Paint()..color = dotColor;
-          canvas.drawCircle(tangent.position, 4.5, dotPaint);
-          canvas.drawCircle(
-            tangent.position,
-            6.5,
-            Paint()
-              ..color = dotColor.withValues(alpha: 0.3)
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = 1.5,
-          );
-        }
+      // 3. DRS Detection / Speed Trap
+      if (points.length >= 9) {
+        final drs = Offset(points[points.length - 4].dx * size.width, points[points.length - 4].dy * size.height);
+        _drawBadge(canvas, drs, 'DRS', const Color(0xFF00E676), Colors.black);
+      }
+
+      // 4. Driver Marker Chips along authentic circuit positions
+      final topDrivers = drivers.take(4).toList();
+      for (int i = 0; i < topDrivers.length; i++) {
+        final d = topDrivers[i];
+        final ptIndex = ((i * 3) + 1) % points.length;
+        final basePt = Offset(points[ptIndex].dx * size.width, points[ptIndex].dy * size.height);
+        final offset = Offset(0, (i % 2 == 0) ? -16.0 : 16.0);
+
+        Color teamColor = accentColor;
+        try {
+          final hex = d.color.replaceAll('#', '');
+          teamColor = Color(int.parse('FF$hex', radix: 16));
+        } catch (_) {}
+
+        final dCode = d.name.split(' ').last.substring(0, 3).toUpperCase();
+        _drawDriverPill(canvas, basePt + offset, 'P${i + 1} $dCode', teamColor);
       }
     }
+  }
+
+  void _drawBadge(Canvas canvas, Offset pos, String text, Color bg, Color fg) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(fontFamily: 'Formula1', fontSize: 7, fontWeight: FontWeight.w900, color: fg),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: pos, width: tp.width + 8, height: tp.height + 4),
+      const Radius.circular(3),
+    );
+    canvas.drawRRect(rrect, Paint()..color = bg);
+    tp.paint(canvas, pos - Offset(tp.width / 2, tp.height / 2));
+  }
+
+  void _drawDriverPill(Canvas canvas, Offset pos, String text, Color color) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 7, fontWeight: FontWeight.w900, color: Colors.white),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: pos, width: tp.width + 10, height: tp.height + 5),
+      const Radius.circular(4),
+    );
+    canvas.drawRRect(rrect, Paint()..color = const Color(0xFF141419));
+    canvas.drawRRect(
+      rrect,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2,
+    );
+    tp.paint(canvas, pos - Offset(tp.width / 2, tp.height / 2));
   }
 
   @override
