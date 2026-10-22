@@ -1,0 +1,22 @@
+name: Keep Backend Alive
+
+on:
+  schedule:
+    # Runs every 10 minutes (cron: minute hour day month day-of-week)
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows manual trigger to test
+
+jobs:
+  ping:
+    name: Ping Render Backend Health
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send HTTP Ping
+        run: |
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" https://f1-backend-41t9.onrender.com/health)
+          echo "Render Backend Ping Status Code: $RESPONSE"
+          if [ "$RESPONSE" -ne 200 ]; then
+            echo "Warning: Backend responded with status $RESPONSE"
+          else
+            echo "Backend is healthy and awake!"
+          fi
