@@ -1,11 +1,11 @@
 __pycache__
- liver
 .venv
 *.pyc
 *.pyo
 *.pyd
 .Python
 .env
+.env.local
 .pytest_cache
 .coverage
 htmlcov
@@ -15,3 +15,9 @@ htmlcov
 dist
 build
 .ipynb_checkpoints
+*.db
+f1_app.db
+f1_dev.db
+*.html
+*.log
+tests/

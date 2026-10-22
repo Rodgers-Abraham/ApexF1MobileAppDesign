@@ -1,0 +1,45 @@
+steps:
+  # 1. Build container image using Dockerfile
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '$_AR_REGION-docker.pkg.dev/$PROJECT_ID/$_AR_REPO/f1-backend:$COMMIT_SHA'
+      - '-t'
+      - '$_AR_REGION-docker.pkg.dev/$PROJECT_ID/$_AR_REPO/f1-backend:latest'
+      - './backend'
+
+  # 2. Push image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '$_AR_REGION-docker.pkg.dev/$PROJECT_ID/$_AR_REPO/f1-backend:$COMMIT_SHA'
+
+  # 3. Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'f1-backend'
+      - '--image=$_AR_REGION-docker.pkg.dev/$PROJECT_ID/$_AR_REPO/f1-backend:$COMMIT_SHA'
+      - '--region=$_DEPLOY_REGION'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--port=8080'
+      - '--memory=1Gi'
+      - '--cpu=1'
+      - '--min-instances=0'
+      - '--max-instances=5'
+
+substitutions:
+  _AR_REGION: 'europe-west1'
+  _AR_REPO: 'f1-repo'
+  _DEPLOY_REGION: 'europe-west1'
+
+images:
+  - '$_AR_REGION-docker.pkg.dev/$PROJECT_ID/$_AR_REPO/f1-backend:$COMMIT_SHA'
+  - '$_AR_REGION-docker.pkg.dev/$PROJECT_ID/$_AR_REPO/f1-backend:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

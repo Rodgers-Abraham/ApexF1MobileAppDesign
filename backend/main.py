@@ -59,6 +59,7 @@ app.include_router(history.router, prefix="/api/f1/history", tags=["F1 Historica
 app.include_router(pro_routes.router, prefix="/api/pro", tags=["Pro Subscriptions"])
 
 @app.get("/")
+@app.get("/health")
 def read_root():
     return {
         "status": "healthy",
