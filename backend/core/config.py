@@ -1,6 +1,8 @@
 import os
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 from functools import lru_cache
+from typing import Union
 
 
 _BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,7 +24,7 @@ class Settings(BaseSettings):
 
     # API Keys
     openrouter_key: str | None = None
-    gemini_keys: list[str] = []
+    gemini_keys: Union[list[str], str] = []
 
     # CORS
     allowed_origins: str = "http://localhost:3000,http://localhost:8000,http://localhost:8080"
@@ -40,19 +42,27 @@ class Settings(BaseSettings):
     neon_function_hello_base_url: str | None = None
     aws_endpoint_url_s3: str | None = None
 
+    @field_validator("gemini_keys")
+    @classmethod
+    def assemble_gemini_keys(cls, v):
+        if isinstance(v, str):
+            v = v.strip()
+            if not v:
+                return []
+            if v.startswith("[") and v.endswith("]"):
+                try:
+                    import json
+                    return json.loads(v)
+                except Exception:
+                    pass
+            return [k.strip() for k in v.split(",") if k.strip()]
+        return v or []
+
     class Config:
         env_file = (_ENV_PATH, ".env")
         env_file_encoding = "utf-8"
         case_sensitive = False
         extra = "ignore"
-
-        @classmethod
-        def parse_env_var(cls, field_name: str, raw_val: str) -> any:
-            if field_name == "gemini_keys":
-                return [k.strip() for k in raw_val.split(",") if k.strip()]
-            if field_name == "allowed_origins":
-                return [o.strip() for o in raw_val.split(",") if o.strip()]
-            return cls.json_loads(raw_val)
 
 
 @lru_cache()
