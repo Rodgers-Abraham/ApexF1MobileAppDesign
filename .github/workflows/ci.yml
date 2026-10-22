@@ -66,6 +66,12 @@ jobs:
           key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.lock') }}
           restore-keys: ${{ runner.os }}-flutter-
 
+      - name: Ensure environment file exists
+        run: |
+          if [ ! -f .env ]; then
+            echo "API_URL=https://f1-backend-41t9.onrender.com" > .env
+          fi
+
       - name: Get dependencies
         run: flutter pub get
 

@@ -44,7 +44,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/animations/
     - assets/circuits/
     - assets/logo.png
     - assets/teams/

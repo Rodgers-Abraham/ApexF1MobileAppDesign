@@ -4,6 +4,8 @@ dist/
 build/
 .cache/
 .env*
+!frontend/.env
+!frontend/.env.example
 .vite/
 vite.config.*.timestamp-*
 *.tsbuildinfo
@@ -37,7 +39,6 @@ frontend/.flutter-plugins-dependencies
 frontend/.pub-cache/
 frontend/.pub/
 frontend/coverage/
-frontend/.env
 frontend/android/app/debug/
 frontend/android/app/profile/
 frontend/android/app/release/

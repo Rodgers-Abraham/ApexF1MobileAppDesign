@@ -44,11 +44,17 @@ jobs:
           key: ${{ runner.os }}-pub-${{ hashFiles('frontend/pubspec.lock') }}
           restore-keys: ${{ runner.os }}-pub-
 
+      - name: Ensure environment file exists
+        run: |
+          if [ ! -f .env ]; then
+            echo "API_URL=https://f1-backend-41t9.onrender.com" > .env
+          fi
+
       - name: Install dependencies
         run: flutter pub get
 
       - name: Build Release APK
-        run: flutter build apk --release
+        run: flutter build apk --release --android-skip-build-dependency-validation
 
       - name: Upload APK as Workflow Artifact
         uses: actions/upload-artifact@v4
