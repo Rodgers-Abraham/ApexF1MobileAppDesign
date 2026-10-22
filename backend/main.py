@@ -19,13 +19,22 @@ from core.database import init_db
 
 settings = get_settings()
 
-# Initialize database on startup and sync real F1 session data
-init_db()
+# Initialize database on startup and sync real F1 session data in background
+import threading
+
 try:
-    from services.f1_poller import f1_poller
-    f1_poller.poll_jolpica_api()
+    init_db()
 except Exception as e:
-    print(f"Startup F1 API poll notice: {e}")
+    print(f"Startup DB init notice: {e}")
+
+def _background_initial_poll():
+    try:
+        from services.f1_poller import f1_poller
+        f1_poller.poll_jolpica_api()
+    except Exception as e:
+        print(f"Startup F1 API poll notice: {e}")
+
+threading.Thread(target=_background_initial_poll, daemon=True).start()
 
 
 # Rate limiter setup (in-memory storage; use Redis in production)

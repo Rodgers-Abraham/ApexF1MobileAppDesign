@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     debug: bool = False
 
     # Security
-    jwt_secret: str
+    jwt_secret: str = "f1_apex_default_jwt_secret_key_change_in_production"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24 * 7
 
