@@ -377,13 +377,42 @@ final List<F1Circuit> allCircuits2026 = [
 
 /// Find a circuit by name (partial match on name, location, or country code).
 F1Circuit? findCircuitByName(String name) {
-  final lower = name.toLowerCase();
+  final lower = name.toLowerCase().trim();
   for (final c in allCircuits2026) {
-    if (c.name.toLowerCase().contains(lower) ||
-        c.location.toLowerCase().contains(lower) ||
+    final cName = c.name.toLowerCase();
+    final cLoc = c.location.toLowerCase();
+    if (cName.contains(lower) || lower.contains(cName) ||
+        cLoc.contains(lower) || lower.contains(cLoc) ||
         c.countryCode.toLowerCase() == lower) {
       return c;
     }
   }
-  return null;
+
+  // Smart keyword matching for all F1 race weekends
+  if (lower.contains('singapore') || lower.contains('marina')) return circuitSingapore;
+  if (lower.contains('austin') || lower.contains('states') || lower.contains('cota') || lower.contains('americas') || lower.contains('usa')) return circuitUSA;
+  if (lower.contains('monza') || lower.contains('italy') || lower.contains('italian')) return circuitItaly;
+  if (lower.contains('baku') || lower.contains('azerbaijan')) return circuitAzerbaijan;
+  if (lower.contains('mexico') || lower.contains('rodriguez')) return circuitMexico;
+  if (lower.contains('brazil') || lower.contains('interlagos') || lower.contains('sao paulo')) return circuitBrazil;
+  if (lower.contains('vegas')) return circuitLasVegas;
+  if (lower.contains('qatar') || lower.contains('lusail')) return circuitQatar;
+  if (lower.contains('abu dhabi') || lower.contains('yas')) return circuitAbuDhabi;
+  if (lower.contains('albert') || lower.contains('australia') || lower.contains('melbourne')) return circuitAustralia;
+  if (lower.contains('monaco') || lower.contains('monte carlo')) return circuitMonaco;
+  if (lower.contains('silverstone') || lower.contains('britain') || lower.contains('british')) return circuitBritain;
+  if (lower.contains('spa') || lower.contains('belgium') || lower.contains('belgian')) return circuitBelgium;
+  if (lower.contains('zandvoort') || lower.contains('dutch') || lower.contains('netherlands')) return circuitDutch;
+  if (lower.contains('hungaroring') || lower.contains('hungary') || lower.contains('hungarian')) return circuitHungary;
+  if (lower.contains('red bull') || lower.contains('austria') || lower.contains('spielberg')) return circuitAustria;
+  if (lower.contains('catalunya') || lower.contains('barcelona') || lower.contains('spain') || lower.contains('spanish')) return circuitSpain;
+  if (lower.contains('montreal') || lower.contains('canada') || lower.contains('villeneuve')) return circuitCanada;
+  if (lower.contains('imola') || lower.contains('emilia')) return circuitImola;
+  if (lower.contains('miami')) return circuitMiami;
+  if (lower.contains('shanghai') || lower.contains('china') || lower.contains('chinese')) return circuitChina;
+  if (lower.contains('suzuka') || lower.contains('japan') || lower.contains('japanese')) return circuitJapan;
+  if (lower.contains('jeddah') || lower.contains('saudi')) return circuitSaudiArabia;
+  if (lower.contains('bahrain') || lower.contains('sakhir')) return circuitBahrain;
+
+  return circuitSingapore;
 }

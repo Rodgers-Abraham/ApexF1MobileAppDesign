@@ -826,10 +826,46 @@ final List<LiveTelemetry> _defaultTelemetryData = [
 ];
 
 final List<TeamRadioItem> _defaultTeamRadios = [
-  TeamRadioItem(id: 'rad-1', driverNumber: 44, driverName: 'Lewis Hamilton', team: 'Ferrari', color: '#E80020', timestamp: 'LAP 42', audioUrl: '', transcript: 'Box box, confirming medium tyre for the final stint.'),
-  TeamRadioItem(id: 'rad-2', driverNumber: 12, driverName: 'Kimi Antonelli', team: 'Mercedes', color: '#00D2BE', timestamp: 'LAP 41', audioUrl: '', transcript: 'Pace is strong Bono, gap to Lewis is holding at 1.4 seconds.'),
-  TeamRadioItem(id: 'rad-3', driverNumber: 1, driverName: 'Max Verstappen', team: 'Red Bull Racing', color: '#3671C6', timestamp: 'LAP 39', audioUrl: '', transcript: 'Front left vibrations increasing in Turn 9 entry.'),
-  TeamRadioItem(id: 'rad-4', driverNumber: 4, driverName: 'Lando Norris', team: 'McLaren', color: '#FF8000', timestamp: 'LAP 38', audioUrl: '', transcript: 'Copy, charging battery for the DRS detection zone.'),
+  TeamRadioItem(
+    id: 'rad-1',
+    driverNumber: 1,
+    driverName: 'Max Verstappen',
+    team: 'Red Bull Racing',
+    color: '#3671C6',
+    timestamp: 'LAP 39',
+    audioUrl: 'https://livetiming.formula1.com/static/2023/2023-09-17_Singapore_Grand_Prix/2023-09-15_Practice_1/TeamRadio/MAXVER01_1_20230915_103928.mp3',
+    transcript: 'Balance is spot on, building gap to P2.',
+  ),
+  TeamRadioItem(
+    id: 'rad-2',
+    driverNumber: 55,
+    driverName: 'Carlos Sainz',
+    team: 'Williams',
+    color: '#00A0DE',
+    timestamp: 'LAP 42',
+    audioUrl: 'https://livetiming.formula1.com/static/2023/2023-09-17_Singapore_Grand_Prix/2023-09-15_Practice_1/TeamRadio/CARSAI01_55_20230915_103326.mp3',
+    transcript: 'Tires feel great, let\'s keep this rhythm.',
+  ),
+  TeamRadioItem(
+    id: 'rad-3',
+    driverNumber: 63,
+    driverName: 'George Russell',
+    team: 'Mercedes',
+    color: '#00D2BE',
+    timestamp: 'LAP 41',
+    audioUrl: 'https://livetiming.formula1.com/static/2023/2023-09-17_Singapore_Grand_Prix/2023-09-15_Practice_1/TeamRadio/GEORUS01_63_20230915_103406.mp3',
+    transcript: 'Track status clear, DRS active.',
+  ),
+  TeamRadioItem(
+    id: 'rad-4',
+    driverNumber: 81,
+    driverName: 'Oscar Piastri',
+    team: 'McLaren',
+    color: '#FF8000',
+    timestamp: 'LAP 38',
+    audioUrl: 'https://livetiming.formula1.com/static/2023/2023-09-17_Singapore_Grand_Prix/2023-09-15_Practice_1/TeamRadio/OSCPIA01_81_20230915_104409.mp3',
+    transcript: 'Box box, changing to hard compound.',
+  ),
 ];
 
 final List<RaceEventItem> _defaultRaceEvents = [

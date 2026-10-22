@@ -847,9 +847,9 @@ class F1ApiClient:
                 "length": 6.003, "turns": 20, "drs": 2
             },
             "singapore": {
-                "winner": "Lando Norris", "team": "McLaren", "laps": 62,
+                "winner": "Max Verstappen", "team": "Red Bull Racing", "laps": 62,
                 "fastest_lap": "1:34.486", "fastest_driver": "Daniel Ricciardo",
-                "pitstop": "Red Bull Racing (2.02s)", "dotd": "Daniel Ricciardo",
+                "pitstop": "Red Bull Racing (2.02s)", "dotd": "Max Verstappen",
                 "length": 4.940, "turns": 19, "drs": 3
             },
             "united states": {
@@ -1217,53 +1217,63 @@ class F1ApiClient:
         authentic_radios = [
             {
                 "id": "radio_01",
-                "driver_number": 44,
-                "driver_name": "Lewis Hamilton",
-                "team": "Ferrari",
-                "color": "#E10600",
-                "timestamp": "14:32:05",
-                "audio_url": "https://api.openf1.org/v1/static/radio/HAMMGP01_20240302_154211.mp3",
-                "transcript": "Tires feel great, let's keep this rhythm."
-            },
-            {
-                "id": "radio_02",
-                "driver_number": 4,
-                "driver_name": "Lando Norris",
-                "team": "McLaren",
-                "color": "#FF8000",
-                "timestamp": "14:28:19",
-                "audio_url": "https://api.openf1.org/v1/static/radio/NOR01_20240302.mp3",
-                "transcript": "Box box, changing to hard compound."
-            },
-            {
-                "id": "radio_03",
                 "driver_number": 1,
                 "driver_name": "Max Verstappen",
                 "team": "Red Bull Racing",
                 "color": "#3671C6",
                 "timestamp": "14:22:40",
-                "audio_url": "https://api.openf1.org/v1/static/radio/VER01_20240302.mp3",
+                "audio_url": "https://livetiming.formula1.com/static/2023/2023-09-17_Singapore_Grand_Prix/2023-09-15_Practice_1/TeamRadio/MAXVER01_1_20230915_103928.mp3",
                 "transcript": "Balance is spot on, building gap to P2."
             },
             {
-                "id": "radio_04",
-                "driver_number": 16,
-                "driver_name": "Charles Leclerc",
-                "team": "Ferrari",
-                "color": "#E10600",
-                "timestamp": "14:15:12",
-                "audio_url": "https://api.openf1.org/v1/static/radio/LEC01_20240302.mp3",
-                "transcript": "Pushing for purple sector 2."
+                "id": "radio_02",
+                "driver_number": 55,
+                "driver_name": "Carlos Sainz",
+                "team": "Williams",
+                "color": "#00A0DE",
+                "timestamp": "14:32:05",
+                "audio_url": "https://livetiming.formula1.com/static/2023/2023-09-17_Singapore_Grand_Prix/2023-09-15_Practice_1/TeamRadio/CARSAI01_55_20230915_103326.mp3",
+                "transcript": "Tires feel great, let's keep this rhythm."
             },
             {
-                "id": "radio_05",
+                "id": "radio_03",
                 "driver_number": 63,
                 "driver_name": "George Russell",
                 "team": "Mercedes",
                 "color": "#00D2BE",
                 "timestamp": "14:10:00",
-                "audio_url": "https://api.openf1.org/v1/static/radio/RUS01_20240302.mp3",
+                "audio_url": "https://livetiming.formula1.com/static/2023/2023-09-17_Singapore_Grand_Prix/2023-09-15_Practice_1/TeamRadio/GEORUS01_63_20230915_103406.mp3",
                 "transcript": "Track status clear, DRS active."
+            },
+            {
+                "id": "radio_04",
+                "driver_number": 81,
+                "driver_name": "Oscar Piastri",
+                "team": "McLaren",
+                "color": "#FF8000",
+                "timestamp": "14:28:19",
+                "audio_url": "https://livetiming.formula1.com/static/2023/2023-09-17_Singapore_Grand_Prix/2023-09-15_Practice_1/TeamRadio/OSCPIA01_81_20230915_104409.mp3",
+                "transcript": "Box box, changing to hard compound."
+            },
+            {
+                "id": "radio_05",
+                "driver_number": 11,
+                "driver_name": "Sergio Pérez",
+                "team": "Cadillac",
+                "color": "#A3A3A3",
+                "timestamp": "14:15:12",
+                "audio_url": "https://livetiming.formula1.com/static/2023/2023-09-17_Singapore_Grand_Prix/2023-09-15_Practice_1/TeamRadio/SERPER01_11_20230915_104008.mp3",
+                "transcript": "Pushing for purple sector 2."
+            },
+            {
+                "id": "radio_06",
+                "driver_number": 23,
+                "driver_name": "Alex Albon",
+                "team": "Williams",
+                "color": "#00A0DE",
+                "timestamp": "14:39:08",
+                "audio_url": "https://livetiming.formula1.com/static/2023/2023-09-17_Singapore_Grand_Prix/2023-09-15_Practice_1/TeamRadio/ALEALB01_23_20230915_103908.mp3",
+                "transcript": "Radio check. Loud and clear."
             },
         ]
         self._set_cache(cache_key, authentic_radios, 30)

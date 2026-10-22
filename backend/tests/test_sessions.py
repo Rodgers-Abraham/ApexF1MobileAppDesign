@@ -87,6 +87,6 @@ def test_race_details_endpoint():
     res_singapore = client.get("/api/sessions/race-details/Singapore GP")
     assert res_singapore.status_code == 200
     data_singapore = res_singapore.json()
-    assert "Lando Norris" in data_singapore["winner_name"]
-    assert "Daniel Ricciardo" in data_singapore["driver_of_the_day"]
+    assert "Max Verstappen" in data_singapore["winner_name"]
+    assert "Max Verstappen" in data_singapore["driver_of_the_day"]
 

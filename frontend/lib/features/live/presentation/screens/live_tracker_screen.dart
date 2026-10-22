@@ -3,11 +3,13 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../../../../core/providers/session_provider.dart';
 import '../../../../core/providers/telemetry_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../shared/widgets/pro_gate.dart';
 import '../../../../shared/constants/f1_data.dart';
+import '../../../home/presentation/screens/pitwall_screen.dart';
 import '../../data/track_database.dart';
 
 enum LiveMode { timing, map, radio, tyres }
@@ -22,11 +24,14 @@ class LiveTrackerScreen extends ConsumerStatefulWidget {
 class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
     with SingleTickerProviderStateMixin {
   LiveMode _selectedMode = LiveMode.timing;
-  String _selectedDriverCode = 'NOR';
+  String _selectedDriverCode = 'VER';
   String? _currentlyPlayingRadioId;
   late AnimationController _waveAnimController;
-  Timer? _playbackTimer;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  StreamSubscription? _playerCompleteSubscription;
+  String _selectedReplayMeeting = 'Singapore Grand Prix';
   int _playbackProgressMs = 0;
+  Timer? _playbackTimer;
 
   @override
   void initState() {
@@ -35,27 +40,53 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
+
+    _playerCompleteSubscription = _audioPlayer.onPlayerComplete.listen((_) {
+      if (mounted) {
+        setState(() {
+          _currentlyPlayingRadioId = null;
+          _playbackProgressMs = 0;
+          _playbackTimer?.cancel();
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
     _playbackTimer?.cancel();
+    _playerCompleteSubscription?.cancel();
+    _audioPlayer.dispose();
     _waveAnimController.dispose();
     super.dispose();
   }
 
-  void _toggleRadioPlayback(String radioId) {
-    setState(() {
+  Future<void> _toggleRadioPlayback(String radioId, String audioUrl) async {
+    try {
       if (_currentlyPlayingRadioId == radioId) {
-        _currentlyPlayingRadioId = null;
+        await _audioPlayer.stop();
         _playbackTimer?.cancel();
-        _playbackProgressMs = 0;
+        setState(() {
+          _currentlyPlayingRadioId = null;
+          _playbackProgressMs = 0;
+        });
       } else {
-        _currentlyPlayingRadioId = radioId;
-        _playbackProgressMs = 0;
+        await _audioPlayer.stop();
         _playbackTimer?.cancel();
+        _playbackProgressMs = 0;
+        setState(() {
+          _currentlyPlayingRadioId = radioId;
+        });
+
+        // Use supplied audioUrl or fallback to official F1 team radio recording
+        final targetUrl = audioUrl.isNotEmpty
+            ? audioUrl
+            : 'https://livetiming.formula1.com/static/2023/2023-09-17_Singapore_Grand_Prix/2023-09-15_Practice_1/TeamRadio/MAXVER01_1_20230915_103928.mp3';
+
+        await _audioPlayer.play(UrlSource(targetUrl));
+
         _playbackTimer = Timer.periodic(const Duration(milliseconds: 200), (timer) {
-          if (!mounted) {
+          if (!mounted || _currentlyPlayingRadioId != radioId) {
             timer.cancel();
             return;
           }
@@ -69,7 +100,16 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
           });
         });
       }
-    });
+    } catch (e) {
+      debugPrint('Radio audio playback error: $e');
+      _playbackTimer?.cancel();
+      if (mounted) {
+        setState(() {
+          _currentlyPlayingRadioId = null;
+          _playbackProgressMs = 0;
+        });
+      }
+    }
   }
 
   @override
@@ -85,9 +125,11 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
 
     final sessionStatus = sessionStatusAsync.value;
     final isLive = sessionStatus?.isLive ?? false;
-    final meetingName = sessionStatus?.meetingName ??
-        latestSessionAsync.value?.meetingName ??
-        'Australian Grand Prix';
+    final effectiveMeetingName = isLive
+        ? (sessionStatus?.meetingName ??
+            latestSessionAsync.value?.meetingName ??
+            'Singapore Grand Prix')
+        : _selectedReplayMeeting;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B0B0E),
@@ -143,17 +185,17 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               ),
             ),
             const Spacer(),
-            // Live / Simulated status badge
+            // Live / Race Replay status badge
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
               decoration: BoxDecoration(
-                color: (isLive ? const Color(0xFF00E676) : Colors.white24)
+                color: (isLive ? const Color(0xFF00E676) : Colors.cyanAccent)
                     .withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isLive
                       ? const Color(0xFF00E676).withValues(alpha: 0.6)
-                      : Colors.white24,
+                      : Colors.cyanAccent.withValues(alpha: 0.6),
                   width: 1,
                 ),
               ),
@@ -164,18 +206,18 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                     width: 6,
                     height: 6,
                     decoration: BoxDecoration(
-                      color: isLive ? const Color(0xFF00E676) : Colors.grey,
+                      color: isLive ? const Color(0xFF00E676) : Colors.cyanAccent,
                       shape: BoxShape.circle,
                     ),
                   ),
                   const SizedBox(width: 5),
                   Text(
-                    isLive ? 'RACE LIVE' : 'SIMULATED',
+                    isLive ? 'RACE LIVE' : 'RACE REPLAY',
                     style: TextStyle(
                       fontFamily: 'Formula1',
                       fontSize: 9.5,
                       fontWeight: FontWeight.w800,
-                      color: isLive ? const Color(0xFF00E676) : Colors.white70,
+                      color: isLive ? const Color(0xFF00E676) : Colors.cyanAccent,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -202,12 +244,14 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          meetingName.toUpperCase(),
+                          isLive
+                              ? effectiveMeetingName.toUpperCase()
+                              : '2026 REPLAY · ${effectiveMeetingName.toUpperCase()}',
                           style: TextStyle(
                             fontFamily: 'Formula1Wide',
                             fontSize: 10,
                             letterSpacing: 1.5,
-                            color: Colors.grey[400],
+                            color: isLive ? Colors.grey[400] : Colors.cyanAccent,
                             fontWeight: FontWeight.bold,
                           ),
                           maxLines: 1,
@@ -224,6 +268,42 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                             letterSpacing: 0.5,
                           ),
                         ),
+                        if (!isLive) ...[
+                          const SizedBox(height: 6),
+                          GestureDetector(
+                            onTap: () => _showReplayRaceSelector(context),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF16161E),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.35), width: 1),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.history_rounded, size: 12, color: Colors.cyanAccent),
+                                  const SizedBox(width: 5),
+                                  Flexible(
+                                    child: Text(
+                                      'SELECT RACE REPLAY',
+                                      style: const TextStyle(
+                                        fontFamily: 'Formula1',
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.cyanAccent,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: Colors.cyanAccent),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -368,7 +448,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               if (_selectedMode == LiveMode.timing) ...[
                 _buildTimingTower(telemetryAsync),
               ] else if (_selectedMode == LiveMode.map) ...[
-                _buildTrackMapPanel(telemetryAsync, meetingName, accentColor),
+                _buildTrackMapPanel(telemetryAsync, effectiveMeetingName, accentColor, isLive),
               ] else if (_selectedMode == LiveMode.radio) ...[
                 _buildTeamRadioPanel(radioAsync, accentColor),
               ] else if (_selectedMode == LiveMode.tyres) ...[
@@ -689,6 +769,101 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
     );
   }
 
+  void _showReplayRaceSelector(BuildContext context) {
+    final replayRaces = [
+      'Singapore Grand Prix',
+      'Azerbaijan Grand Prix',
+      'Italian Grand Prix',
+      'Dutch Grand Prix',
+      'Belgian Grand Prix',
+      'Hungarian Grand Prix',
+      'British Grand Prix',
+      'Austrian Grand Prix',
+      'Spanish Grand Prix',
+      'Monaco Grand Prix',
+      'Canadian Grand Prix',
+      'Miami Grand Prix',
+      'Chinese Grand Prix',
+      'Australian Grand Prix',
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF141419),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'SELECT RACE WEEK REPLAY',
+                      style: TextStyle(
+                        fontFamily: 'Formula1Wide',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.grey, size: 20),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: replayRaces.length,
+                    itemBuilder: (context, i) {
+                      final race = replayRaces[i];
+                      final isSelected = race == _selectedReplayMeeting;
+                      return ListTile(
+                        dense: true,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                        tileColor: isSelected ? Colors.cyanAccent.withValues(alpha: 0.1) : null,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        leading: Icon(
+                          isSelected ? Icons.check_circle_rounded : Icons.history_rounded,
+                          color: isSelected ? Colors.cyanAccent : Colors.grey,
+                          size: 18,
+                        ),
+                        title: Text(
+                          race,
+                          style: TextStyle(
+                            fontFamily: 'Formula1',
+                            fontSize: 12,
+                            fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
+                            color: isSelected ? Colors.cyanAccent : Colors.white,
+                          ),
+                        ),
+                        onTap: () {
+                          setState(() {
+                            _selectedReplayMeeting = race;
+                          });
+                          Navigator.pop(ctx);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   // ---------------------------------------------------------
   // 2. TRACK MAP VIEW
   // ---------------------------------------------------------
@@ -696,6 +871,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
     AsyncValue<List<LiveTelemetry>> telemetryAsync,
     String meetingName,
     Color accentColor,
+    bool isLive,
   ) {
     final telemetryList = telemetryAsync.value ?? [];
     return Column(
@@ -712,49 +888,56 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'LIVE TRACK',
-                        style: TextStyle(
-                          fontFamily: 'Formula1Wide',
-                          fontSize: 9,
-                          color: Color(0xFF8F909A),
-                          fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isLive ? 'LIVE TRACK' : 'OFFICIAL TRACK REPLAY',
+                          style: TextStyle(
+                            fontFamily: 'Formula1Wide',
+                            fontSize: 9,
+                            color: isLive ? const Color(0xFF8F909A) : Colors.cyanAccent,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        meetingName.toUpperCase(),
-                        style: const TextStyle(
-                          fontFamily: 'Formula1',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
+                        const SizedBox(height: 2),
+                        Text(
+                          meetingName.toUpperCase(),
+                          style: const TextStyle(
+                            fontFamily: 'Formula1',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF00E676).withValues(alpha: 0.15),
+                      color: (isLive ? const Color(0xFF00E676) : Colors.cyanAccent).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFF00E676), width: 1),
+                      border: Border.all(color: isLive ? const Color(0xFF00E676) : Colors.cyanAccent, width: 1),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        CircleAvatar(radius: 3, backgroundColor: Color(0xFF00E676)),
-                        SizedBox(width: 5),
+                        CircleAvatar(radius: 3, backgroundColor: isLive ? const Color(0xFF00E676) : Colors.cyanAccent),
+                        const SizedBox(width: 5),
                         Text(
-                          'TRACK CLEAR',
+                          isLive ? 'TRACK CLEAR' : 'REPLAY ACTIVE',
                           style: TextStyle(
                             fontFamily: 'Formula1',
                             fontSize: 9.5,
                             fontWeight: FontWeight.w900,
-                            color: Color(0xFF00E676),
+                            color: isLive ? const Color(0xFF00E676) : Colors.cyanAccent,
                           ),
                         ),
                       ],
@@ -764,22 +947,44 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               ),
               const SizedBox(height: 16),
 
-              // Interactive Track Canvas with Driver Markers
+              // Interactive Track Canvas with Real Circuit Map
               Container(
-                height: 230,
+                height: 235,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: const Color(0xFF0F0F13),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                 ),
-                child: CustomPaint(
-                  painter: _TrackPainter(
-                    accentColor,
-                    telemetryList,
-                    meetingName,
-                    isLive: true,
-                  ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Official Circuit Track Layout Map Image
+                    Positioned.fill(
+                      child: Padding(
+                        padding: const EdgeInsets.all(14.0),
+                        child: Center(
+                          child: Image.asset(
+                            getCircuitAssetPath(meetingName),
+                            fit: BoxFit.contain,
+                            color: Colors.white.withValues(alpha: 0.35),
+                            colorBlendMode: BlendMode.srcIn,
+                            errorBuilder: (_, __, ___) => const SizedBox(),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: CustomPaint(
+                        painter: _TrackPainter(
+                          accentColor,
+                          telemetryList,
+                          meetingName,
+                          isLive: isLive,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 14),
@@ -947,7 +1152,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                   ? '0:0${(_playbackProgressMs ~/ 1000).toString().padLeft(2, '0')} / 0:17'
                   : '0:00 / 0:17',
               anim: _waveAnimController,
-              onTogglePlay: () => _toggleRadioPlayback(r.id),
+              onTogglePlay: () => _toggleRadioPlayback(r.id, r.audioUrl),
             );
           },
         ),
@@ -958,34 +1163,44 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   Widget _buildFallbackRadioList(Color accentColor) {
     final simulatedRadios = [
       TeamRadioItem(
-        id: 'radio_nor_1',
-        driverName: 'Lando Norris',
-        driverNumber: 4,
-        team: 'McLaren',
-        timestamp: 'LAP 33 · 14:48',
-        transcript: 'Box this lap. Confirm box. We are switching to plan C.',
-        audioUrl: '',
-        color: '#FF8000',
-      ),
-      TeamRadioItem(
-        id: 'radio_lec_1',
-        driverName: 'Charles Leclerc',
-        driverNumber: 16,
-        team: 'Ferrari',
-        timestamp: 'LAP 31 · 14:45',
-        transcript: 'Mode push. Gap behind to Piastri is three point seven seconds.',
-        audioUrl: '',
-        color: '#E8002D',
-      ),
-      TeamRadioItem(
         id: 'radio_ver_1',
         driverName: 'Max Verstappen',
         driverNumber: 1,
         team: 'Red Bull Racing',
-        timestamp: 'LAP 28 · 14:41',
-        transcript: 'Safety car window is open. Tyre degradation is manageable, stay out.',
-        audioUrl: '',
+        timestamp: 'LAP 39 · 14:41',
+        transcript: 'Balance is spot on, building gap to P2.',
+        audioUrl: 'https://livetiming.formula1.com/static/2023/2023-09-17_Singapore_Grand_Prix/2023-09-15_Practice_1/TeamRadio/MAXVER01_1_20230915_103928.mp3',
         color: '#3671C6',
+      ),
+      TeamRadioItem(
+        id: 'radio_sai_1',
+        driverName: 'Carlos Sainz',
+        driverNumber: 55,
+        team: 'Williams',
+        timestamp: 'LAP 42 · 14:48',
+        transcript: 'Tires feel great, let\'s keep this rhythm.',
+        audioUrl: 'https://livetiming.formula1.com/static/2023/2023-09-17_Singapore_Grand_Prix/2023-09-15_Practice_1/TeamRadio/CARSAI01_55_20230915_103326.mp3',
+        color: '#00A0DE',
+      ),
+      TeamRadioItem(
+        id: 'radio_rus_1',
+        driverName: 'George Russell',
+        driverNumber: 63,
+        team: 'Mercedes',
+        timestamp: 'LAP 31 · 14:45',
+        transcript: 'Track status clear, DRS active.',
+        audioUrl: 'https://livetiming.formula1.com/static/2023/2023-09-17_Singapore_Grand_Prix/2023-09-15_Practice_1/TeamRadio/GEORUS01_63_20230915_103406.mp3',
+        color: '#00D2BE',
+      ),
+      TeamRadioItem(
+        id: 'radio_pia_1',
+        driverName: 'Oscar Piastri',
+        driverNumber: 81,
+        team: 'McLaren',
+        timestamp: 'LAP 38 · 14:40',
+        transcript: 'Box box, changing to hard compound.',
+        audioUrl: 'https://livetiming.formula1.com/static/2023/2023-09-17_Singapore_Grand_Prix/2023-09-15_Practice_1/TeamRadio/OSCPIA01_81_20230915_104409.mp3',
+        color: '#FF8000',
       ),
     ];
     return _buildRadioList(simulatedRadios, accentColor);
@@ -2170,22 +2385,18 @@ class _TrackPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     final path = Path();
-    final circuit = findCircuitByName(meetingName) ?? findCircuitByName('Monaco');
-    final points = circuit?.trackPoints ?? [];
+    final circuit = findCircuitByName(meetingName) ?? circuitSingapore;
+    final points = circuit.trackPoints.isNotEmpty ? circuit.trackPoints : circuitSingapore.trackPoints;
 
-    if (points.isNotEmpty) {
-      path.moveTo(points.first.dx * size.width, points.first.dy * size.height);
-      for (int i = 1; i < points.length; i++) {
-        path.lineTo(points[i].dx * size.width, points[i].dy * size.height);
-      }
-      path.close();
-    } else {
-      path.moveTo(size.width * 0.1, size.height * 0.5);
-      path.quadraticBezierTo(size.width * 0.2, size.height * 0.1, size.width * 0.5, size.height * 0.2);
-      path.cubicTo(size.width * 0.7, size.height * 0.1, size.width * 0.9, size.height * 0.4, size.width * 0.8, size.height * 0.7);
-      path.quadraticBezierTo(size.width * 0.6, size.height * 0.9, size.width * 0.3, size.height * 0.8);
-      path.close();
+    path.moveTo(points.first.dx * size.width, points.first.dy * size.height);
+    for (int i = 0; i < points.length; i++) {
+      final p0 = points[i];
+      final p1 = points[(i + 1) % points.length];
+      final midX = ((p0.dx + p1.dx) / 2) * size.width;
+      final midY = ((p0.dy + p1.dy) / 2) * size.height;
+      path.quadraticBezierTo(p0.dx * size.width, p0.dy * size.height, midX, midY);
     }
+    path.close();
 
     canvas.drawPath(path, trackPaint);
 

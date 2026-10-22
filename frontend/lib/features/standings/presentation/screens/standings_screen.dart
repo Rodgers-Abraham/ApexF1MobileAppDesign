@@ -203,21 +203,26 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'DRIVER RANKINGS (P4 - P22)',
-                style: TextStyle(
-                  fontFamily: 'Formula1Wide',
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[400],
-                  letterSpacing: 0.8,
+              Expanded(
+                child: Text(
+                  'DRIVER RANKINGS (P4 - P22)',
+                  style: TextStyle(
+                    fontFamily: 'Formula1Wide',
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[400],
+                    letterSpacing: 0.8,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               Text(
                 'POINTS',
                 style: TextStyle(
                   fontFamily: 'Formula1Wide',
-                  fontSize: 10,
+                  fontSize: 9.5,
                   fontWeight: FontWeight.bold,
                   color: Colors.grey[400],
                   letterSpacing: 0.8,
@@ -431,24 +436,22 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
               children: [
                 Row(
                   children: [
-                    Flexible(
-                      child: Text(
-                        driverData?.code ?? d.name,
-                        style: AppFonts.driverName(
-                          fontSize: 12,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    Text(
+                      driverData?.code ?? '',
+                      style: AppFonts.driverName(
+                        fontSize: 12,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      d.name,
-                      style: AppFonts.regular(fontSize: 10.5, color: Colors.grey[400]!),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Expanded(
+                      child: Text(
+                        d.name,
+                        style: AppFonts.regular(fontSize: 10.5, color: Colors.grey[400]!),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),

@@ -254,16 +254,21 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'SEASON CALENDAR',
-                  style: TextStyle(
-                    fontFamily: 'Formula1Wide',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    letterSpacing: 0.8,
+                Expanded(
+                  child: Text(
+                    'SEASON CALENDAR',
+                    style: const TextStyle(
+                      fontFamily: 'Formula1Wide',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 0.8,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                const SizedBox(width: 8),
                 Text(
                   '2026 ROUNDS',
                   style: AppFonts.number(fontSize: 9, color: Colors.grey[500]!, fontWeight: FontWeight.bold),
@@ -738,16 +743,21 @@ class _FigmaRaceControlWidgetState extends State<_FigmaRaceControlWidget> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'RACE CONTROL',
-              style: TextStyle(
-                fontFamily: 'Formula1Wide',
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-                letterSpacing: 0.8,
+            Expanded(
+              child: Text(
+                'RACE CONTROL',
+                style: const TextStyle(
+                  fontFamily: 'Formula1Wide',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: 0.8,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
+            const SizedBox(width: 8),
             Text(
               'LIVE FEED',
               style: AppFonts.number(fontSize: 9, color: Colors.grey[500]!, fontWeight: FontWeight.bold),
@@ -863,16 +873,21 @@ class _FigmaRacePulseWidget extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'RACE PULSE',
-              style: TextStyle(
-                fontFamily: 'Formula1Wide',
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-                letterSpacing: 0.8,
+            Expanded(
+              child: Text(
+                'RACE PULSE',
+                style: const TextStyle(
+                  fontFamily: 'Formula1Wide',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: 0.8,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
+            const SizedBox(width: 8),
             Text(
               'LAP 34 / 58',
               style: AppFonts.number(fontSize: 9, color: Colors.grey[500]!, fontWeight: FontWeight.bold),
@@ -1006,16 +1021,21 @@ class _FigmaNewsRailWidget extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'PADDOCK FEED',
-              style: TextStyle(
-                fontFamily: 'Formula1Wide',
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-                letterSpacing: 0.8,
+            Expanded(
+              child: Text(
+                'PADDOCK FEED',
+                style: const TextStyle(
+                  fontFamily: 'Formula1Wide',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: 0.8,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
+            const SizedBox(width: 8),
             Text(
               'LATEST ARTICLES',
               style: AppFonts.number(fontSize: 9, color: Colors.grey[500]!, fontWeight: FontWeight.bold),
@@ -1662,14 +1682,23 @@ class _RaceDetailsModalContent extends ConsumerWidget {
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
+                                      flex: 3,
                                       child: Text(
                                         drv,
                                         style: AppFonts.driverName(fontSize: 13, color: Colors.white, fontWeight: FontWeight.bold),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                    Text(
-                                      team,
-                                      style: AppFonts.regular(fontSize: 11, color: Colors.grey[400]!),
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      flex: 2,
+                                      child: Text(
+                                        team,
+                                        style: AppFonts.regular(fontSize: 11, color: Colors.grey[400]!),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                   ],
                                 ),
