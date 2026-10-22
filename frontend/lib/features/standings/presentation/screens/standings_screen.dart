@@ -377,15 +377,19 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
       decoration: BoxDecoration(
         color: const Color(0xFF141419),
         borderRadius: BorderRadius.circular(8),
-        border: Border(
-          left: BorderSide(color: teamColor, width: 3.5),
-          top: BorderSide(color: Colors.white.withValues(alpha: 0.04)),
-          right: BorderSide(color: Colors.white.withValues(alpha: 0.04)),
-          bottom: BorderSide(color: Colors.white.withValues(alpha: 0.04)),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
       ),
       child: Row(
         children: [
+          Container(
+            width: 3.5,
+            height: 24,
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: teamColor,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
           // Position
           SizedBox(
             width: 26,
@@ -513,20 +517,9 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
           decoration: BoxDecoration(
             color: const Color(0xFF141419),
             borderRadius: BorderRadius.circular(10),
-            border: Border(
-              left: BorderSide(color: teamColor, width: 4),
-              top: BorderSide(
-                color: isUserFavorite ? accentColor.withValues(alpha: 0.7) : Colors.white.withValues(alpha: 0.05),
-                width: isUserFavorite ? 1.5 : 1,
-              ),
-              right: BorderSide(
-                color: isUserFavorite ? accentColor.withValues(alpha: 0.7) : Colors.white.withValues(alpha: 0.05),
-                width: isUserFavorite ? 1.5 : 1,
-              ),
-              bottom: BorderSide(
-                color: isUserFavorite ? accentColor.withValues(alpha: 0.7) : Colors.white.withValues(alpha: 0.05),
-                width: isUserFavorite ? 1.5 : 1,
-              ),
+            border: Border.all(
+              color: isUserFavorite ? accentColor.withValues(alpha: 0.7) : Colors.white.withValues(alpha: 0.05),
+              width: isUserFavorite ? 1.5 : 1,
             ),
             boxShadow: isUserFavorite
                 ? [
@@ -540,6 +533,15 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
           ),
           child: Row(
             children: [
+              Container(
+                width: 4,
+                height: 28,
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: teamColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
               // Rank (01 to 11)
               SizedBox(
                 width: 26,

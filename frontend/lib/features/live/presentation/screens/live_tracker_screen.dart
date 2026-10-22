@@ -1049,15 +1049,19 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                   bottomLeft: Radius.circular(2),
                   bottomRight: Radius.circular(8),
                 ),
-                border: Border(
-                  left: BorderSide(color: teamColor, width: 3),
-                  top: const BorderSide(color: Color(0xFF202028)),
-                  right: const BorderSide(color: Color(0xFF202028)),
-                  bottom: const BorderSide(color: Color(0xFF202028)),
-                ),
+                border: Border.all(color: const Color(0xFF202028)),
               ),
               child: Row(
                 children: [
+                  Container(
+                    width: 3,
+                    height: 20,
+                    margin: const EdgeInsets.only(right: 6),
+                    decoration: BoxDecoration(
+                      color: teamColor,
+                      borderRadius: BorderRadius.circular(1.5),
+                    ),
+                  ),
                   SizedBox(
                     width: 22,
                     child: Text(
@@ -1354,24 +1358,22 @@ class _FigmaTimingRowWidget extends StatelessWidget {
             bottomLeft: Radius.circular(2),
             bottomRight: Radius.circular(7),
           ),
-          border: Border(
-            left: BorderSide(color: teamColor, width: 3.5),
-            top: BorderSide(
-              color: isSelected ? teamColor.withValues(alpha: 0.7) : const Color(0xFF202028),
-              width: isSelected ? 1.2 : 1.0,
-            ),
-            right: BorderSide(
-              color: isSelected ? teamColor.withValues(alpha: 0.7) : const Color(0xFF202028),
-              width: isSelected ? 1.2 : 1.0,
-            ),
-            bottom: BorderSide(
-              color: isSelected ? teamColor.withValues(alpha: 0.7) : const Color(0xFF202028),
-              width: isSelected ? 1.2 : 1.0,
-            ),
+          border: Border.all(
+            color: isSelected ? teamColor.withValues(alpha: 0.7) : const Color(0xFF202028),
+            width: isSelected ? 1.2 : 1.0,
           ),
         ),
         child: Row(
           children: [
+            Container(
+              width: 3.5,
+              height: 22,
+              margin: const EdgeInsets.only(right: 6),
+              decoration: BoxDecoration(
+                color: teamColor,
+                borderRadius: BorderRadius.circular(1.5),
+              ),
+            ),
             // 1. Position & Delta
             SizedBox(
               width: 30,
@@ -1866,17 +1868,8 @@ class _FigmaRadioCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF141419),
         borderRadius: BorderRadius.circular(8),
-        border: Border(
-          left: BorderSide(color: teamColor, width: 3.5),
-          top: BorderSide(
-            color: isPlaying ? teamColor.withValues(alpha: 0.6) : const Color(0xFF202028),
-          ),
-          right: BorderSide(
-            color: isPlaying ? teamColor.withValues(alpha: 0.6) : const Color(0xFF202028),
-          ),
-          bottom: BorderSide(
-            color: isPlaying ? teamColor.withValues(alpha: 0.6) : const Color(0xFF202028),
-          ),
+        border: Border.all(
+          color: isPlaying ? teamColor.withValues(alpha: 0.6) : const Color(0xFF202028),
         ),
       ),
       child: Column(
@@ -1885,6 +1878,15 @@ class _FigmaRadioCard extends StatelessWidget {
           // Header Row
           Row(
             children: [
+              Container(
+                width: 3.5,
+                height: 28,
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: teamColor,
+                  borderRadius: BorderRadius.circular(1.5),
+                ),
+              ),
               Container(
                 width: 32,
                 height: 32,

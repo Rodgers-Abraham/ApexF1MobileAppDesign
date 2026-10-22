@@ -103,22 +103,23 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                       decoration: BoxDecoration(
                         color: const Color(0xFF19191F),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border(
-                          left: BorderSide(color: teamColor, width: 3),
-                          top: const BorderSide(color: Color(0xFF282832)),
-                          right: const BorderSide(color: Color(0xFF282832)),
-                          bottom: const BorderSide(color: Color(0xFF282832)),
-                        ),
+                        border: Border.all(color: const Color(0xFF282832)),
                       ),
-                      child: ListTile(
-                        onTap: () {
-                          setState(() {
-                            _podiumPicks[slotIndex] = d.code;
-                            _showError = false;
-                          });
-                          Navigator.pop(context);
-                        },
-                        leading: Container(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border(left: BorderSide(color: teamColor, width: 3.5)),
+                          ),
+                          child: ListTile(
+                            onTap: () {
+                              setState(() {
+                                _podiumPicks[slotIndex] = d.code;
+                                _showError = false;
+                              });
+                              Navigator.pop(context);
+                            },
+                            leading: Container(
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
@@ -163,7 +164,9 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                         ),
                         trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey, size: 14),
                       ),
-                    );
+                    ),
+                  ),
+                );
                   },
                 ),
               ),

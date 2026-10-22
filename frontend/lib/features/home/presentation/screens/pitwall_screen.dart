@@ -138,49 +138,56 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
         backgroundColor: const Color(0xFF101014),
         elevation: 0,
         centerTitle: false,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(3),
-              ),
-              child: const Text(
-                'A',
-                style: TextStyle(
-                  fontFamily: 'Formula1Wide',
-                  fontWeight: FontWeight.w900,
-                  fontSize: 13,
-                  color: Color(0xFF0B0B0E),
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+                child: const Text(
+                  'A',
+                  style: TextStyle(
+                    fontFamily: 'Formula1Wide',
+                    fontWeight: FontWeight.w900,
+                    fontSize: 13,
+                    color: Color(0xFF0B0B0E),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'APEX',
-              style: AppFonts.wide(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.white),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              'F1',
-              style: AppFonts.wide(fontSize: 12, fontWeight: FontWeight.w900, color: const Color(0xFFFF1744)),
-            ),
-          ],
+              const SizedBox(width: 8),
+              Text(
+                'APEX',
+                style: AppFonts.wide(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.white),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'F1',
+                style: AppFonts.wide(fontSize: 12, fontWeight: FontWeight.w900, color: const Color(0xFFFF1744)),
+              ),
+            ],
+          ),
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 14),
+            padding: const EdgeInsets.only(right: 12),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
                   decoration: BoxDecoration(
                     color: const Color(0xFF00E676).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.3)),
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
                         width: 6,
@@ -190,22 +197,22 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
                           shape: BoxShape.circle,
                         ),
                       ),
-                      const SizedBox(width: 5),
+                      const SizedBox(width: 4),
                       Text(
-                        isLive ? 'RACE LIVE' : 'TRACK ACTIVE',
-                        style: TextStyle(
+                        isLive ? 'LIVE' : 'ACTIVE',
+                        style: const TextStyle(
                           fontFamily: 'Formula1Wide',
-                          fontSize: 8,
-                          color: const Color(0xFF00E676),
+                          fontSize: 7.5,
+                          color: Color(0xFF00E676),
                           fontWeight: FontWeight.w900,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 5),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3.5),
                   decoration: BoxDecoration(
                     color: const Color(0xFF18181E),
                     borderRadius: BorderRadius.circular(16),
@@ -398,40 +405,45 @@ class _FigmaGPHeroWidgetState extends ConsumerState<_FigmaGPHeroWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'FORMULA 1 · ROUND ${nextRace.round}',
-                          style: TextStyle(
-                            fontFamily: 'Formula1Wide',
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF8F909A),
-                            letterSpacing: 1.0,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'FORMULA 1 · ROUND ${nextRace.round}',
+                            style: const TextStyle(
+                              fontFamily: 'Formula1Wide',
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF8F909A),
+                              letterSpacing: 1.0,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          nextRace.name.split(' ').first.toUpperCase(),
-                          style: AppFonts.wide(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
+                          const SizedBox(height: 5),
+                          Text(
+                            nextRace.name.split(' ').first.toUpperCase(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppFonts.wide(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                        Text(
-                          'GRAND PRIX',
-                          style: TextStyle(
-                            fontFamily: 'Formula1Wide',
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                            fontStyle: FontStyle.italic,
-                            color: const Color(0xFFFF1744),
+                          const Text(
+                            'GRAND PRIX',
+                            style: TextStyle(
+                              fontFamily: 'Formula1Wide',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              fontStyle: FontStyle.italic,
+                              color: Color(0xFFFF1744),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     // Country emoji badge
                     Container(
                       width: 40,
@@ -552,27 +564,32 @@ class _FigmaGPHeroWidgetState extends ConsumerState<_FigmaGPHeroWidget> {
                 // Real Weather conditions row
                 Row(
                   children: [
-                    const Icon(Icons.cloud_outlined, color: Color(0xFFFFD600), size: 18),
-                    const SizedBox(width: 8),
+                    const Icon(Icons.cloud_outlined, color: Color(0xFFFFD600), size: 16),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'PARTLY CLOUDY',
-                            style: AppFonts.number(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.white),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppFonts.number(fontSize: 8.5, fontWeight: FontWeight.bold, color: Colors.white),
                           ),
                           Text(
                             'RAIN 10%',
-                            style: AppFonts.number(fontSize: 8, color: const Color(0xFF8F909A)),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppFonts.number(fontSize: 7.5, color: const Color(0xFF8F909A)),
                           ),
                         ],
                       ),
                     ),
+                    const SizedBox(width: 8),
                     _buildWeatherCell('24°', 'AIR'),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 8),
                     _buildWeatherCell('38°', 'TRACK'),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 8),
                     _buildWeatherCell('45%', 'HUM'),
                   ],
                 ),
@@ -650,17 +667,18 @@ class _FigmaGPHeroWidgetState extends ConsumerState<_FigmaGPHeroWidget> {
   Widget _buildWeatherCell(String value, String label) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           value,
-          style: AppFonts.number(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+          style: AppFonts.number(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.white),
         ),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontFamily: 'Formula1Wide',
-            fontSize: 7,
-            color: const Color(0xFF8F909A),
+            fontSize: 6.5,
+            color: Color(0xFF8F909A),
           ),
         ),
       ],
@@ -749,17 +767,21 @@ class _FigmaRaceControlWidgetState extends State<_FigmaRaceControlWidget> {
               bottomLeft: Radius.circular(3),
               bottomRight: Radius.circular(12),
             ),
-            border: Border(
-              left: BorderSide(color: flagColor, width: 3.5),
-              top: BorderSide(color: flagColor.withValues(alpha: 0.3)),
-              right: BorderSide(color: flagColor.withValues(alpha: 0.3)),
-              bottom: BorderSide(color: flagColor.withValues(alpha: 0.3)),
-            ),
+            border: Border.all(color: flagColor.withValues(alpha: 0.3)),
           ),
           child: Row(
             children: [
+              Container(
+                width: 3.5,
+                height: 28,
+                margin: const EdgeInsets.only(right: 10),
+                decoration: BoxDecoration(
+                  color: flagColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
               Icon(Icons.warning_amber_rounded, color: flagColor, size: 20),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -901,15 +923,21 @@ class _FigmaRacePulseWidget extends StatelessWidget {
                               color: const Color(0xFFFF8000), // McLaren papaya
                             ),
                             const SizedBox(width: 5),
-                            Text(
-                              'NORRIS',
-                              style: AppFonts.driverName(fontSize: 13, fontWeight: FontWeight.w900, color: Colors.white),
+                            Expanded(
+                              child: Text(
+                                'NORRIS',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppFonts.driverName(fontSize: 13, fontWeight: FontWeight.w900, color: Colors.white),
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 2),
                         Text(
                           'McLAREN · MEDIUM 12L',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: AppFonts.number(fontSize: 8.5, color: const Color(0xFF8F909A)),
                         ),
                       ],
@@ -942,6 +970,8 @@ class _FigmaRacePulseWidget extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           'PIASTRI · LAP 31',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: AppFonts.number(fontSize: 8.5, color: const Color(0xFF8F909A)),
                         ),
                       ],
@@ -1138,14 +1168,19 @@ class _FigmaNewsRailWidget extends ConsumerWidget {
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(
-                                        '${item.timeAgo.isNotEmpty ? item.timeAgo : "RECENT"} · ${item.source.toUpperCase()}',
-                                        style: AppFonts.number(
-                                          fontSize: 8,
-                                          color: const Color(0xFF8F909A),
-                                          fontWeight: FontWeight.bold,
+                                      Expanded(
+                                        child: Text(
+                                          '${item.timeAgo.isNotEmpty ? item.timeAgo : "RECENT"} · ${item.source.toUpperCase()}',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: AppFonts.number(
+                                            fontSize: 8,
+                                            color: const Color(0xFF8F909A),
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
+                                      const SizedBox(width: 6),
                                       const Icon(Icons.arrow_outward_rounded, size: 14, color: Colors.grey),
                                     ],
                                   ),
