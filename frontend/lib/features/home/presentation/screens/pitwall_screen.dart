@@ -107,6 +107,32 @@ String _monthAbbrev(int month) {
   return names[month];
 }
 
+String _getCountryFlag(String code) {
+  switch (code.toUpperCase()) {
+    case 'AUS': return '🇦🇺';
+    case 'CHN': return '🇨🇳';
+    case 'JPN': return '🇯🇵';
+    case 'USA': return '🇺🇸';
+    case 'CAN': return '🇨🇦';
+    case 'MCO': return '🇲🇨';
+    case 'ESP': return '🇪🇸';
+    case 'AUT': return '🇦🇹';
+    case 'GBR': return '🇬🇧';
+    case 'BEL': return '🇧🇪';
+    case 'HUN': return '🇭🇺';
+    case 'NLD': return '🇳🇱';
+    case 'ITA': return '🇮🇹';
+    case 'AZE': return '🇦🇿';
+    case 'BHR': return '🇧🇭';
+    case 'SGP': return '🇸🇬';
+    case 'MEX': return '🇲🇽';
+    case 'BRA': return '🇧🇷';
+    case 'QAT': return '🇶🇦';
+    case 'UAE': return '🇦🇪';
+    default: return '🏁';
+  }
+}
+
 // ─── PIT WALL SCREEN ─────────────────────────────────────────────────────────
 
 class PitWallScreen extends ConsumerStatefulWidget {
@@ -131,6 +157,7 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
     final accentColor = themeState.selectedTeam.primaryColor;
     final sessionStatusAsync = ref.watch(sessionLiveStatusProvider);
     final isLive = sessionStatusAsync.value?.isLive ?? false;
+    final nextRace = _findNextRace() ?? _calendar.first;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B0B0E),
@@ -182,9 +209,9 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF00E676).withValues(alpha: 0.1),
+                    color: (isLive ? const Color(0xFF00E676) : Colors.cyanAccent).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.3)),
+                    border: Border.all(color: (isLive ? const Color(0xFF00E676) : Colors.cyanAccent).withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -192,18 +219,18 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
                       Container(
                         width: 6,
                         height: 6,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF00E676),
+                        decoration: BoxDecoration(
+                          color: isLive ? const Color(0xFF00E676) : Colors.cyanAccent,
                           shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         isLive ? 'LIVE' : 'ACTIVE',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Formula1Wide',
                           fontSize: 7.5,
-                          color: Color(0xFF00E676),
+                          color: isLive ? const Color(0xFF00E676) : Colors.cyanAccent,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
@@ -219,7 +246,7 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
                     border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                   ),
                   child: Text(
-                    'R01 · MEL',
+                    '${nextRace.round} · ${nextRace.countryCode}',
                     style: AppFonts.number(fontSize: 8.5, color: Colors.grey[400]!, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -358,6 +385,8 @@ class _FigmaGPHeroWidgetState extends ConsumerState<_FigmaGPHeroWidget> {
     final s = diff.inSeconds % 60;
 
     final nextRace = _findNextRace() ?? _calendar.first;
+    final sessionStatus = ref.watch(sessionLiveStatusProvider).value;
+    final isLiveNow = sessionStatus?.isLive ?? false;
 
     return Container(
       width: double.infinity,
@@ -405,6 +434,92 @@ class _FigmaGPHeroWidgetState extends ConsumerState<_FigmaGPHeroWidget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (isLiveNow) ...[
+                  InkWell(
+                    onTap: () => context.go('/live'),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 14),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFF00E676).withValues(alpha: 0.22),
+                            const Color(0xFF00E676).withValues(alpha: 0.06),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.6), width: 1.2),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF00E676),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(color: Color(0xFF00E676), blurRadius: 8, spreadRadius: 2),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'LIVE ON TRACK · ${(sessionStatus?.sessionName ?? "PRACTICE 1").toUpperCase()}',
+                                  style: const TextStyle(
+                                    fontFamily: 'Formula1Wide',
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xFF00E676),
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${sessionStatus?.meetingName ?? "United States Grand Prix"} · Circuit of the Americas',
+                                  style: const TextStyle(
+                                    fontFamily: 'Formula1',
+                                    fontSize: 9,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF00E676),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: const [
+                                Text(
+                                  'PITWALL',
+                                  style: TextStyle(
+                                    fontFamily: 'Formula1Wide',
+                                    fontSize: 8.5,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                SizedBox(width: 3),
+                                Icon(Icons.arrow_forward_ios_rounded, size: 9, color: Colors.black),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+
                 // Head: Eyebrow + Title + Round Flag
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -460,11 +575,7 @@ class _FigmaGPHeroWidgetState extends ConsumerState<_FigmaGPHeroWidget> {
                       ),
                       child: Center(
                         child: Text(
-                          nextRace.countryCode == 'AUS'
-                              ? '🇦🇺'
-                              : (nextRace.countryCode == 'CHN'
-                                  ? '🇨🇳'
-                                  : (nextRace.countryCode == 'JPN' ? '🇯🇵' : '🏁')),
+                          _getCountryFlag(nextRace.countryCode),
                           style: const TextStyle(fontSize: 20),
                         ),
                       ),

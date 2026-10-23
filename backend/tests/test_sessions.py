@@ -18,6 +18,15 @@ def clean_sessions_db(monkeypatch):
     # Mock poll_openf1_api and poll_jolpica_api to return False to keep tests hermetic
     monkeypatch.setattr(f1_poller, "poll_openf1_api", lambda *args, **kwargs: False)
     monkeypatch.setattr(f1_poller, "poll_jolpica_api", lambda *args, **kwargs: False)
+    from services.f1_api_client import f1_api_client
+    monkeypatch.setattr(f1_api_client, "get_session_status", lambda: {"is_live": False, "is_race_weekend": False})
+    try:
+        import api.routes.sessions as routes_sessions
+        monkeypatch.setattr(routes_sessions.f1_api_client, "get_session_status", lambda: {"is_live": False, "is_race_weekend": False})
+        monkeypatch.setattr(routes_sessions.f1_poller, "poll_openf1_api", lambda *args, **kwargs: False)
+        monkeypatch.setattr(routes_sessions.f1_poller, "poll_jolpica_api", lambda *args, **kwargs: False)
+    except Exception:
+        pass
     
     # Setup: Clean tables before test runs
     with get_db_connection() as conn:

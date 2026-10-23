@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from core.auth import get_current_user
 from services.f1_poller import f1_poller
+from services.f1_api_client import f1_api_client
 
 router = APIRouter()
 
@@ -50,6 +51,11 @@ class RaceDetailsResponse(BaseModel):
 
 @router.get("/latest", response_model=LatestSessionResponse)
 async def get_latest_session_endpoint():
+    # If an official session is currently live, ensure it is populated in the database
+    session_status = f1_api_client.get_session_status()
+    if session_status.get("is_live", False):
+        f1_poller.ensure_live_session(session_status)
+
     latest = f1_poller.get_latest_session()
     # If missing or simulated session key, sync from authentic live APIs
     if not latest or (latest and 1000 <= latest.get("session_key", 0) <= 1050):
