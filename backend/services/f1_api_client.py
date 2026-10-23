@@ -202,7 +202,7 @@ class F1ApiClient:
         try:
             from core.database import get_db_connection
             with get_db_connection() as conn:
-                row = conn.execute("SELECT session_key FROM session_states ORDER BY id DESC LIMIT 1").fetchone()
+                row = conn.execute("SELECT session_key FROM session_states ORDER BY CASE WHEN status = 'live' THEN 0 ELSE 1 END, session_key DESC, id DESC LIMIT 1").fetchone()
                 if row and row["session_key"]:
                     key = row["session_key"]
                     self._set_cache(cache_key, key, 300)
@@ -429,19 +429,18 @@ class F1ApiClient:
         except Exception as e:
             print(f"OpenF1 session probe notice: {e}")
 
-        # If OpenF1 did not return session list, use official calendar
-        if not sessions:
-            sessions = calendar_sessions
+        # Always ensure the official 2026 championship calendar sessions are included
+        sessions = calendar_sessions + [s for s in (sessions if isinstance(sessions, list) else []) if isinstance(s, dict)]
 
         try:
             current_session = None
 
-            # Find current live session: active within [date_start - 15m, date_end + 30m]
+            # Find current live session: active within [date_start - 15m, date_end + 45m]
             for s in sessions:
                 try:
                     ds = datetime.datetime.fromisoformat(s['date_start'])
                     de = datetime.datetime.fromisoformat(s['date_end'])
-                    if (ds - datetime.timedelta(minutes=15)) <= now <= (de + datetime.timedelta(minutes=30)):
+                    if (ds - datetime.timedelta(minutes=15)) <= now <= (de + datetime.timedelta(minutes=45)):
                         current_session = s
                         break
                 except Exception:
@@ -906,7 +905,7 @@ class F1ApiClient:
         # Fallback to local official classification if OpenF1 network is unreachable
         try:
             with get_db_connection() as conn:
-                row = conn.execute("SELECT results_json FROM session_states ORDER BY id DESC LIMIT 1").fetchone()
+                row = conn.execute("SELECT results_json FROM session_states ORDER BY CASE WHEN status = 'live' THEN 0 ELSE 1 END, session_key DESC, id DESC LIMIT 1").fetchone()
             results = json.loads(row["results_json"]) if row and row["results_json"] else []
         except Exception:
             results = []
@@ -1211,7 +1210,7 @@ class F1ApiClient:
         if not telemetry_items:
             try:
                 with get_db_connection() as conn:
-                    row = conn.execute("SELECT results_json FROM session_states ORDER BY id DESC LIMIT 1").fetchone()
+                    row = conn.execute("SELECT results_json FROM session_states ORDER BY CASE WHEN status = 'live' THEN 0 ELSE 1 END, session_key DESC, id DESC LIMIT 1").fetchone()
                 results = json.loads(row["results_json"]) if row and row["results_json"] else []
             except Exception:
                 results = []

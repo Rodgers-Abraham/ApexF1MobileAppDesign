@@ -15,7 +15,10 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def clean_sessions_db(monkeypatch):
-    # Mock poll_openf1_api and poll_jolpica_api to return False to keep tests hermetic
+    # Mock poll_openf1_api and poll_jolpica_api on the class and instance to keep tests hermetic
+    from services.f1_poller import F1PollerService, f1_poller
+    monkeypatch.setattr(F1PollerService, "poll_openf1_api", lambda *args, **kwargs: False)
+    monkeypatch.setattr(F1PollerService, "poll_jolpica_api", lambda *args, **kwargs: False)
     monkeypatch.setattr(f1_poller, "poll_openf1_api", lambda *args, **kwargs: False)
     monkeypatch.setattr(f1_poller, "poll_jolpica_api", lambda *args, **kwargs: False)
     from services.f1_api_client import f1_api_client

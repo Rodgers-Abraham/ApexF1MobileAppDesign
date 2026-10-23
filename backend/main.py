@@ -1,4 +1,5 @@
 import os
+import sys
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -28,6 +29,8 @@ except Exception as e:
     print(f"Startup DB init notice: {e}")
 
 def _background_initial_poll():
+    if os.getenv("TESTING") == "1" or "pytest" in sys.modules:
+        return
     try:
         from services.f1_poller import f1_poller
         f1_poller.poll_jolpica_api()

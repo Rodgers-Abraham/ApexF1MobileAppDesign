@@ -40,7 +40,7 @@ class F1PollerService:
         """Returns the latest loaded session and results from the database."""
         with get_db_connection() as conn:
             row = conn.execute(
-                "SELECT * FROM session_states ORDER BY id DESC LIMIT 1"
+                "SELECT * FROM session_states ORDER BY CASE WHEN status = 'live' THEN 0 ELSE 1 END, session_key DESC, id DESC LIMIT 1"
             ).fetchone()
 
         if not row:
