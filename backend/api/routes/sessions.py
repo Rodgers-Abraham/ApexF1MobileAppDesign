@@ -120,6 +120,48 @@ async def simulate_session_endpoint():
         results=[DriverStandingResponse(**r) for r in new_state["results"]]
     )
 
+class OverrideLiveResultsRequest(BaseModel):
+    session_key: Optional[int] = None
+    session_name: Optional[str] = None
+    results: List[DriverStandingResponse]
+
+@router.post("/live-results/override")
+async def override_live_results_endpoint(payload: OverrideLiveResultsRequest):
+    """Allows manual sync or live update of session classification (e.g. from TV timing)."""
+    import json
+    from core.database import get_db_connection
+    s_key = payload.session_key or 1802
+    s_name = payload.session_name or "Practice 2"
+    res_list = [r.dict() for r in payload.results]
+
+    with get_db_connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO session_states
+            (session_key, meeting_name, session_name, session_type, status, date_start, results_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (session_key) DO UPDATE SET
+                session_name = EXCLUDED.session_name,
+                status = 'live',
+                results_json = EXCLUDED.results_json,
+                last_updated = CURRENT_TIMESTAMP
+            """,
+            (
+                s_key,
+                "United States Grand Prix",
+                s_name,
+                "practice",
+                "live",
+                "2026-10-23T21:00:00Z",
+                json.dumps(res_list)
+            )
+        )
+        conn.commit()
+
+    f1_poller.trigger_auto_predictions(s_key, "United States Grand Prix", s_name, res_list)
+    f1_api_client.cache.pop("live_telemetry", None)
+    return {"status": "ok", "message": f"Live results for {s_name} updated successfully", "count": len(res_list)}
+
 @router.post("/poll")
 async def poll_f1_api_endpoint():
     # Try Jolpica first (as the default API for results)

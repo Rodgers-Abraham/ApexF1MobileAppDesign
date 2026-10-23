@@ -56,38 +56,77 @@ class F1PollerService:
             return None
 
         m_name = session_status.get("meeting_name", "United States Grand Prix")
-        s_name = session_status.get("session_name", "Practice 1")
-        session_key = 1801
+        s_name = session_status.get("session_name", "Practice 2")
+
+        # Dynamically determine session_key
+        s_lower = s_name.lower()
+        if "2" in s_name or "fp2" in s_lower:
+            session_key = 1802
+        elif "3" in s_name or "fp3" in s_lower:
+            session_key = 1803
+        elif "quali" in s_lower:
+            session_key = 1804
+        elif "race" in s_lower:
+            session_key = 1805
+        else:
+            session_key = 1801
 
         # Check if already present and live
         latest = self.get_latest_session()
         if latest and latest.get("meeting_name") == m_name and latest.get("session_name") == s_name and latest.get("status") == "live":
             return latest
 
-        results_fp1 = [
-            {"position": 1, "driver_name": "Kimi Antonelli", "team": "Mercedes", "time_or_gap": "1:34.845"},
-            {"position": 2, "driver_name": "Lewis Hamilton", "team": "Ferrari", "time_or_gap": "+0.137s"},
-            {"position": 3, "driver_name": "George Russell", "team": "Mercedes", "time_or_gap": "+0.275s"},
-            {"position": 4, "driver_name": "Lando Norris", "team": "McLaren", "time_or_gap": "+0.365s"},
-            {"position": 5, "driver_name": "Max Verstappen", "team": "Red Bull", "time_or_gap": "+0.450s"},
-            {"position": 6, "driver_name": "Charles Leclerc", "team": "Ferrari", "time_or_gap": "+0.567s"},
-            {"position": 7, "driver_name": "Oscar Piastri", "team": "McLaren", "time_or_gap": "+0.645s"},
-            {"position": 8, "driver_name": "Liam Lawson", "team": "Racing Bulls", "time_or_gap": "+0.905s"},
-            {"position": 9, "driver_name": "Pierre Gasly", "team": "Alpine", "time_or_gap": "+1.035s"},
-            {"position": 10, "driver_name": "Franco Colapinto", "team": "Alpine", "time_or_gap": "+1.167s"},
-            {"position": 11, "driver_name": "Carlos Sainz", "team": "Williams", "time_or_gap": "+1.295s"},
-            {"position": 12, "driver_name": "Fernando Alonso", "team": "Aston Martin", "time_or_gap": "+1.405s"},
-            {"position": 13, "driver_name": "Isack Hadjar", "team": "Red Bull", "time_or_gap": "+1.535s"},
-            {"position": 14, "driver_name": "Oliver Bearman", "team": "Haas", "time_or_gap": "+1.675s"},
-            {"position": 15, "driver_name": "Esteban Ocon", "team": "Haas", "time_or_gap": "+1.805s"},
-            {"position": 16, "driver_name": "Alex Albon", "team": "Williams", "time_or_gap": "+1.935s"},
-            {"position": 17, "driver_name": "Lance Stroll", "team": "Aston Martin", "time_or_gap": "+2.065s"},
-            {"position": 18, "driver_name": "Arvid Lindblad", "team": "Racing Bulls", "time_or_gap": "+2.195s"},
-            {"position": 19, "driver_name": "Nico Hülkenberg", "team": "Audi", "time_or_gap": "+2.365s"},
-            {"position": 20, "driver_name": "Gabriel Bortoleto", "team": "Audi", "time_or_gap": "+2.545s"},
-            {"position": 21, "driver_name": "Sergio Perez", "team": "Cadillac", "time_or_gap": "+2.735s"},
-            {"position": 22, "driver_name": "Valtteri Bottas", "team": "Cadillac", "time_or_gap": "+2.905s"}
+        results_fp2 = [
+            {"position": 1, "driver_name": "Charles Leclerc", "team": "Ferrari", "time_or_gap": "1:35.652"},
+            {"position": 2, "driver_name": "Max Verstappen", "team": "Red Bull", "time_or_gap": "+0.084s"},
+            {"position": 3, "driver_name": "Lando Norris", "team": "McLaren", "time_or_gap": "+0.215s"},
+            {"position": 4, "driver_name": "George Russell", "team": "Mercedes", "time_or_gap": "+0.312s"},
+            {"position": 5, "driver_name": "Lewis Hamilton", "team": "Ferrari", "time_or_gap": "+0.398s"},
+            {"position": 6, "driver_name": "Kimi Antonelli", "team": "Mercedes", "time_or_gap": "+0.442s"},
+            {"position": 7, "driver_name": "Oscar Piastri", "team": "McLaren", "time_or_gap": "+0.518s"},
+            {"position": 8, "driver_name": "Liam Lawson", "team": "Racing Bulls", "time_or_gap": "+0.765s"},
+            {"position": 9, "driver_name": "Gabriel Bortoleto", "team": "Audi", "time_or_gap": "+0.892s"},
+            {"position": 10, "driver_name": "Arvid Lindblad", "team": "Racing Bulls", "time_or_gap": "+0.954s"},
+            {"position": 11, "driver_name": "Oliver Bearman", "team": "Haas", "time_or_gap": "+1.085s"},
+            {"position": 12, "driver_name": "Fernando Alonso", "team": "Aston Martin", "time_or_gap": "+1.175s"},
+            {"position": 13, "driver_name": "Carlos Sainz", "team": "Williams", "time_or_gap": "+1.250s"},
+            {"position": 14, "driver_name": "Pierre Gasly", "team": "Alpine", "time_or_gap": "+1.325s"},
+            {"position": 15, "driver_name": "Isack Hadjar", "team": "Red Bull", "time_or_gap": "+1.415s"},
+            {"position": 16, "driver_name": "Lance Stroll", "team": "Aston Martin", "time_or_gap": "+1.490s"},
+            {"position": 17, "driver_name": "Esteban Ocon", "team": "Haas", "time_or_gap": "+1.575s"},
+            {"position": 18, "driver_name": "Franco Colapinto", "team": "Alpine", "time_or_gap": "+1.645s"},
+            {"position": 19, "driver_name": "Nico Hülkenberg", "team": "Audi", "time_or_gap": "+1.735s"},
+            {"position": 20, "driver_name": "Alex Albon", "team": "Williams", "time_or_gap": "+1.860s"},
+            {"position": 21, "driver_name": "Valtteri Bottas", "team": "Cadillac", "time_or_gap": "+2.050s"},
+            {"position": 22, "driver_name": "Colton Herta", "team": "Cadillac", "time_or_gap": "+2.290s"}
         ]
+
+        results_fp1 = [
+            {"position": 1, "driver_name": "Charles Leclerc", "team": "Ferrari", "time_or_gap": "1:36.052"},
+            {"position": 2, "driver_name": "Max Verstappen", "team": "Red Bull", "time_or_gap": "+0.084s"},
+            {"position": 3, "driver_name": "Lando Norris", "team": "McLaren", "time_or_gap": "+0.245s"},
+            {"position": 4, "driver_name": "George Russell", "team": "Mercedes", "time_or_gap": "+0.326s"},
+            {"position": 5, "driver_name": "Kimi Antonelli", "team": "Mercedes", "time_or_gap": "+0.481s"},
+            {"position": 6, "driver_name": "Lewis Hamilton", "team": "Ferrari", "time_or_gap": "+0.503s"},
+            {"position": 7, "driver_name": "Oscar Piastri", "team": "McLaren", "time_or_gap": "+0.734s"},
+            {"position": 8, "driver_name": "Gabriel Bortoleto", "team": "Audi", "time_or_gap": "+0.943s"},
+            {"position": 9, "driver_name": "Arvid Lindblad", "team": "Racing Bulls", "time_or_gap": "+1.011s"},
+            {"position": 10, "driver_name": "Liam Lawson", "team": "Racing Bulls", "time_or_gap": "+1.257s"},
+            {"position": 11, "driver_name": "Oliver Bearman", "team": "Haas", "time_or_gap": "+1.613s"},
+            {"position": 12, "driver_name": "Fernando Alonso", "team": "Aston Martin", "time_or_gap": "+1.636s"},
+            {"position": 13, "driver_name": "Lance Stroll", "team": "Aston Martin", "time_or_gap": "+1.731s"},
+            {"position": 14, "driver_name": "Isack Hadjar", "team": "Red Bull", "time_or_gap": "+1.738s"},
+            {"position": 15, "driver_name": "Pierre Gasly", "team": "Alpine", "time_or_gap": "+1.749s"},
+            {"position": 16, "driver_name": "Esteban Ocon", "team": "Haas", "time_or_gap": "+1.844s"},
+            {"position": 17, "driver_name": "Franco Colapinto", "team": "Alpine", "time_or_gap": "+2.069s"},
+            {"position": 18, "driver_name": "Nico Hülkenberg", "team": "Audi", "time_or_gap": "+2.070s"},
+            {"position": 19, "driver_name": "Carlos Sainz", "team": "Williams", "time_or_gap": "+2.794s"},
+            {"position": 20, "driver_name": "Valtteri Bottas", "team": "Cadillac", "time_or_gap": "+3.001s"},
+            {"position": 21, "driver_name": "Colton Herta", "team": "Cadillac", "time_or_gap": "+3.927s"},
+            {"position": 22, "driver_name": "Alex Albon", "team": "Williams", "time_or_gap": "+31.812s"}
+        ]
+
+        active_results = results_fp2 if session_key == 1802 else results_fp1
 
         try:
             with get_db_connection() as conn:
@@ -111,13 +150,13 @@ class F1PollerService:
                         s_name,
                         "practice",
                         "live",
-                        session_status.get("date_start", "2026-10-23T17:30:00Z"),
-                        json.dumps(results_fp1)
+                        session_status.get("date_start", "2026-10-23T21:00:00Z"),
+                        json.dumps(active_results)
                     )
                 )
                 conn.commit()
 
-            self.trigger_auto_predictions(session_key, m_name, s_name, results_fp1)
+            self.trigger_auto_predictions(session_key, m_name, s_name, active_results)
         except Exception as e:
             print(f"Error ensuring live session in database: {e}")
 

@@ -217,7 +217,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                   ),
                   const SizedBox(width: 5),
                   Text(
-                    isLive ? 'RACE LIVE' : 'RACE REPLAY',
+                    isLive ? '${sessionStatus?.sessionName.toUpperCase() ?? 'SESSION'} LIVE' : 'RACE REPLAY',
                     style: TextStyle(
                       fontFamily: 'Formula1',
                       fontSize: 9.5,
@@ -332,7 +332,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                         ),
                         const SizedBox(width: 5),
                         const Text(
-                          'R01 · MEL',
+                          'R18 · USA',
                           style: TextStyle(
                             fontFamily: 'Formula1',
                             fontSize: 9.5,
@@ -372,7 +372,13 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                           textBaseline: TextBaseline.alphabetic,
                           children: [
                             Text(
-                              isLive ? 'LAP 34' : 'LAP ${replayState.currentLap}',
+                              isLive
+                                  ? ((sessionStatus?.sessionName.toLowerCase().contains('practice') == true ||
+                                          sessionStatus?.sessionName.toLowerCase().contains('qualifying') == true ||
+                                          sessionStatus?.sessionName.toLowerCase().contains('fp') == true)
+                                      ? (sessionStatus?.sessionName.toUpperCase() ?? 'PRACTICE 2')
+                                      : 'LAP 34')
+                                  : 'LAP ${replayState.currentLap}',
                               style: const TextStyle(
                                 fontFamily: 'Formula1',
                                 fontSize: 16,
@@ -382,7 +388,13 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              isLive ? '/ 58' : '/ ${replayState.totalLaps}',
+                              isLive
+                                  ? ((sessionStatus?.sessionName.toLowerCase().contains('practice') == true ||
+                                          sessionStatus?.sessionName.toLowerCase().contains('qualifying') == true ||
+                                          sessionStatus?.sessionName.toLowerCase().contains('fp') == true)
+                                      ? '· COTA'
+                                      : '/ 58')
+                                  : '/ ${replayState.totalLaps}',
                               style: TextStyle(
                                 fontFamily: 'Formula1',
                                 fontSize: 12,
@@ -396,7 +408,11 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                           fit: BoxFit.scaleDown,
                           child: Text(
                             isLive
-                                ? '58.6%'
+                                ? ((sessionStatus?.sessionName.toLowerCase().contains('practice') == true ||
+                                        sessionStatus?.sessionName.toLowerCase().contains('qualifying') == true ||
+                                        sessionStatus?.sessionName.toLowerCase().contains('fp') == true)
+                                    ? 'LIVE SESSION'
+                                    : '58.6%')
                                 : '${((replayState.currentLap / (replayState.totalLaps > 0 ? replayState.totalLaps : 1)) * 100).toStringAsFixed(1)}%',
                             style: TextStyle(
                               fontFamily: 'Formula1Wide',
@@ -418,7 +434,11 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                         child: FractionallySizedBox(
                           alignment: Alignment.centerLeft,
                           widthFactor: isLive
-                              ? 0.586
+                              ? ((sessionStatus?.sessionName.toLowerCase().contains('practice') == true ||
+                                      sessionStatus?.sessionName.toLowerCase().contains('qualifying') == true ||
+                                      sessionStatus?.sessionName.toLowerCase().contains('fp') == true)
+                                  ? 0.70
+                                  : 0.586)
                               : (replayState.currentLap / (replayState.totalLaps > 0 ? replayState.totalLaps : 1)).clamp(0.01, 1.0),
                           child: Container(
                             decoration: BoxDecoration(
