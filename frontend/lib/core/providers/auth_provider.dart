@@ -15,7 +15,6 @@ class AuthState {
   final String? name;
   final String? favouriteTeam;
   final String? favouriteDriver;
-  final bool isPro;
   final bool isLoading;
   final String? errorMessage;
 
@@ -25,7 +24,6 @@ class AuthState {
     this.name,
     this.favouriteTeam,
     this.favouriteDriver,
-    this.isPro = false,
     this.isLoading = false,
     this.errorMessage,
   });
@@ -38,7 +36,6 @@ class AuthState {
     String? name,
     String? favouriteTeam,
     String? favouriteDriver,
-    bool? isPro,
     bool? isLoading,
     String? errorMessage,
   }) {
@@ -48,7 +45,6 @@ class AuthState {
       name: name ?? this.name,
       favouriteTeam: favouriteTeam ?? this.favouriteTeam,
       favouriteDriver: favouriteDriver ?? this.favouriteDriver,
-      isPro: isPro ?? this.isPro,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
     );
@@ -80,10 +76,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
           name: userData['name'],
           favouriteTeam: userData['favourite_team'],
           favouriteDriver: userData['favourite_driver'],
-          isPro: userData['is_pro'] ?? false,
         );
-        
-        // Also update ThemeProvider to match user preference
+
         _updateAppTheme(userData['favourite_team']);
       } catch (e) {
         logout();
@@ -153,7 +147,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         name: data['name'],
         favouriteTeam: data['favourite_team'],
         favouriteDriver: data['favourite_driver'],
-        isPro: data['is_pro'] ?? false,
       );
 
       _updateAppTheme(data['favourite_team']);
@@ -190,7 +183,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         name: data['name'],
         favouriteTeam: data['favourite_team'],
         favouriteDriver: data['favourite_driver'],
-        isPro: data['is_pro'] ?? false,
       );
 
       _updateAppTheme(data['favourite_team']);
@@ -268,30 +260,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
     } catch (e) {
       debugPrint('Failed to update favourite team on server: $e');
-    }
-  }
-
-  Future<void> upgradeToPro() async {
-    if (!state.isAuthenticated) return;
-    try {
-      await _dio.put(
-        '/api/auth/pro',
-        data: {'is_pro': true},
-        options: Options(headers: {'Authorization': 'Bearer ${state.token}'}),
-      );
-
-      state = state.copyWith(isPro: true);
-
-      // Save updated user data locally
-      final prefs = await SharedPreferences.getInstance();
-      final userJson = prefs.getString(_userKey);
-      if (userJson != null) {
-        final userData = jsonDecode(userJson);
-        userData['is_pro'] = true;
-        await prefs.setString(_userKey, jsonEncode(userData));
-      }
-    } catch (e) {
-      debugPrint('Failed to update pro tier status: $e');
     }
   }
 

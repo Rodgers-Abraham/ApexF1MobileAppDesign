@@ -1,15 +1,17 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../../../../core/providers/session_provider.dart';
 import '../../../../core/providers/telemetry_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
-import '../../../../shared/widgets/pro_gate.dart';
 import '../../../../shared/constants/f1_data.dart';
 import '../../../home/presentation/screens/pitwall_screen.dart';
-import '../../data/track_database.dart';
+import '../widgets/timing_row_widget.dart';
+import '../widgets/telemetry_strip.dart';
+import '../widgets/radio_card.dart';
+import '../widgets/session_flag_banner.dart';
+import '../widgets/track_painter.dart';
 
 enum LiveMode { timing, map, radio, tyres }
 
@@ -232,9 +234,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
           ],
         ),
       ),
-      body: ProGateWidget(
-        featureName: 'Live Telemetry & Race Center',
-        child: SingleChildScrollView(
+      body: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -580,7 +580,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               const SizedBox(height: 10),
 
               // Live Flag / Race Control Banner
-              _FigmaSessionFlagBanner(status: effectiveFlagStatus),
+              FigmaSessionFlagBanner(status: effectiveFlagStatus),
               const SizedBox(height: 12),
 
               // Figma Mode Switcher (TIMING, MAP, RADIO, TYRES)
@@ -615,7 +615,6 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
             ],
           ),
         ),
-      ),
     );
   }
 
@@ -785,7 +784,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                 (overallFastestLapTime.isNotEmpty &&
                     (d.bestLap == overallFastestLapTime || d.lastLap == overallFastestLapTime));
 
-            return _FigmaTimingRowWidget(
+            return FigmaTimingRowWidget(
               pos: d.pos,
               code: code,
               name: d.name,
@@ -812,7 +811,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
         const SizedBox(height: 12),
 
         // Pinned Onboard Telemetry Strip
-        _FigmaTelemetryStrip(
+        FigmaTelemetryStrip(
           driverName: selectedDriver.name,
           driverCode: _selectedDriverCode,
           speedKph: selectedDriver.speed.isNotEmpty && selectedDriver.speed != '-'
@@ -829,153 +828,42 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
     );
   }
 
-  // Fallback Timing Tower with 2026 Drivers
   Widget _buildTimingFallbackTower() {
-    final drivers = kDrivers2026List;
-    final selectedDriver = drivers.firstWhere(
-      (d) => d.code == _selectedDriverCode,
-      orElse: () => drivers.first,
-    );
-
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Row(
-            children: [
-              const SizedBox(
-                width: 60,
-                child: Text(
-                  'POS / DRIVER',
-                  style: TextStyle(
-                    fontFamily: 'Formula1',
-                    color: Color(0xFF5F606B),
-                    fontSize: 8,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 60),
+        child: Column(
+          children: [
+            Icon(Icons.timer_outlined, color: Color(0xFF5F606B), size: 40),
+            SizedBox(height: 12),
+            Text(
+              'NO TIMING DATA',
+              style: TextStyle(
+                fontFamily: 'Formula1Wide',
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF5F606B),
               ),
-              const Spacer(),
-              const Text(
-                'GAP / INT',
-                style: TextStyle(
-                  fontFamily: 'Formula1',
-                  color: Color(0xFF5F606B),
-                  fontSize: 8,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 14),
-              const Text(
-                'TYRE',
-                style: TextStyle(
-                  fontFamily: 'Formula1',
-                  color: Color(0xFF5F606B),
-                  fontSize: 8,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 16),
-              const SizedBox(
-                width: 50,
-                child: Text(
-                  'LAST LAP',
-                  textAlign: TextAlign.end,
-                  style: TextStyle(
-                    fontFamily: 'Formula1',
-                    color: Color(0xFF5F606B),
-                    fontSize: 8,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Timing data will appear during live sessions',
+              style: TextStyle(fontSize: 12, color: Color(0xFF5F606B)),
+            ),
+          ],
         ),
-        const SizedBox(height: 2),
-
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: drivers.length,
-          itemBuilder: (context, index) {
-            final driver = drivers[index];
-            final pos = (index + 1).toString();
-            final isSelected = driver.code == _selectedDriverCode;
-            final teamColor = getTeamColor(driver.team);
-            final isFastest = driver.code == 'PIA';
-            final isDnf = driver.code == 'ALB';
-            final isPit = driver.code == 'TSU';
-            final gap = index == 0
-                ? 'LEADER'
-                : isDnf
-                    ? 'OUT'
-                    : '+${(index * 1.842).toStringAsFixed(3)}s';
-            final interval = index == 0
-                ? '—'
-                : '+${(1.2 + (index % 3) * 0.4).toStringAsFixed(3)}s';
-            final tyre = index % 3 == 0 ? 'S' : (index % 3 == 1 ? 'M' : 'H');
-            final tyreAge = '${14 + (index * 2)}L';
-            final lastLap = isDnf
-                ? 'RETIRED'
-                : (isFastest ? '1:21.733' : '1:22.${(800 + index * 42)}');
-
-            return _FigmaTimingRowWidget(
-              pos: pos,
-              code: driver.code,
-              name: driver.name,
-              team: driver.team,
-              driverNumber: int.tryParse(driver.code.hashCode.abs().toString().substring(0, 2)) ?? (index + 1),
-              gap: gap,
-              interval: interval,
-              positionsGained: (index % 5 == 1) ? 2 : ((index % 4 == 0) ? -1 : 0),
-              status: isDnf ? 'DNF' : (isPit ? 'PIT' : 'RACING'),
-              dnfReason: isDnf ? 'Power Unit Failure' : '',
-              tyre: tyre,
-              tyreLife: tyreAge,
-              pitStops: (index > 8) ? 2 : 1,
-              lastLap: lastLap,
-              isFastestLap: isFastest,
-              drs: index % 2 == 1 && !isDnf,
-              teamColor: teamColor,
-              isSelected: isSelected,
-              portraitAsset: driver.portraitAsset,
-              onTap: () => setState(() => _selectedDriverCode = driver.code),
-            );
-          },
-        ),
-        const SizedBox(height: 12),
-
-        _FigmaTelemetryStrip(
-          driverName: selectedDriver.name,
-          driverCode: _selectedDriverCode,
-          speedKph: selectedDriver.code == 'ALB' ? '0' : '294',
-          gear: selectedDriver.code == 'ALB' ? 'N' : '8',
-          throttlePct: selectedDriver.code == 'ALB' ? '0' : '97',
-          ersPct: '61',
-          isDnf: selectedDriver.code == 'ALB',
-        ),
-      ],
+      ),
     );
   }
 
   void _showReplayRaceSelector(BuildContext context) {
-    final replayRaces = [
-      'Singapore Grand Prix',
-      'Azerbaijan Grand Prix',
-      'Italian Grand Prix',
-      'Dutch Grand Prix',
-      'Belgian Grand Prix',
-      'Hungarian Grand Prix',
-      'British Grand Prix',
-      'Austrian Grand Prix',
-      'Spanish Grand Prix',
-      'Monaco Grand Prix',
-      'Canadian Grand Prix',
-      'Miami Grand Prix',
-      'Chinese Grand Prix',
-      'Australian Grand Prix',
-    ];
+    final calendarAsync = ref.read(calendarProvider);
+    final replayRaces = calendarAsync.whenOrNull(
+      data: (races) => races
+          .where((r) => r.date.isBefore(DateTime.now()))
+          .map((r) => r.name)
+          .toList(),
+    ) ?? [];
 
     showModalBottomSheet(
       context: context,
@@ -1092,18 +980,18 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
       orElse: () => telemetryList.isNotEmpty
           ? telemetryList.first
           : LiveTelemetry(
-              name: selectedMeta?.name ?? 'Max Verstappen',
-              pos: '1',
-              speed: '294 km/h',
-              gear: '8',
-              status: 'RACING',
+              name: selectedMeta?.name ?? '',
+              pos: '',
+              speed: '',
+              gear: '',
+              status: '',
               drs: false,
-              bestLap: '1:21.432',
-              lastLap: '1:21.890',
-              tyre: 'M',
-              tyreLife: '12 laps',
-              gap: 'LEADER',
-              color: '#3671C6',
+              bestLap: '',
+              lastLap: '',
+              tyre: '',
+              tyreLife: '',
+              gap: '',
+              color: '#FFFFFF',
               x: 0.5,
               y: 0.5,
             ),
@@ -1300,7 +1188,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                     ),
                     Positioned.fill(
                       child: CustomPaint(
-                        painter: _TrackPainter(
+                        painter: TrackPainter(
                           accentColor,
                           telemetryList,
                           meetingName,
@@ -1330,7 +1218,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
         const SizedBox(height: 14),
 
         // Bottom Telemetry Strip for Selected Driver
-        _FigmaTelemetryStrip(
+        FigmaTelemetryStrip(
           driverName: selectedMeta?.name ?? targetTelemetry.name,
           driverCode: activeCode,
           speedKph: targetTelemetry.speed.isNotEmpty && targetTelemetry.speed != '-'
@@ -1468,7 +1356,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
             final teamColor = getTeamColor(r.team);
             final driverMeta = getDriverData(r.driverName);
 
-            return _FigmaRadioCard(
+            return FigmaRadioCard(
               id: r.id,
               driverName: r.driverName,
               teamName: r.team,
@@ -1491,49 +1379,31 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   }
 
   Widget _buildFallbackRadioList(Color accentColor) {
-    final simulatedRadios = [
-      TeamRadioItem(
-        id: 'radio_ver_1',
-        driverName: 'Max Verstappen',
-        driverNumber: 1,
-        team: 'Red Bull Racing',
-        timestamp: 'LAP 39 · 14:41',
-        transcript: 'Balance is spot on, building gap to P2.',
-        audioUrl: 'https://livetiming.formula1.com/static/2023/2023-09-17_Singapore_Grand_Prix/2023-09-15_Practice_1/TeamRadio/MAXVER01_1_20230915_103928.mp3',
-        color: '#3671C6',
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 60),
+        child: Column(
+          children: [
+            Icon(Icons.podcasts_rounded, color: Color(0xFF5F606B), size: 40),
+            SizedBox(height: 12),
+            Text(
+              'NO RADIO MESSAGES',
+              style: TextStyle(
+                fontFamily: 'Formula1Wide',
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF5F606B),
+              ),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Team radio will appear during live sessions',
+              style: TextStyle(fontSize: 12, color: Color(0xFF5F606B)),
+            ),
+          ],
+        ),
       ),
-      TeamRadioItem(
-        id: 'radio_sai_1',
-        driverName: 'Carlos Sainz',
-        driverNumber: 55,
-        team: 'Williams',
-        timestamp: 'LAP 42 · 14:48',
-        transcript: 'Tires feel great, let\'s keep this rhythm.',
-        audioUrl: 'https://livetiming.formula1.com/static/2023/2023-09-17_Singapore_Grand_Prix/2023-09-15_Practice_1/TeamRadio/CARSAI01_55_20230915_103326.mp3',
-        color: '#00A0DE',
-      ),
-      TeamRadioItem(
-        id: 'radio_rus_1',
-        driverName: 'George Russell',
-        driverNumber: 63,
-        team: 'Mercedes',
-        timestamp: 'LAP 31 · 14:45',
-        transcript: 'Track status clear, DRS active.',
-        audioUrl: 'https://livetiming.formula1.com/static/2023/2023-09-17_Singapore_Grand_Prix/2023-09-15_Practice_1/TeamRadio/GEORUS01_63_20230915_103406.mp3',
-        color: '#00D2BE',
-      ),
-      TeamRadioItem(
-        id: 'radio_pia_1',
-        driverName: 'Oscar Piastri',
-        driverNumber: 81,
-        team: 'McLaren',
-        timestamp: 'LAP 38 · 14:40',
-        transcript: 'Box box, changing to hard compound.',
-        audioUrl: 'https://livetiming.formula1.com/static/2023/2023-09-17_Singapore_Grand_Prix/2023-09-15_Practice_1/TeamRadio/OSCPIA01_81_20230915_104409.mp3',
-        color: '#FF8000',
-      ),
-    ];
-    return _buildRadioList(simulatedRadios, accentColor);
+    );
   }
 
   // ---------------------------------------------------------
@@ -1543,12 +1413,9 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
     AsyncValue<List<LiveTelemetry>> telemetryAsync,
     Color accentColor,
   ) {
-    final drivers = kDrivers2026List.take(12).toList();
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Compound Legend
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
@@ -1568,222 +1435,155 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
           ),
         ),
         const SizedBox(height: 12),
+        telemetryAsync.when(
+          loading: () => const Center(
+            child: Padding(
+              padding: EdgeInsets.all(40),
+              child: CircularProgressIndicator(),
+            ),
+          ),
+          error: (_, __) => _buildTyreEmptyState(),
+          data: (telemetry) {
+            if (telemetry.isEmpty) return _buildTyreEmptyState();
+            return ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: telemetry.length,
+              itemBuilder: (context, index) {
+                final driver = telemetry[index];
+                final pos = driver.pos;
+                final driverMeta = getDriverData(driver.name);
+                final code = driverMeta?.code ?? driver.name.split(' ').last.substring(0, 3).toUpperCase();
+                Color teamColor;
+                try {
+                  final hex = driver.color.replaceAll('#', '');
+                  teamColor = Color(int.parse('FF$hex', radix: 16));
+                } catch (_) {
+                  teamColor = getDriverTeamColor(driver.name);
+                }
+                final tyre = driver.tyre.isNotEmpty ? driver.tyre[0].toUpperCase() : '?';
+                final tyreLife = driver.tyreLife;
 
-        // Driver stint rows
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: drivers.length,
-          itemBuilder: (context, index) {
-            final driver = drivers[index];
-            final pos = (index + 1).toString();
-            final teamColor = getTeamColor(driver.team);
-            final softWidth = 25.0 + (index % 4) * 6;
-            final tyre = index % 3 == 0 ? 'S' : (index % 3 == 1 ? 'M' : 'H');
-            final tyreAge = '${14 + index}L';
-            final pitWindow = index % 3 == 0 ? 'BOX NOW' : 'L${40 + index}–${43 + index}';
-
-            return Container(
-              margin: const EdgeInsets.only(bottom: 6),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF141419),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(2),
-                  topRight: Radius.circular(8),
-                  bottomLeft: Radius.circular(2),
-                  bottomRight: Radius.circular(8),
-                ),
-                border: Border.all(color: const Color(0xFF202028)),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 3,
-                    height: 20,
-                    margin: const EdgeInsets.only(right: 6),
-                    decoration: BoxDecoration(
-                      color: teamColor,
-                      borderRadius: BorderRadius.circular(1.5),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF141419),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(2),
+                      topRight: Radius.circular(8),
+                      bottomLeft: Radius.circular(2),
+                      bottomRight: Radius.circular(8),
                     ),
+                    border: Border.all(color: const Color(0xFF202028)),
                   ),
-                  SizedBox(
-                    width: 22,
-                    child: Text(
-                      pos,
-                      style: const TextStyle(
-                        fontFamily: 'Formula1Wide',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 3,
+                        height: 20,
+                        margin: const EdgeInsets.only(right: 6),
+                        decoration: BoxDecoration(
+                          color: teamColor,
+                          borderRadius: BorderRadius.circular(1.5),
+                        ),
                       ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 36,
-                    child: Text(
-                      driver.code,
-                      style: const TextStyle(
-                        fontFamily: 'Formula1',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  // Stint bars
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Container(
-                          width: softWidth,
-                          height: 18,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFF1744).withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(3),
-                            border: Border.all(color: const Color(0xFFFF1744), width: 1),
+                      SizedBox(
+                        width: 22,
+                        child: Text(
+                          pos,
+                          style: const TextStyle(
+                            fontFamily: 'Formula1Wide',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
                           ),
-                          child: const Text(
-                            'S',
+                        ),
+                      ),
+                      SizedBox(
+                        width: 36,
+                        child: Text(
+                          code,
+                          style: const TextStyle(
+                            fontFamily: 'Formula1',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Container(
+                          height: 18,
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          alignment: Alignment.centerLeft,
+                          decoration: BoxDecoration(
+                            color: _tyreColor(tyre).withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(3),
+                            border: Border.all(color: _tyreColor(tyre), width: 1),
+                          ),
+                          child: Text(
+                            '$tyre · $tyreLife',
                             style: TextStyle(
                               fontFamily: 'Formula1',
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFFFF1744),
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.bold,
+                              color: _tyreColor(tyre),
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 3),
-                        Expanded(
-                          child: Container(
-                            height: 18,
-                            padding: const EdgeInsets.symmetric(horizontal: 6),
-                            alignment: Alignment.centerLeft,
-                            decoration: BoxDecoration(
-                              color: (tyre == 'H' ? Colors.white : const Color(0xFFFFD600))
-                                  .withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(3),
-                              border: Border.all(
-                                color: tyre == 'H' ? Colors.white70 : const Color(0xFFFFD600),
-                                width: 1,
-                              ),
-                            ),
-                            child: Text(
-                              '$tyre · $tyreAge',
-                              style: TextStyle(
-                                fontFamily: 'Formula1',
-                                fontSize: 8.5,
-                                fontWeight: FontWeight.bold,
-                                color: tyre == 'H' ? Colors.white : const Color(0xFFFFD600),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: pitWindow == 'BOX NOW'
-                          ? const Color(0xFFFF9100).withValues(alpha: 0.25)
-                          : const Color(0xFF19191F),
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: pitWindow == 'BOX NOW'
-                            ? const Color(0xFFFF9100)
-                            : const Color(0xFF282832),
                       ),
-                    ),
-                    child: Text(
-                      pitWindow,
-                      style: TextStyle(
-                        fontFamily: 'Formula1',
-                        fontSize: 8.5,
-                        fontWeight: FontWeight.w900,
-                        color: pitWindow == 'BOX NOW'
-                            ? const Color(0xFFFF9100)
-                            : Colors.white70,
-                      ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             );
           },
         ),
-        const SizedBox(height: 12),
-
-        // Undercut Pitwall Prediction Callout Card
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: const Color(0xFF141419),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFF202028)),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFD600).withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.bolt_rounded,
-                  color: Color(0xFFFFD600),
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'PITWALL STRATEGY CALL',
-                      style: TextStyle(
-                        fontFamily: 'Formula1Wide',
-                        fontSize: 9,
-                        color: Color(0xFFFFD600),
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    SizedBox(height: 3),
-                    Text(
-                      'Undercut Window Opening',
-                      style: TextStyle(
-                        fontFamily: 'Formula1',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(height: 3),
-                    Text(
-                      'Medium tyre runners gain an estimated 1.8s by stopping before lap 39 against hard runners.',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: Color(0xFF8F909A),
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
       ],
     );
+  }
+
+  Widget _buildTyreEmptyState() {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 60),
+        child: Column(
+          children: [
+            Icon(Icons.tire_repair, color: Color(0xFF5F606B), size: 40),
+            SizedBox(height: 12),
+            Text(
+              'NO TYRE DATA',
+              style: TextStyle(
+                fontFamily: 'Formula1Wide',
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF5F606B),
+              ),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Tyre strategy data will appear during live sessions',
+              style: TextStyle(fontSize: 12, color: Color(0xFF5F606B)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _tyreColor(String compound) {
+    switch (compound) {
+      case 'S': return const Color(0xFFFF1744);
+      case 'M': return const Color(0xFFFFD600);
+      case 'H': return Colors.white;
+      case 'I': return const Color(0xFF00E676);
+      case 'W': return const Color(0xFF00B0FF);
+      default: return Colors.grey;
+    }
   }
 
   Widget _buildCompoundLegendBadge(String code, String name, Color color) {
@@ -1824,1082 +1624,4 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
     );
   }
 }
-
-// -------------------------------------------------------------
-// TIMING ROW COMPONENT
-// -------------------------------------------------------------
-class _FigmaTimingRowWidget extends StatelessWidget {
-  final String pos;
-  final String code;
-  final String name;
-  final String team;
-  final int driverNumber;
-  final String gap;
-  final String interval;
-  final int positionsGained;
-  final String status;
-  final String dnfReason;
-  final String tyre;
-  final String tyreLife;
-  final int pitStops;
-  final String lastLap;
-  final bool isFastestLap;
-  final bool drs;
-  final Color teamColor;
-  final bool isSelected;
-  final String portraitAsset;
-  final VoidCallback onTap;
-
-  const _FigmaTimingRowWidget({
-    required this.pos,
-    required this.code,
-    required this.name,
-    required this.team,
-    required this.driverNumber,
-    required this.gap,
-    required this.interval,
-    required this.positionsGained,
-    required this.status,
-    required this.dnfReason,
-    required this.tyre,
-    required this.tyreLife,
-    required this.pitStops,
-    required this.lastLap,
-    required this.isFastestLap,
-    required this.drs,
-    required this.teamColor,
-    required this.isSelected,
-    required this.portraitAsset,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDnf = status == 'DNF' || status == 'RETIRED';
-    final isPit = status == 'PIT';
-
-    Color tyreColor = Colors.white;
-    if (tyre == 'S') tyreColor = const Color(0xFFFF1744);
-    if (tyre == 'M') tyreColor = const Color(0xFFFFD600);
-    if (tyre == 'H') tyreColor = Colors.white;
-    if (tyre == 'I') tyreColor = const Color(0xFF00E676);
-    if (tyre == 'W') tyreColor = const Color(0xFF00B0FF);
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        margin: const EdgeInsets.only(bottom: 3),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-        decoration: BoxDecoration(
-          color: isDnf
-              ? const Color(0xFF1E1012)
-              : isSelected
-                  ? Color.lerp(teamColor.withValues(alpha: 0.12), const Color(0xFF141419), 0.7)
-                  : const Color(0xFF141419),
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(2),
-            topRight: Radius.circular(7),
-            bottomLeft: Radius.circular(2),
-            bottomRight: Radius.circular(7),
-          ),
-          border: Border.all(
-            color: isSelected ? teamColor.withValues(alpha: 0.7) : const Color(0xFF202028),
-            width: isSelected ? 1.2 : 1.0,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 3.0,
-              height: 20,
-              margin: const EdgeInsets.only(right: 4),
-              decoration: BoxDecoration(
-                color: teamColor,
-                borderRadius: BorderRadius.circular(1.5),
-              ),
-            ),
-            // 1. Position & Delta
-            SizedBox(
-              width: 24,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      pos,
-                      style: TextStyle(
-                        fontFamily: 'Formula1Wide',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        color: isDnf ? const Color(0xFFFF5252) : Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 1),
-                  if (!isDnf)
-                    if (positionsGained > 0)
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          '▲$positionsGained',
-                          style: const TextStyle(
-                            fontFamily: 'Formula1',
-                            color: Color(0xFF00E676),
-                            fontSize: 7,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      )
-                    else if (positionsGained < 0)
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          '▼${positionsGained.abs()}',
-                          style: const TextStyle(
-                            fontFamily: 'Formula1',
-                            color: Color(0xFFFF5252),
-                            fontSize: 7,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      )
-                    else
-                      const Text(
-                        '—',
-                        style: TextStyle(color: Colors.grey, fontSize: 7),
-                      ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 3),
-
-            // 2. Driver Portrait Avatar with team ring
-            Container(
-              width: 26,
-              height: 26,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF222228),
-                border: Border.all(color: teamColor.withValues(alpha: 0.6), width: 1.0),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: portraitAsset.isNotEmpty
-                  ? Image.asset(
-                      portraitAsset,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.topCenter,
-                      errorBuilder: (context, error, stackTrace) => Center(
-                        child: Text(
-                          code,
-                          style: TextStyle(
-                            fontFamily: 'Formula1',
-                            fontSize: 8,
-                            fontWeight: FontWeight.w900,
-                            color: teamColor,
-                          ),
-                        ),
-                      ),
-                    )
-                  : Center(
-                      child: Text(
-                        code,
-                        style: TextStyle(
-                          fontFamily: 'Formula1',
-                          fontSize: 8,
-                          fontWeight: FontWeight.w900,
-                          color: teamColor,
-                        ),
-                      ),
-                    ),
-            ),
-            const SizedBox(width: 5),
-
-            // 3. Driver Code, Number, Team
-            Expanded(
-              flex: 3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        code,
-                        style: const TextStyle(
-                          fontFamily: 'Formula1',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(width: 3),
-                      Text(
-                        '#$driverNumber',
-                        style: TextStyle(
-                          fontFamily: 'Formula1Wide',
-                          fontSize: 7.5,
-                          color: teamColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    team,
-                    style: const TextStyle(
-                      fontFamily: 'Formula1',
-                      fontSize: 8,
-                      color: Color(0xFF8F909A),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 4),
-
-            // 4. Gap & Interval
-            Expanded(
-              flex: 2,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (isDnf)
-                    const FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        'OUT',
-                        style: TextStyle(
-                          fontFamily: 'Formula1Wide',
-                          fontSize: 9,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFFFF1744),
-                        ),
-                      ),
-                    )
-                  else if (isPit)
-                    const FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        'IN PIT',
-                        style: TextStyle(
-                          fontFamily: 'Formula1Wide',
-                          fontSize: 9,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFFFF9100),
-                        ),
-                      ),
-                    )
-                  else
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        gap,
-                        style: TextStyle(
-                          fontFamily: 'Formula1',
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w900,
-                          color: gap == 'LEADER' ? const Color(0xFF00E676) : Colors.white,
-                        ),
-                        maxLines: 1,
-                      ),
-                    ),
-                  const SizedBox(height: 1),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      isDnf
-                          ? (dnfReason.isNotEmpty ? dnfReason : 'CRASH')
-                          : isPit
-                              ? 'STOP $pitStops'
-                              : 'INT $interval',
-                      style: const TextStyle(
-                        fontFamily: 'Formula1',
-                        fontSize: 7.5,
-                        color: Color(0xFF8F909A),
-                      ),
-                      maxLines: 1,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 5),
-
-            // 5. DRS + Compound Badge
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (drs && !isDnf) ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 2.5, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF00E676).withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(2.5),
-                      border: Border.all(color: const Color(0xFF00E676), width: 0.8),
-                    ),
-                    child: const Text(
-                      'DRS',
-                      style: TextStyle(
-                        fontFamily: 'Formula1Wide',
-                        fontSize: 6,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF00E676),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 3),
-                ],
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 3.5, vertical: 1.5),
-                  decoration: BoxDecoration(
-                    color: tyreColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(2.5),
-                    border: Border.all(color: tyreColor, width: 0.9),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        tyre,
-                        style: TextStyle(
-                          fontFamily: 'Formula1Wide',
-                          fontSize: 8,
-                          fontWeight: FontWeight.w900,
-                          color: tyreColor,
-                        ),
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        tyreLife.replaceAll(' laps', '').replaceAll('L', ''),
-                        style: TextStyle(
-                          fontFamily: 'Formula1',
-                          fontSize: 7,
-                          fontWeight: FontWeight.bold,
-                          color: tyreColor.withValues(alpha: 0.8),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(width: 5),
-
-            // 6. Last Lap / Fastest Lap
-            SizedBox(
-              width: 48,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      lastLap,
-                      style: TextStyle(
-                        fontFamily: 'Formula1',
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                        color: isFastestLap ? const Color(0xFFB388FF) : Colors.white,
-                      ),
-                      maxLines: 1,
-                    ),
-                  ),
-                  const SizedBox(height: 1),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      isFastestLap ? 'FASTEST' : 'LAST LAP',
-                      style: TextStyle(
-                        fontFamily: 'Formula1Wide',
-                        fontSize: 6,
-                        fontWeight: FontWeight.bold,
-                        color: isFastestLap ? const Color(0xFFB388FF) : const Color(0xFF5F606B),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// -------------------------------------------------------------
-// ONBOARD TELEMETRY STRIP COMPONENT
-// -------------------------------------------------------------
-class _FigmaTelemetryStrip extends StatelessWidget {
-  final String driverName;
-  final String driverCode;
-  final String speedKph;
-  final String gear;
-  final String throttlePct;
-  final String ersPct;
-  final bool isDnf;
-
-  const _FigmaTelemetryStrip({
-    required this.driverName,
-    required this.driverCode,
-    required this.speedKph,
-    required this.gear,
-    required this.throttlePct,
-    required this.ersPct,
-    this.isDnf = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final driverMeta = getDriverData(driverCode);
-    final teamColor = getTeamColor(driverMeta?.team ?? '');
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF141419),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFF202028)),
-      ),
-      child: Row(
-        children: [
-          // Onboard Driver info
-          Container(
-            width: 26,
-            height: 26,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF222228),
-              border: Border.all(color: teamColor.withValues(alpha: 0.6), width: 1),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: driverMeta != null && driverMeta.portraitAsset.isNotEmpty
-                ? Image.asset(
-                    driverMeta.portraitAsset,
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
-                    errorBuilder: (context, error, stackTrace) => Center(
-                      child: Text(
-                        driverCode,
-                        style: TextStyle(
-                          fontFamily: 'Formula1',
-                          fontSize: 8,
-                          fontWeight: FontWeight.w900,
-                          color: teamColor,
-                        ),
-                      ),
-                    ),
-                  )
-                : Center(
-                    child: Text(
-                      driverCode,
-                      style: TextStyle(
-                        fontFamily: 'Formula1',
-                        fontSize: 8,
-                        fontWeight: FontWeight.w900,
-                        color: teamColor,
-                      ),
-                    ),
-                  ),
-          ),
-          const SizedBox(width: 6),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'ONBOARD',
-                style: TextStyle(
-                  fontFamily: 'Formula1Wide',
-                  fontSize: 7,
-                  color: Color(0xFF8F909A),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                driverCode,
-                style: const TextStyle(
-                  fontFamily: 'Formula1',
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 8),
-
-          // Distributed stat columns inside Expanded flex row
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildStatCol(
-                  isDnf ? '0' : speedKph,
-                  'KM/H',
-                  const Color(0xFF00E676),
-                ),
-                _buildStatCol(
-                  isDnf ? 'N' : gear,
-                  'GEAR',
-                  Colors.white,
-                ),
-                _buildStatCol(
-                  isDnf ? '0%' : '$throttlePct%',
-                  'THR %',
-                  const Color(0xFFFFD600),
-                ),
-                _buildStatCol(
-                  '$ersPct%',
-                  'ERS %',
-                  const Color(0xFF00E5FF),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCol(String value, String label, Color valueColor) {
-    return Flexible(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              value,
-              style: TextStyle(
-                fontFamily: 'Formula1Wide',
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                color: valueColor,
-              ),
-            ),
-          ),
-          const SizedBox(height: 1),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontFamily: 'Formula1',
-                fontSize: 7,
-                color: Color(0xFF8F909A),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// -------------------------------------------------------------
-// TEAM RADIO CARD COMPONENT
-// -------------------------------------------------------------
-class _FigmaRadioCard extends StatelessWidget {
-  final String id;
-  final String driverName;
-  final String teamName;
-  final String timestamp;
-  final String transcript;
-  final Color teamColor;
-  final String portraitAsset;
-  final bool isPlaying;
-  final double progressRatio;
-  final String elapsedStr;
-  final Animation<double> anim;
-  final VoidCallback onTogglePlay;
-
-  const _FigmaRadioCard({
-    required this.id,
-    required this.driverName,
-    required this.teamName,
-    required this.timestamp,
-    required this.transcript,
-    required this.teamColor,
-    required this.portraitAsset,
-    required this.isPlaying,
-    required this.progressRatio,
-    required this.elapsedStr,
-    required this.anim,
-    required this.onTogglePlay,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF141419),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isPlaying ? teamColor.withValues(alpha: 0.6) : const Color(0xFF202028),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header Row
-          Row(
-            children: [
-              Container(
-                width: 3.5,
-                height: 28,
-                margin: const EdgeInsets.only(right: 8),
-                decoration: BoxDecoration(
-                  color: teamColor,
-                  borderRadius: BorderRadius.circular(1.5),
-                ),
-              ),
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF222228),
-                  border: Border.all(color: teamColor.withValues(alpha: 0.6), width: 1.2),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: portraitAsset.isNotEmpty
-                    ? Image.asset(
-                        portraitAsset,
-                        fit: BoxFit.cover,
-                        alignment: Alignment.topCenter,
-                        errorBuilder: (context, error, stackTrace) => const SizedBox(),
-                      )
-                    : const SizedBox(),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      timestamp.toUpperCase(),
-                      style: const TextStyle(
-                        fontFamily: 'Formula1Wide',
-                        fontSize: 8,
-                        color: Color(0xFF8F909A),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      driverName,
-                      style: const TextStyle(
-                        fontFamily: 'Formula1',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      teamName,
-                      style: TextStyle(
-                        fontFamily: 'Formula1',
-                        fontSize: 8.5,
-                        color: teamColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              GestureDetector(
-                onTap: onTogglePlay,
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: isPlaying ? teamColor : Colors.white12,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                    color: isPlaying ? Colors.black : Colors.white,
-                    size: 20,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // Animated Waveform
-          AnimatedBuilder(
-            animation: anim,
-            builder: (context, child) {
-              return Container(
-                height: 28,
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(36, (index) {
-                    final baseHeight = 6.0 + ((index * 13) % 20);
-                    final oscillation = isPlaying ? sin(anim.value * pi + index * 0.3) * 6 : 0;
-                    final h = (baseHeight + oscillation).clamp(4.0, 26.0);
-
-                    final isPassed = isPlaying && (index / 36.0) <= progressRatio;
-
-                    return Container(
-                      width: 2.5,
-                      height: h,
-                      decoration: BoxDecoration(
-                        color: isPassed
-                            ? teamColor
-                            : (isPlaying
-                                ? teamColor.withValues(alpha: 0.4)
-                                : Colors.white24),
-                        borderRadius: BorderRadius.circular(1.5),
-                      ),
-                    );
-                  }),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 8),
-
-          // Transcript
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.35),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              '“$transcript”',
-              style: const TextStyle(
-                fontSize: 11.5,
-                color: Colors.white70,
-                fontStyle: FontStyle.italic,
-                height: 1.3,
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-
-          // Elapsed Audio Time
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                elapsedStr,
-                style: const TextStyle(
-                  fontFamily: 'Formula1Wide',
-                  fontSize: 8,
-                  color: Color(0xFF8F909A),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              if (isPlaying)
-                Text(
-                  'AUDIO PLAYING',
-                  style: TextStyle(
-                    fontFamily: 'Formula1Wide',
-                    fontSize: 7.5,
-                    fontWeight: FontWeight.w900,
-                    color: teamColor,
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// -------------------------------------------------------------
-// SESSION FLAG BANNER
-// -------------------------------------------------------------
-class _FigmaSessionFlagBanner extends StatelessWidget {
-  final RaceFlagStatus? status;
-
-  const _FigmaSessionFlagBanner({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    if (status == null) {
-      return const SizedBox.shrink();
-    }
-
-    Color bannerColor;
-    Color textColor;
-    IconData icon;
-    String title;
-    String subtitle;
-
-    if (status!.isRedFlag) {
-      bannerColor = const Color(0xFFFF1744);
-      textColor = Colors.white;
-      icon = Icons.flag_rounded;
-      title = 'RED FLAG — SESSION SUSPENDED';
-      subtitle = status!.message.isNotEmpty ? status!.message : 'Track blocked / hazardous condition. Return to pitlane.';
-    } else if (status!.isSafetyCar) {
-      bannerColor = const Color(0xFFFF9100);
-      textColor = Colors.black;
-      icon = Icons.warning_rounded;
-      title = 'SAFETY CAR DEPLOYED (FULL SC)';
-      subtitle = status!.message.isNotEmpty ? status!.message : 'Reduce speed, maintain delta, no overtaking.';
-    } else if (status!.isVsc) {
-      bannerColor = const Color(0xFFFF9100);
-      textColor = Colors.black;
-      icon = Icons.speed_rounded;
-      title = 'VIRTUAL SAFETY CAR (VSC)';
-      subtitle = status!.message.isNotEmpty ? status!.message : 'Observe positive delta. Pit lane speed limit applies.';
-    } else if (status!.isYellowFlag) {
-      bannerColor = const Color(0xFFFFD600);
-      textColor = Colors.black;
-      icon = Icons.flag_rounded;
-      title = status!.flag == 'DOUBLE_YELLOW'
-          ? 'DOUBLE YELLOW FLAG — HAZARD'
-          : 'YELLOW FLAG — CAUTION';
-      subtitle = status!.message.isNotEmpty ? status!.message : 'Caution in sector.';
-    } else {
-      // Clear
-      bannerColor = const Color(0xFF00E676);
-      textColor = Colors.black;
-      icon = Icons.check_circle_rounded;
-      title = 'TRACK CLEAR — GREEN FLAG';
-      subtitle = 'DRS Enabled • Full Racing Conditions';
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: bannerColor.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: bannerColor.withValues(alpha: 0.7), width: 1.2),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: bannerColor,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: textColor, size: 14),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontFamily: 'Formula1Wide',
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    color: bannerColor,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 10.5,
-                    color: Colors.white70,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// -------------------------------------------------------------
-// TRACK PAINTER (Official Broadcast Map Overlay)
-// -------------------------------------------------------------
-class _TrackPainter extends CustomPainter {
-  final Color accentColor;
-  final List<LiveTelemetry> drivers;
-  final String meetingName;
-  final String selectedDriverCode;
-  final bool isLive;
-
-  _TrackPainter(
-    this.accentColor,
-    this.drivers,
-    this.meetingName, {
-    required this.selectedDriverCode,
-    this.isLive = false,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Note: The authentic high-resolution circuit diagram from assets/circuits/*.png
-    // is rendered directly beneath this canvas. We render official broadcast sector
-    // checkpoints, Start/Finish badge, DRS/Speed Trap, and STRICTLY the single
-    // driver selected by the user.
-    final circuit = findCircuitByName(meetingName) ?? circuitSingapore;
-    final points = circuit.trackPoints.isNotEmpty ? circuit.trackPoints : circuitSingapore.trackPoints;
-
-    if (points.isNotEmpty) {
-      // 1. Start / Finish Line Badge
-      final sf = Offset(points.first.dx * size.width, points.first.dy * size.height);
-      _drawBadge(canvas, sf, 'S/F', Colors.white, Colors.black);
-
-      // 2. Sector 1, Sector 2, Sector 3 Badges
-      if (points.length >= 7) {
-        final s1 = Offset(points[2].dx * size.width, points[2].dy * size.height);
-        _drawBadge(canvas, s1, 'S1', const Color(0xFFFFD600), Colors.black);
-
-        final s2 = Offset(points[5].dx * size.width, points[5].dy * size.height);
-        _drawBadge(canvas, s2, 'S2', const Color(0xFF00E5FF), Colors.black);
-
-        final s3 = Offset(points[points.length - 2].dx * size.width, points[points.length - 2].dy * size.height);
-        _drawBadge(canvas, s3, 'S3', const Color(0xFFB388FF), Colors.black);
-      }
-
-      // 3. DRS Detection / Speed Trap
-      if (points.length >= 9) {
-        final drs = Offset(points[points.length - 4].dx * size.width, points[points.length - 4].dy * size.height);
-        _drawBadge(canvas, drs, 'DRS', const Color(0xFF00E676), Colors.black);
-      }
-
-      // 4. STRICTLY ONLY THE SELECTED DRIVER IS DISPLAYED
-      LiveTelemetry? targetDriver;
-      int driverIndex = 0;
-      for (int i = 0; i < drivers.length; i++) {
-        final d = drivers[i];
-        final code = (getDriverData(d.name)?.code ?? d.name.split(' ').last.substring(0, 3)).toUpperCase();
-        if (code == selectedDriverCode || d.name.toUpperCase().contains(selectedDriverCode.toUpperCase())) {
-          targetDriver = d;
-          driverIndex = i;
-          break;
-        }
-      }
-
-      final meta = getDriverData(selectedDriverCode);
-      Color teamColor = getTeamColor(meta?.team ?? '');
-      if (targetDriver != null) {
-        try {
-          final hex = targetDriver.color.replaceAll('#', '');
-          teamColor = Color(int.parse('FF$hex', radix: 16));
-        } catch (_) {}
-      }
-
-      final posStr = targetDriver?.pos.isNotEmpty == true ? targetDriver!.pos : '${driverIndex + 1}';
-      final ptIndex = ((driverIndex * 3) + 2) % points.length;
-      final carPoint = Offset(points[ptIndex].dx * size.width, points[ptIndex].dy * size.height);
-
-      _drawSingleFocusedDriver(canvas, carPoint, 'P$posStr $selectedDriverCode', teamColor);
-    }
-  }
-
-  void _drawBadge(Canvas canvas, Offset pos, String text, Color bg, Color fg) {
-    final tp = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: TextStyle(fontFamily: 'Formula1', fontSize: 7, fontWeight: FontWeight.w900, color: fg),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-
-    final rrect = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: pos, width: tp.width + 8, height: tp.height + 4),
-      const Radius.circular(3),
-    );
-    canvas.drawRRect(rrect, Paint()..color = bg);
-    tp.paint(canvas, pos - Offset(tp.width / 2, tp.height / 2));
-  }
-
-  void _drawSingleFocusedDriver(Canvas canvas, Offset pos, String text, Color color) {
-    // 1. Radar Pulse / Halo Beacon Rings around car position
-    final pulsePaint1 = Paint()
-      ..color = color.withValues(alpha: 0.22)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(pos, 16, pulsePaint1);
-
-    final pulsePaint2 = Paint()
-      ..color = color.withValues(alpha: 0.6)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.6;
-    canvas.drawCircle(pos, 9, pulsePaint2);
-
-    // 2. Glowing Core Beacon Dot
-    final corePaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(pos, 4.5, corePaint);
-
-    final coreBorder = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-    canvas.drawCircle(pos, 4.5, coreBorder);
-
-    // 3. Floating Callout Pill
-    final isNearTop = pos.dy < 45;
-    final pillOffset = Offset(0, isNearTop ? 22 : -22);
-    final badgeCenter = pos + pillOffset;
-
-    // Leader indicator line from car to pill
-    final leaderPaint = Paint()
-      ..color = color.withValues(alpha: 0.8)
-      ..strokeWidth = 1.2;
-    canvas.drawLine(pos + Offset(0, isNearTop ? 6 : -6), badgeCenter + Offset(0, isNearTop ? -10 : 10), leaderPaint);
-
-    final tp = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: const TextStyle(
-          fontFamily: 'Formula1Wide',
-          fontSize: 7.5,
-          fontWeight: FontWeight.w900,
-          color: Colors.white,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-
-    final rrect = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: badgeCenter, width: tp.width + 16, height: tp.height + 7),
-      const Radius.circular(5),
-    );
-
-    // Pill background
-    canvas.drawRRect(rrect, Paint()..color = const Color(0xFF141419));
-    // Pill accent border
-    canvas.drawRRect(
-      rrect,
-      Paint()
-        ..color = color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.4,
-    );
-    // Pill team indicator bar on left
-    final leftBar = RRect.fromRectAndRadius(
-      Rect.fromLTWH(badgeCenter.dx - (tp.width + 16) / 2, badgeCenter.dy - (tp.height + 7) / 2, 3.5, tp.height + 7),
-      const Radius.circular(1.5),
-    );
-    canvas.drawRRect(leftBar, Paint()..color = color);
-
-    tp.paint(canvas, badgeCenter - Offset(tp.width / 2 - 2, tp.height / 2));
-  }
-
-  @override
-  bool shouldRepaint(covariant _TrackPainter oldDelegate) =>
-      oldDelegate.selectedDriverCode != selectedDriverCode ||
-      oldDelegate.drivers != drivers;
-}
+// Widget classes extracted to ../widgets/ — see imports above.

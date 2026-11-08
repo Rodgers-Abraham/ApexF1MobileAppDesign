@@ -275,18 +275,6 @@ class HomeScreen extends ConsumerWidget {
                         letterSpacing: 1,
                       ),
                     ),
-                    if (!authState.isPro)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.amber.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Text(
-                          'PRO',
-                          style: TextStyle(color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold),
-                        ),
-                      ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -326,51 +314,6 @@ class HomeScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    
-                    if (!authState.isPro)
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.black.withOpacity(0.0),
-                                Colors.black.withOpacity(0.6),
-                                const Color(0xFF0F0F0F).withOpacity(0.95),
-                              ],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                            ),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: accentColor,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: const Text(
-                                  'UPGRADE TO PRO TO UNLOCK',
-                                  style: TextStyle(
-                                    fontFamily: 'Outfit',
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              const Text(
-                                'Access full telemetry summaries, heatmaps, and AI race summaries.',
-                                style: TextStyle(color: Colors.grey, fontSize: 11),
-                              ),
-                              const SizedBox(height: 16),
-                            ],
-                          ),
-                        ),
-                      ),
                   ],
                 ),
                 const SizedBox(height: 28),

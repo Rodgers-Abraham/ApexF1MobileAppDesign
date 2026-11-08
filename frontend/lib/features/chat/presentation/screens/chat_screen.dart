@@ -5,7 +5,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../core/utils/api_config.dart';
-import '../../../../shared/widgets/pro_gate.dart';
 
 class ChatMessage {
   final String text;
@@ -22,26 +21,22 @@ class ChatMessage {
 class ChatState {
   final List<ChatMessage> messages;
   final bool isLoading;
-  final int freeMessagesUsed;
   final String? error;
 
   ChatState({
     this.messages = const [],
     this.isLoading = false,
-    this.freeMessagesUsed = 0,
     this.error,
   });
 
   ChatState copyWith({
     List<ChatMessage>? messages,
     bool? isLoading,
-    int? freeMessagesUsed,
     String? error,
   }) {
     return ChatState(
       messages: messages ?? this.messages,
       isLoading: isLoading ?? this.isLoading,
-      freeMessagesUsed: freeMessagesUsed ?? this.freeMessagesUsed,
       error: error,
     );
   }
@@ -66,12 +61,6 @@ class ChatNotifier extends StateNotifier<ChatState> {
   Future<void> sendMessage(String text) async {
     final auth = _ref.read(authProvider);
     
-    // Check free message limits
-    if (!auth.isPro && state.freeMessagesUsed >= 7) {
-      state = state.copyWith(error: "Daily free message limit reached. Upgrade to Pro for unlimited access!");
-      return;
-    }
-
     final userMsg = ChatMessage(text: text, isUser: true);
     state = state.copyWith(
       messages: [...state.messages, userMsg],
@@ -114,7 +103,6 @@ class ChatNotifier extends StateNotifier<ChatState> {
       state = state.copyWith(
         messages: [...state.messages, assistantMsg],
         isLoading: false,
-        freeMessagesUsed: auth.isPro ? 0 : state.freeMessagesUsed + 1,
       );
     } catch (e) {
       state = state.copyWith(
@@ -124,8 +112,8 @@ class ChatNotifier extends StateNotifier<ChatState> {
     }
   }
 
-  void resetLimit() {
-    state = state.copyWith(freeMessagesUsed: 0, error: null);
+  void clearError() {
+    state = state.copyWith(error: null);
   }
 }
 
@@ -174,8 +162,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final chatState = ref.watch(chatNotifierProvider);
     final accentColor = themeState.selectedTeam.primaryColor;
 
-    final isLimitReached = !authState.isPro && chatState.freeMessagesUsed >= 7;
-
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -198,69 +184,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ],
         ),
-        actions: [
-          if (!authState.isPro)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.amber.withOpacity(0.3)),
-                  ),
-                  child: Text(
-                    '${7 - chatState.freeMessagesUsed} FREE LEFT',
-                    style: const TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ),
-        ],
+        actions: const [],
       ),
       body: Column(
         children: [
-          // If limit reached, show ProGate style paywall prompt banner
-          if (isLimitReached)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              color: Colors.amber.withOpacity(0.08),
-              child: Column(
-                children: [
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.lock_clock, color: Colors.amber),
-                      SizedBox(width: 8),
-                      Text(
-                        'Daily Free Limits Reached',
-                        style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Unlock unlimited chatbot access and interactive ML predictions with Apex Pro.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, color: Colors.white70),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: () {
-                      ref.read(authProvider.notifier).upgradeToPro();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: accentColor,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    ),
-                    child: const Text('Upgrade for \$3.99/mo', style: TextStyle(fontSize: 12)),
-                  ),
-                ],
-              ),
-            ),
-          
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
@@ -380,10 +307,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 Expanded(
                   child: TextField(
                     controller: _controller,
-                    enabled: !isLimitReached,
+                    enabled: true,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: isLimitReached ? 'Daily limit reached. Upgrade to ask more.' : 'Ask about driver history, rules, schedules...',
+                      hintText: 'Ask about driver history, rules, schedules...',
                       hintStyle: TextStyle(color: Colors.grey[600], fontSize: 13),
                       filled: true,
                       fillColor: const Color(0xFF161616),
@@ -399,8 +326,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  onPressed: isLimitReached ? null : _send,
-                  icon: Icon(Icons.send_rounded, color: isLimitReached ? Colors.grey : accentColor),
+                  onPressed: _send,
+                  icon: Icon(Icons.send_rounded, color: accentColor),
                 ),
               ],
             ),

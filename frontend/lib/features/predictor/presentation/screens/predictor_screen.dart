@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/theme/theme_provider.dart';
-import '../../../../shared/widgets/pro_gate.dart';
 import '../../../../shared/constants/f1_data.dart';
 
 class PredictorScreen extends ConsumerStatefulWidget {
@@ -236,9 +235,7 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
           ],
         ),
       ),
-      body: ProGateWidget(
-        featureName: 'ML Winner Predictions & Race Cards',
-        child: SingleChildScrollView(
+      body: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 28),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -713,7 +710,6 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
             ],
           ),
         ),
-      ),
     );
   }
 

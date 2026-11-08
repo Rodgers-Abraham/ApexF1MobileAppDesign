@@ -559,69 +559,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const SizedBox(height: 24),
 
             // ---------------------------------------------------
-            // SECTION 5: APEX PRO MEMBERSHIP
-            // ---------------------------------------------------
-            _buildSectionHeader('Membership', authState.isPro ? 'PRO ACTIVE' : 'FREE TIER', const Color(0xFFFFD700)),
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFF141419),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: authState.isPro ? const Color(0xFFFFD700).withValues(alpha: 0.5) : const Color(0xFF202028),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: (authState.isPro ? const Color(0xFFFFD700) : Colors.grey).withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.star_rounded, color: authState.isPro ? const Color(0xFFFFD700) : Colors.grey, size: 22),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          authState.isPro ? 'Apex Pro Member' : 'Apex Pro Access',
-                          style: const TextStyle(
-                            fontFamily: 'Formula1',
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          authState.isPro ? 'Unlimited live telemetry & radio feeds unlocked' : 'Subscribe for \$3.99/mo to unlock full telemetry',
-                          style: const TextStyle(color: Color(0xFF8F909A), fontSize: 11),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Switch(
-                    value: authState.isPro,
-                    activeColor: const Color(0xFFFFD700),
-                    onChanged: (val) async {
-                      if (val) {
-                        await ref.read(authProvider.notifier).upgradeToPro();
-                      } else {
-                        await ref.read(authProvider.notifier).logout();
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // ---------------------------------------------------
-            // SECTION 6: USER PROFILE & ACCOUNT
+            // SECTION 5: USER PROFILE & ACCOUNT
             // ---------------------------------------------------
             _buildSectionHeader('User Account', 'PROFILE', Colors.white70),
             const SizedBox(height: 10),
