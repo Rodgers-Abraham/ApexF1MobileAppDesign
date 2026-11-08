@@ -81,13 +81,6 @@ async def get_latest_session_endpoint():
 
 @router.get("/predictions", response_model=SessionPredictionsResponse)
 async def get_session_predictions_endpoint(session_key: Optional[int] = None, current_user: dict = Depends(get_current_user)):
-    # Verify Pro tier
-    if not current_user.get("is_pro", False):
-        raise HTTPException(
-            status_code=403,
-            detail={"error": "F1 predictions are only available for Apex Pro subscribers.", "code": "PRO_SUBSCRIPTION_REQUIRED"}
-        )
-
     latest = f1_poller.get_latest_session()
     if not latest:
         latest = f1_poller.advance_simulation()

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/session_provider.dart';
-import '../../../../core/providers/telemetry_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../data/calendar_provider.dart';
 

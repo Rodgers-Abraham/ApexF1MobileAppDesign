@@ -65,7 +65,7 @@ def get_current_user(authorization: str = Header(None)):
 
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT id, email, name, favourite_team, favourite_driver, is_pro FROM users WHERE email = ?", (email,))
+        cursor.execute("SELECT id, email, name, favourite_team, favourite_driver FROM users WHERE email = ?", (email,))
         user = cursor.fetchone()
 
     if not user:

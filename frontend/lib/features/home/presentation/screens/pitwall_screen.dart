@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/providers/telemetry_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../data/calendar_provider.dart';
@@ -9,7 +8,6 @@ import '../widgets/race_control_widget.dart';
 import '../widgets/race_pulse_widget.dart';
 import '../widgets/news_rail_widget.dart';
 import '../widgets/season_calendar_widget.dart';
-import '../widgets/intel_widgets.dart';
 
 export '../../data/calendar_provider.dart' show RaceEvent, getCircuitAssetPath, getCountryFlag, monthAbbrev, calendarProvider, nextRaceProvider, circuitHistoryProvider;
 
@@ -31,7 +29,6 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
   @override
   Widget build(BuildContext context) {
     final themeState = ref.watch(themeProvider);
-    final authState = ref.watch(authProvider);
     final accentColor = themeState.selectedTeam.primaryColor;
     final sessionStatusAsync = ref.watch(sessionLiveStatusProvider);
     final isLive = sessionStatusAsync.value?.isLive ?? false;

@@ -42,8 +42,6 @@ def test_auth_flow():
   assert "token" in reg_data
   assert reg_data["email"] == email
   assert reg_data["favourite_team"] == "Aston Martin"
-  assert reg_data["is_pro"] is False
-  
   # 2. Login User (Success)
   login_payload = {
     "email": email,
@@ -68,19 +66,13 @@ def test_auth_flow():
   me_data = me_res.json()
   assert me_data["email"] == email
   assert me_data["favourite_team"] == "Aston Martin"
-  assert me_data["is_pro"] is False
 
   # 5. Update Theme Preference
   theme_res = client.put("/api/auth/theme", json={"favourite_team": "McLaren"}, headers=headers)
   assert theme_res.status_code == 200
   assert theme_res.json()["favourite_team"] == "McLaren"
 
-  # 6. Update Pro Status
-  pro_res = client.put("/api/auth/pro", json={"is_pro": True}, headers=headers)
-  assert pro_res.status_code == 200
-  assert pro_res.json()["is_pro"] is True
-
-  # 7. Update Profile (Name & Driver & Password Reset)
+  # 6. Update Profile (Name & Driver & Password Reset)
   profile_payload = {
     "name": "John Doe",
     "favourite_driver": "Kimi Antonelli",
@@ -154,14 +146,7 @@ def test_predictor_endpoint(monkeypatch):
   res_no_auth = client.post("/api/predictor/predict", json={"race_name": "Monaco GP", "condition": "Dry"})
   assert res_no_auth.status_code == 401
 
-  # 2. Test predictor with Free tier -> 403
-  res_free = client.post("/api/predictor/predict", json={"race_name": "Monaco GP", "condition": "Dry"}, headers=headers)
-  assert res_free.status_code == 403
-
-  # 3. Upgrade user to Pro
-  client.put("/api/auth/pro", json={"is_pro": True}, headers=headers)
-
-  # 4. Test predictor with Pro tier -> 200
+  # 2. Test predictor -> 200
   res_pro = client.post("/api/predictor/predict", json={"race_name": "Monaco GP", "condition": "Dry"}, headers=headers)
   assert res_pro.status_code == 200
   data = res_pro.json()

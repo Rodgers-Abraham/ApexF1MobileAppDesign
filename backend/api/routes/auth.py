@@ -23,9 +23,6 @@ class UserLogin(BaseModel):
 class ThemeUpdate(BaseModel):
     favourite_team: str
 
-class ProUpdate(BaseModel):
-    is_pro: bool
-
 class ProfileUpdate(BaseModel):
     name: Optional[str] = None
     favourite_driver: Optional[str] = None
@@ -37,7 +34,6 @@ class AuthResponse(BaseModel):
     name: Optional[str] = None
     favourite_team: str
     favourite_driver: Optional[str] = None
-    is_pro: bool
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -49,13 +45,12 @@ def _build_user_dict(row: sqlite3.Row) -> dict:
         "name": row["name"],
         "favourite_team": row["favourite_team"],
         "favourite_driver": row["favourite_driver"],
-        "is_pro": bool(row["is_pro"]),
     }
 
 
 def _get_user_by_email(cursor, email: str):
     cursor.execute(
-        "SELECT id, email, name, favourite_team, favourite_driver, is_pro FROM users WHERE email = ?",
+        "SELECT id, email, name, favourite_team, favourite_driver FROM users WHERE email = ?",
         (email.lower(),),
     )
     return cursor.fetchone()
@@ -73,7 +68,7 @@ async def register(user_in: UserRegister):
 
         try:
             cursor.execute(
-                "INSERT INTO users (email, password_hash, name, favourite_team, favourite_driver, is_pro) VALUES (?, ?, ?, ?, ?, 0)",
+                "INSERT INTO users (email, password_hash, name, favourite_team, favourite_driver) VALUES (?, ?, ?, ?, ?)",
                 (user_in.email.lower(), pwd_hash, user_in.name, user_in.favourite_team, user_in.favourite_driver),
             )
             conn.commit()
@@ -85,7 +80,7 @@ async def register(user_in: UserRegister):
 
         # Fetch the newly created user
         cursor.execute(
-            "SELECT id, email, name, favourite_team, favourite_driver, is_pro FROM users WHERE email = ?",
+            "SELECT id, email, name, favourite_team, favourite_driver FROM users WHERE email = ?",
             (user_in.email.lower(),),
         )
         user = cursor.fetchone()
@@ -98,7 +93,6 @@ async def register(user_in: UserRegister):
         name=user["name"],
         favourite_team=user["favourite_team"],
         favourite_driver=user["favourite_driver"],
-        is_pro=bool(user["is_pro"]),
     )
 
 
@@ -107,7 +101,7 @@ async def login(user_in: UserLogin):
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT id, email, password_hash, name, favourite_team, favourite_driver, is_pro FROM users WHERE email = ?",
+            "SELECT id, email, password_hash, name, favourite_team, favourite_driver FROM users WHERE email = ?",
             (user_in.email.lower(),),
         )
         user = cursor.fetchone()
@@ -132,7 +126,6 @@ async def login(user_in: UserLogin):
         name=user["name"],
         favourite_team=user["favourite_team"],
         favourite_driver=user["favourite_driver"],
-        is_pro=bool(user["is_pro"]),
     )
 
 
@@ -143,7 +136,6 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         "name": current_user.get("name"),
         "favourite_team": current_user["favourite_team"],
         "favourite_driver": current_user.get("favourite_driver"),
-        "is_pro": bool(current_user["is_pro"]),
     }
 
 
@@ -179,7 +171,7 @@ async def update_profile(profile_in: ProfileUpdate, current_user: dict = Depends
 
         # Fetch updated user
         cursor.execute(
-            "SELECT id, email, name, favourite_team, favourite_driver, is_pro FROM users WHERE id = ?",
+            "SELECT id, email, name, favourite_team, favourite_driver FROM users WHERE id = ?",
             (current_user["id"],),
         )
         user = cursor.fetchone()
@@ -199,30 +191,12 @@ async def update_theme(theme_in: ThemeUpdate, current_user: dict = Depends(get_c
     return {"status": "success", "favourite_team": theme_in.favourite_team}
 
 
-@router.put("/pro")
-async def update_pro(pro_in: ProUpdate, current_user: dict = Depends(get_current_user)):
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE users SET is_pro = ? WHERE id = ?",
-            (1 if pro_in.is_pro else 0, current_user["id"]),
-        )
-        conn.commit()
-        cursor.execute(
-            "SELECT id, email, name, favourite_team, favourite_driver, is_pro FROM users WHERE id = ?",
-            (current_user["id"],),
-        )
-        user = cursor.fetchone()
-    return _build_user_dict(user)
-
-
 @router.delete("/delete")
 async def delete_account(current_user: dict = Depends(get_current_user)):
     with get_db_connection() as conn:
         cursor = conn.cursor()
         try:
             cursor.execute("DELETE FROM predictions WHERE user_id = ?", (current_user["id"],))
-            cursor.execute("DELETE FROM pro_subscriptions WHERE user_id = ?", (current_user["id"],))
             cursor.execute("DELETE FROM users WHERE id = ?", (current_user["id"],))
             conn.commit()
         except Exception as e:

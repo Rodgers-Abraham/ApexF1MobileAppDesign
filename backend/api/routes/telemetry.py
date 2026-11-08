@@ -96,6 +96,21 @@ class SessionStatusResponse(BaseModel):
     next_session_circuit: str
     seconds_until_next: int
 
+class CalendarRaceEntry(BaseModel):
+    name: str
+    circuit: str
+    country_code: str
+    date: str
+    round: str
+    length_km: float
+    turns: int
+    drs_zones: int
+
+@router.get("/calendar", response_model=List[CalendarRaceEntry])
+async def get_calendar_endpoint():
+    races = f1_api_client.get_calendar()
+    return [CalendarRaceEntry(**r) for r in races]
+
 @router.get("/session-status", response_model=SessionStatusResponse)
 async def get_session_status_endpoint():
     status = f1_api_client.get_session_status()

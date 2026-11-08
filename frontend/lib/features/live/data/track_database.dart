@@ -36,8 +36,6 @@ class F1Circuit {
   });
 }
 
-Offset _p(double x, double y) => Offset(x, y);
-
 const _green = Color(0xFF4CAF50);
 const _blue = Color(0xFF2196F3);
 const _amber = Color(0xFFFFB300);

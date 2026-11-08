@@ -33,13 +33,6 @@ ACTIVE_DRIVERS = [
 
 @router.post("/predict", response_model=PredictionResponse)
 async def predict_endpoint(request: PredictionRequest, current_user: dict = Depends(get_current_user)):
-  # Check if user is Pro
-  if not current_user.get("is_pro", False):
-    raise HTTPException(
-      status_code=403, 
-      detail={"error": "F1 predictions are only available for Apex Pro subscribers.", "code": "PRO_SUBSCRIPTION_REQUIRED"}
-    )
-
   features = []
   for idx, driver in enumerate(ACTIVE_DRIVERS):
     # Determine grid starting position simulation:

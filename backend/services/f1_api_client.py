@@ -2284,6 +2284,127 @@ class F1ApiClient:
         }
         return fallback
 
+    def get_calendar(self, year: int = 2026):
+        cache_key = f"calendar_{year}"
+        cached = self._get_cached(cache_key)
+        if cached:
+            return cached
+
+        # Try Jolpica API first
+        try:
+            resp = requests.get(f"{JOLPICA_BASE}/{year}.json", timeout=5)
+            if resp.status_code == 200:
+                races = resp.json().get("MRData", {}).get("RaceTable", {}).get("Races", [])
+                if races:
+                    result = []
+                    for race in races:
+                        circuit = race.get("Circuit", {})
+                        loc = circuit.get("Location", {})
+                        result.append({
+                            "name": race.get("raceName", ""),
+                            "circuit": circuit.get("circuitName", ""),
+                            "country_code": self._country_to_code(loc.get("country", "")),
+                            "date": race.get("date", ""),
+                            "round": f"R{race.get('round', '')}",
+                            "length_km": self._circuit_length(race.get("raceName", "")),
+                            "turns": self._circuit_turns(race.get("raceName", "")),
+                            "drs_zones": self._circuit_drs(race.get("raceName", "")),
+                        })
+                    self._set_cache(cache_key, result, 86400)
+                    return result
+        except Exception as e:
+            print(f"Jolpica calendar fetch notice: {e}")
+
+        # Fallback: complete 2026 calendar
+        fallback = [
+            {"name": "Australian Grand Prix", "circuit": "Albert Park Circuit", "country_code": "AUS", "date": "2026-03-15", "round": "R1", "length_km": 5.278, "turns": 14, "drs_zones": 4},
+            {"name": "Chinese Grand Prix", "circuit": "Shanghai International Circuit", "country_code": "CHN", "date": "2026-03-29", "round": "R2", "length_km": 5.451, "turns": 16, "drs_zones": 2},
+            {"name": "Japanese Grand Prix", "circuit": "Suzuka International Racing Course", "country_code": "JPN", "date": "2026-04-12", "round": "R3", "length_km": 5.807, "turns": 18, "drs_zones": 1},
+            {"name": "Bahrain Grand Prix", "circuit": "Bahrain International Circuit", "country_code": "BHR", "date": "2026-04-19", "round": "R4", "length_km": 5.412, "turns": 15, "drs_zones": 3},
+            {"name": "Saudi Arabian Grand Prix", "circuit": "Jeddah Corniche Circuit", "country_code": "SAU", "date": "2026-04-26", "round": "R5", "length_km": 6.174, "turns": 27, "drs_zones": 3},
+            {"name": "Miami Grand Prix", "circuit": "Miami International Autodrome", "country_code": "USA", "date": "2026-05-10", "round": "R6", "length_km": 5.412, "turns": 19, "drs_zones": 3},
+            {"name": "Emilia Romagna Grand Prix", "circuit": "Autodromo Enzo e Dino Ferrari", "country_code": "ITA", "date": "2026-05-24", "round": "R7", "length_km": 4.909, "turns": 19, "drs_zones": 1},
+            {"name": "Monaco Grand Prix", "circuit": "Circuit de Monaco", "country_code": "MCO", "date": "2026-05-31", "round": "R8", "length_km": 3.337, "turns": 19, "drs_zones": 1},
+            {"name": "Spanish Grand Prix", "circuit": "Circuit de Barcelona-Catalunya", "country_code": "ESP", "date": "2026-06-14", "round": "R9", "length_km": 4.657, "turns": 14, "drs_zones": 2},
+            {"name": "Canadian Grand Prix", "circuit": "Circuit Gilles Villeneuve", "country_code": "CAN", "date": "2026-06-28", "round": "R10", "length_km": 4.361, "turns": 14, "drs_zones": 2},
+            {"name": "Austrian Grand Prix", "circuit": "Red Bull Ring", "country_code": "AUT", "date": "2026-07-12", "round": "R11", "length_km": 4.318, "turns": 10, "drs_zones": 3},
+            {"name": "British Grand Prix", "circuit": "Silverstone Circuit", "country_code": "GBR", "date": "2026-07-19", "round": "R12", "length_km": 5.891, "turns": 18, "drs_zones": 2},
+            {"name": "Belgian Grand Prix", "circuit": "Circuit de Spa-Francorchamps", "country_code": "BEL", "date": "2026-08-02", "round": "R13", "length_km": 7.004, "turns": 19, "drs_zones": 2},
+            {"name": "Hungarian Grand Prix", "circuit": "Hungaroring", "country_code": "HUN", "date": "2026-08-16", "round": "R14", "length_km": 4.381, "turns": 14, "drs_zones": 2},
+            {"name": "Dutch Grand Prix", "circuit": "Circuit Zandvoort", "country_code": "NLD", "date": "2026-08-30", "round": "R15", "length_km": 4.259, "turns": 14, "drs_zones": 2},
+            {"name": "Italian Grand Prix", "circuit": "Autodromo Nazionale Monza", "country_code": "ITA", "date": "2026-09-06", "round": "R16", "length_km": 5.793, "turns": 11, "drs_zones": 2},
+            {"name": "Azerbaijan Grand Prix", "circuit": "Baku City Circuit", "country_code": "AZE", "date": "2026-09-20", "round": "R17", "length_km": 6.003, "turns": 20, "drs_zones": 2},
+            {"name": "Singapore Grand Prix", "circuit": "Marina Bay Street Circuit", "country_code": "SGP", "date": "2026-10-04", "round": "R18", "length_km": 4.940, "turns": 19, "drs_zones": 3},
+            {"name": "United States Grand Prix", "circuit": "Circuit of the Americas", "country_code": "USA", "date": "2026-10-25", "round": "R19", "length_km": 5.513, "turns": 20, "drs_zones": 2},
+            {"name": "Mexico City Grand Prix", "circuit": "Autódromo Hermanos Rodríguez", "country_code": "MEX", "date": "2026-11-01", "round": "R20", "length_km": 4.304, "turns": 17, "drs_zones": 3},
+            {"name": "São Paulo Grand Prix", "circuit": "Autódromo José Carlos Pace", "country_code": "BRA", "date": "2026-11-08", "round": "R21", "length_km": 4.309, "turns": 15, "drs_zones": 2},
+            {"name": "Las Vegas Grand Prix", "circuit": "Las Vegas Strip Circuit", "country_code": "USA", "date": "2026-11-22", "round": "R22", "length_km": 6.201, "turns": 17, "drs_zones": 2},
+            {"name": "Qatar Grand Prix", "circuit": "Lusail International Circuit", "country_code": "QAT", "date": "2026-11-29", "round": "R23", "length_km": 5.419, "turns": 16, "drs_zones": 1},
+            {"name": "Abu Dhabi Grand Prix", "circuit": "Yas Marina Circuit", "country_code": "UAE", "date": "2026-12-06", "round": "R24", "length_km": 5.281, "turns": 16, "drs_zones": 2},
+        ]
+        self._set_cache(cache_key, fallback, 86400)
+        return fallback
+
+    def _country_to_code(self, country: str) -> str:
+        mapping = {
+            "Australia": "AUS", "China": "CHN", "Japan": "JPN", "Bahrain": "BHR",
+            "Saudi Arabia": "SAU", "USA": "USA", "Italy": "ITA", "Monaco": "MCO",
+            "Spain": "ESP", "Canada": "CAN", "Austria": "AUT", "UK": "GBR",
+            "Belgium": "BEL", "Hungary": "HUN", "Netherlands": "NLD",
+            "Azerbaijan": "AZE", "Singapore": "SGP", "Mexico": "MEX",
+            "Brazil": "BRA", "Qatar": "QAT", "UAE": "UAE",
+            "United States": "USA", "United Kingdom": "GBR",
+        }
+        return mapping.get(country, country[:3].upper() if country else "")
+
+    def _circuit_length(self, race_name: str) -> float:
+        lengths = {
+            "australian": 5.278, "chinese": 5.451, "japanese": 5.807, "bahrain": 5.412,
+            "saudi": 6.174, "miami": 5.412, "emilia": 4.909, "monaco": 3.337,
+            "spanish": 4.657, "canadian": 4.361, "austrian": 4.318, "british": 5.891,
+            "belgian": 7.004, "hungarian": 4.381, "dutch": 4.259, "italian": 5.793,
+            "azerbaijan": 6.003, "singapore": 4.940, "united states": 5.513,
+            "mexico": 4.304, "são paulo": 4.309, "las vegas": 6.201,
+            "qatar": 5.419, "abu dhabi": 5.281,
+        }
+        nl = race_name.lower()
+        for k, v in lengths.items():
+            if k in nl:
+                return v
+        return 5.3
+
+    def _circuit_turns(self, race_name: str) -> int:
+        turns = {
+            "australian": 14, "chinese": 16, "japanese": 18, "bahrain": 15,
+            "saudi": 27, "miami": 19, "emilia": 19, "monaco": 19,
+            "spanish": 14, "canadian": 14, "austrian": 10, "british": 18,
+            "belgian": 19, "hungarian": 14, "dutch": 14, "italian": 11,
+            "azerbaijan": 20, "singapore": 19, "united states": 20,
+            "mexico": 17, "são paulo": 15, "las vegas": 17,
+            "qatar": 16, "abu dhabi": 16,
+        }
+        nl = race_name.lower()
+        for k, v in turns.items():
+            if k in nl:
+                return v
+        return 16
+
+    def _circuit_drs(self, race_name: str) -> int:
+        drs = {
+            "australian": 4, "chinese": 2, "japanese": 1, "bahrain": 3,
+            "saudi": 3, "miami": 3, "emilia": 1, "monaco": 1,
+            "spanish": 2, "canadian": 2, "austrian": 3, "british": 2,
+            "belgian": 2, "hungarian": 2, "dutch": 2, "italian": 2,
+            "azerbaijan": 2, "singapore": 3, "united states": 2,
+            "mexico": 3, "são paulo": 2, "las vegas": 2,
+            "qatar": 1, "abu dhabi": 2,
+        }
+        nl = race_name.lower()
+        for k, v in drs.items():
+            if k in nl:
+                return v
+        return 2
+
 f1_api_client = F1ApiClient()
 
 

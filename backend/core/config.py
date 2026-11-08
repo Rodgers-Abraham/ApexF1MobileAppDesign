@@ -34,9 +34,6 @@ class Settings(BaseSettings):
     rate_limit_auth: str = "10/minute"
     rate_limit_chat: str = "20/minute"
 
-    # RevenueCat (for webhook verification)
-    revenuecat_webhook_secret: str | None = None
-
     # Neon Services
     neon_auth_base_url: str | None = None
     neon_function_hello_base_url: str | None = None

@@ -12,9 +12,9 @@ class ApiConfig {
     }
 
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return 'https://f1-backend-41t9.onrender.com';
+      return 'http://10.0.2.2:8000';
     }
-    return 'https://f1-backend-41t9.onrender.com';
+    return 'http://localhost:8000';
   }
 
   Future<void> initialize() async {

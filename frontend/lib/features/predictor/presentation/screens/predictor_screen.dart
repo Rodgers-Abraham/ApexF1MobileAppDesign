@@ -13,7 +13,6 @@ class PredictorScreen extends ConsumerStatefulWidget {
 class _PredictorScreenState extends ConsumerState<PredictorScreen> {
   // Podium picks: [P1, P2, P3] (codes)
   final List<String?> _podiumPicks = ['NOR', 'LEC', null];
-  int? _activeSlotIndex;
 
   String _poleSitter = 'LEC';
   String _fastestLap = 'PIA';

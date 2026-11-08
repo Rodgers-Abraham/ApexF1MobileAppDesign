@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../../../../core/providers/auth_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../core/utils/api_config.dart';
 
@@ -43,10 +41,9 @@ class ChatState {
 }
 
 class ChatNotifier extends StateNotifier<ChatState> {
-  final Ref _ref;
   final Dio _dio = Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
 
-  ChatNotifier(this._ref) : super(ChatState()) {
+  ChatNotifier(Ref ref) : super(ChatState()) {
     // Initial welcome message from the assistant
     state = ChatState(
       messages: [
@@ -59,8 +56,6 @@ class ChatNotifier extends StateNotifier<ChatState> {
   }
 
   Future<void> sendMessage(String text) async {
-    final auth = _ref.read(authProvider);
-    
     final userMsg = ChatMessage(text: text, isUser: true);
     state = state.copyWith(
       messages: [...state.messages, userMsg],
@@ -158,7 +153,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final themeState = ref.watch(themeProvider);
-    final authState = ref.watch(authProvider);
     final chatState = ref.watch(chatNotifierProvider);
     final accentColor = themeState.selectedTeam.primaryColor;
 

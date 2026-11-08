@@ -158,8 +158,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT NOT NULL,
     name TEXT,
     favourite_team TEXT DEFAULT 'Ferrari',
-    favourite_driver TEXT,
-    is_pro INTEGER DEFAULT 0
+    favourite_driver TEXT
 );
 
 CREATE TABLE IF NOT EXISTS predictions (
@@ -206,8 +205,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT NOT NULL,
     name TEXT,
     favourite_team TEXT DEFAULT 'Ferrari',
-    favourite_driver TEXT,
-    is_pro INTEGER DEFAULT 0
+    favourite_driver TEXT
 );
 
 CREATE TABLE IF NOT EXISTS predictions (

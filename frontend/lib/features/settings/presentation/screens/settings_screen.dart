@@ -140,7 +140,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final themeState = ref.watch(themeProvider);
     final accentColor = themeState.selectedTeam.primaryColor;
     final currentTeam = themeState.selectedTeam;
-    final authState = ref.watch(authProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B0B0E),

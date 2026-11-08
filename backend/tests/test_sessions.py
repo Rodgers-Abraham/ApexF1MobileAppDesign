@@ -74,14 +74,7 @@ def test_predictions_endpoint():
     # 1. Fetch latest session to ensure DB is populated
     client.get("/api/sessions/latest")
     
-    # 2. Query /predictions without Pro tier -> 403
-    res_free = client.get("/api/sessions/predictions", headers=headers)
-    assert res_free.status_code == 403
-    
-    # 3. Upgrade user to Pro
-    client.put("/api/auth/pro", json={"is_pro": True}, headers=headers)
-    
-    # 4. Query /predictions with Pro tier -> 200
+    # 2. Query /predictions -> 200
     res_pro = client.get("/api/sessions/predictions", headers=headers)
     assert res_pro.status_code == 200
     pred_data = res_pro.json()

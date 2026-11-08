@@ -338,7 +338,6 @@ class _SmartSearchCard extends ConsumerWidget {
 
         if (type == 'driver') {
           final name = data['name']?.toString() ?? query;
-          final nationality = data['nationality']?.toString() ?? 'F1 Driver';
           final titles = data['titles']?.toString() ?? '0';
           final wins = data['wins']?.toString() ?? '0';
           final poles = data['poles']?.toString() ?? '0';
@@ -421,7 +420,6 @@ class _SmartSearchCard extends ConsumerWidget {
           final name = data['name']?.toString() ?? query;
           final titles = data['titles']?.toString() ?? '0';
           final wins = data['wins']?.toString() ?? '0';
-          final hq = data['headquarters']?.toString() ?? '';
           final drivers = data['legendary_drivers']?.toString() ?? '';
 
           return Container(

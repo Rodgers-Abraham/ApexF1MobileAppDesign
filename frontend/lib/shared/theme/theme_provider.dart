@@ -161,7 +161,7 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
       primaryColor: accentColor,
       colorScheme: ColorScheme.dark(
         primary: accentColor,
-        secondary: accentColor.withOpacity(0.8),
+        secondary: accentColor.withValues(alpha: 0.8),
         tertiary: const Color(0xFF1E1E1E),
         surface: const Color(0xFF121215),
         error: const Color(0xFFCF6679),
@@ -176,7 +176,7 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withValues(alpha: 0.08),
             width: 1,
           ),
         ),
