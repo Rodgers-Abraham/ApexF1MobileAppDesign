@@ -219,3 +219,115 @@ async def delete_account(current_user: dict = Depends(get_current_user)):
                 detail={"error": f"Failed to delete account: {e}", "code": "DELETE_FAILED"},
             )
     return {"status": "success", "message": "Account successfully deleted"}
+
+
+# ─── Firebase Auth ─────────────────────────────────────────────────────────────
+
+class FirebaseAuthRequest(BaseModel):
+    firebase_token: str
+    name: Optional[str] = None
+    favourite_team: Optional[str] = "Ferrari"
+    favourite_driver: Optional[str] = None
+    country: Optional[str] = None
+
+
+@router.post("/firebase")
+async def firebase_auth(req: FirebaseAuthRequest):
+    from core.auth import verify_firebase_token
+
+    try:
+        decoded = verify_firebase_token(req.firebase_token)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"error": str(e), "code": "INVALID_FIREBASE_TOKEN"},
+        )
+
+    uid = decoded.get("uid") or decoded.get("sub")
+    email = decoded.get("email", "")
+
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+
+        # Check for existing profile by firebase_uid
+        cursor.execute(
+            "SELECT id, email, name, favourite_team, favourite_driver, country "
+            "FROM users WHERE firebase_uid = ?",
+            (uid,),
+        )
+        user = cursor.fetchone()
+
+        if not user:
+            # Try to find by email (linking old account)
+            cursor.execute(
+                "SELECT id, email, name, favourite_team, favourite_driver, country "
+                "FROM users WHERE email = ?",
+                (email.lower(),),
+            )
+            existing_by_email = cursor.fetchone()
+
+            if existing_by_email:
+                # Link firebase_uid to existing account
+                cursor.execute(
+                    "UPDATE users SET firebase_uid = ? WHERE email = ?",
+                    (uid, email.lower()),
+                )
+                conn.commit()
+                user = existing_by_email
+            else:
+                # Create new profile
+                try:
+                    cursor.execute(
+                        "INSERT INTO users "
+                        "(firebase_uid, email, name, favourite_team, favourite_driver, country) "
+                        "VALUES (?, ?, ?, ?, ?, ?)",
+                        (uid, email.lower(), req.name,
+                         req.favourite_team or "Ferrari",
+                         req.favourite_driver, req.country),
+                    )
+                    conn.commit()
+                    cursor.execute(
+                        "SELECT id, email, name, favourite_team, favourite_driver, country "
+                        "FROM users WHERE firebase_uid = ?",
+                        (uid,),
+                    )
+                    user = cursor.fetchone()
+                except DBIntegrityError:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail={"error": "Account creation failed.", "code": "CREATE_FAILED"},
+                    )
+        else:
+            # Update profile if new data provided
+            updates, params = [], []
+            if req.name:
+                updates.append("name = ?")
+                params.append(req.name)
+            if req.favourite_team and req.favourite_team != "Ferrari":
+                updates.append("favourite_team = ?")
+                params.append(req.favourite_team)
+            if req.country:
+                updates.append("country = ?")
+                params.append(req.country)
+            if updates:
+                params.append(uid)
+                cursor.execute(
+                    f"UPDATE users SET {', '.join(updates)} WHERE firebase_uid = ?",
+                    tuple(params),
+                )
+                conn.commit()
+                cursor.execute(
+                    "SELECT id, email, name, favourite_team, favourite_driver, country "
+                    "FROM users WHERE firebase_uid = ?",
+                    (uid,),
+                )
+                user = cursor.fetchone()
+
+    country_val = user["country"] if "country" in user.keys() else None
+    return {
+        "email": user["email"] or email,
+        "name": user["name"],
+        "favourite_team": user["favourite_team"] or "Ferrari",
+        "favourite_driver": user["favourite_driver"],
+        "country": country_val,
+    }

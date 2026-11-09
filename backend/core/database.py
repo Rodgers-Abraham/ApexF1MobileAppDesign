@@ -154,12 +154,13 @@ class PostgresConnectionWrapper:
 POSTGRES_SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    password_hash TEXT,
     name TEXT,
     favourite_team TEXT DEFAULT 'Ferrari',
     favourite_driver TEXT,
-    country TEXT
+    country TEXT,
+    firebase_uid TEXT
 );
 
 CREATE TABLE IF NOT EXISTS predictions (
@@ -220,12 +221,13 @@ CREATE TABLE IF NOT EXISTS user_race_picks (
 SQLITE_SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
+    email TEXT NOT NULL,
+    password_hash TEXT,
     name TEXT,
     favourite_team TEXT DEFAULT 'Ferrari',
     favourite_driver TEXT,
-    country TEXT
+    country TEXT,
+    firebase_uid TEXT
 );
 
 CREATE TABLE IF NOT EXISTS predictions (
@@ -295,6 +297,18 @@ def init_db():
         try:
             with raw_conn.cursor() as cur:
                 cur.execute(POSTGRES_SCHEMA_SQL)
+                # Column migrations for existing tables
+                for col_sql in [
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS country TEXT;",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS firebase_uid TEXT;",
+                    # Make email and password_hash nullable for Firebase-only accounts
+                    "ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;",
+                    "ALTER TABLE users ALTER COLUMN email DROP NOT NULL;",
+                ]:
+                    try:
+                        cur.execute(col_sql)
+                    except Exception:
+                        pass
                 # Purge simulated session rows (keys 1000-1100)
                 try:
                     cur.execute("DELETE FROM session_states WHERE session_key >= 1000 AND session_key <= 1100;")
@@ -314,6 +328,7 @@ def init_db():
             "ALTER TABLE users ADD COLUMN name TEXT;",
             "ALTER TABLE users ADD COLUMN favourite_driver TEXT;",
             "ALTER TABLE users ADD COLUMN country TEXT;",
+            "ALTER TABLE users ADD COLUMN firebase_uid TEXT;",
         ]:
             try:
                 cursor.execute(migration)

@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/api_config.dart';
 
 class ApiClient {
@@ -17,10 +17,14 @@ class ApiClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final prefs = await SharedPreferences.getInstance();
-          final token = prefs.getString('auth_token');
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
+          try {
+            final user = FirebaseAuth.instance.currentUser;
+            if (user != null) {
+              final token = await user.getIdToken();
+              options.headers['Authorization'] = 'Bearer $token';
+            }
+          } catch (e) {
+            debugPrint('Firebase token fetch error: $e');
           }
           return handler.next(options);
         },
@@ -51,6 +55,14 @@ class ApiClient {
   Future<Response> put(String path, {dynamic data}) async {
     try {
       return await _dio.put(path, data: data);
+    } on DioException catch (e) {
+      throw _parseError(e);
+    }
+  }
+
+  Future<Response> delete(String path) async {
+    try {
+      return await _dio.delete(path);
     } on DioException catch (e) {
       throw _parseError(e);
     }

@@ -6,7 +6,7 @@ class ApiConfig {
     if (dotenv.isInitialized && dotenv.env['API_URL'] != null && dotenv.env['API_URL']!.isNotEmpty) {
       final url = dotenv.env['API_URL']!;
       if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android && (url.contains('localhost') || url.contains('127.0.0.1'))) {
-        return 'http://192.168.100.86:8000';
+        return 'http://192.168.100.78:8000';
       }
       return url;
     }
