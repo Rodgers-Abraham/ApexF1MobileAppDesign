@@ -197,13 +197,23 @@ class F1ApiClient:
         if cached:
             return cached
 
+        def _fallback():
+            if year == 2026:
+                fb = [
+                    {**r, "sessions": self._approx_sessions(r["date"])}
+                    for r in FALLBACK_2026_CALENDAR
+                ]
+                self._set_cache(cache_key, fb, 21600)
+                return fb
+            return []
+
         season_id = self._resolve_season_id(year)
         if not season_id:
-            return []
+            return _fallback()
 
         summary = self._get_season_summary(season_id)
         if not summary or "stages" not in summary:
-            return []
+            return _fallback()
 
         races = []
         for idx, stage in enumerate(summary["stages"]):
