@@ -196,6 +196,24 @@ CREATE TABLE IF NOT EXISTS pro_subscriptions (
     expires_at TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS user_race_picks (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    race_name TEXT NOT NULL,
+    race_date TEXT,
+    podium_p1 TEXT,
+    podium_p2 TEXT,
+    podium_p3 TEXT,
+    pole_sitter TEXT,
+    fastest_lap TEXT,
+    safety_cars INTEGER DEFAULT 0,
+    first_team_to_pit TEXT,
+    confidence INTEGER DEFAULT 50,
+    is_locked INTEGER DEFAULT 0,
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, race_name)
+);
 """
 
 SQLITE_SCHEMA_SQL = """
@@ -244,6 +262,25 @@ CREATE TABLE IF NOT EXISTS pro_subscriptions (
     expires_at TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(user_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS user_race_picks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    race_name TEXT NOT NULL,
+    race_date TEXT,
+    podium_p1 TEXT,
+    podium_p2 TEXT,
+    podium_p3 TEXT,
+    pole_sitter TEXT,
+    fastest_lap TEXT,
+    safety_cars INTEGER DEFAULT 0,
+    first_team_to_pit TEXT,
+    confidence INTEGER DEFAULT 50,
+    is_locked INTEGER DEFAULT 0,
+    submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id),
+    UNIQUE(user_id, race_name)
 );
 """
 

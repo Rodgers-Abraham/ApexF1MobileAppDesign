@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../shared/constants/f1_data.dart';
+import '../../../../core/providers/session_provider.dart';
+import '../../../../features/home/data/calendar_provider.dart';
 
 class PredictorScreen extends ConsumerStatefulWidget {
   const PredictorScreen({super.key});
@@ -11,26 +13,112 @@ class PredictorScreen extends ConsumerStatefulWidget {
 }
 
 class _PredictorScreenState extends ConsumerState<PredictorScreen> {
-  // Podium picks: [P1, P2, P3] (codes)
-  final List<String?> _podiumPicks = ['NOR', 'LEC', null];
+  final List<String?> _podiumPicks = [null, null, null];
 
-  String _poleSitter = 'LEC';
-  String _fastestLap = 'PIA';
-  int _safetyCars = 1;
-  String _firstTeamToPit = 'Williams';
-  double _confidence = 72;
+  String _poleSitter = '';
+  String _fastestLap = '';
+  int _safetyCars = 0;
+  String _firstTeamToPit = '';
+  double _confidence = 50;
   bool _isLocked = false;
+  bool _isPermanentlyLocked = false;
   bool _showError = false;
+  bool _isSaving = false;
 
-  void _submitPicks() {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadSavedPicks());
+  }
+
+  Future<void> _loadSavedPicks() async {
+    final nextRace = ref.read(nextRaceProvider);
+    if (nextRace == null) return;
+
+    // Check if race has already started (permanent lock)
+    if (DateTime.now().isAfter(nextRace.date)) {
+      setState(() {
+        _isLocked = true;
+        _isPermanentlyLocked = true;
+      });
+      return;
+    }
+
+    try {
+      final client = ref.read(apiClientProvider);
+      final resp = await client.get('/api/user/picks/${Uri.encodeComponent(nextRace.name)}');
+      if (resp.statusCode == 200) {
+        final data = resp.data as Map<String, dynamic>;
+        setState(() {
+          _podiumPicks[0] = _nameToCode(data['podium_p1']?.toString() ?? '');
+          _podiumPicks[1] = _nameToCode(data['podium_p2']?.toString() ?? '');
+          _podiumPicks[2] = _nameToCode(data['podium_p3']?.toString() ?? '');
+          _poleSitter = _nameToCode(data['pole_sitter']?.toString() ?? '') ?? '';
+          _fastestLap = _nameToCode(data['fastest_lap']?.toString() ?? '') ?? '';
+          _safetyCars = (data['safety_cars'] as num?)?.toInt() ?? 0;
+          _firstTeamToPit = data['first_team_to_pit']?.toString() ?? '';
+          _confidence = ((data['confidence'] as num?)?.toDouble() ?? 50).clamp(25, 100);
+          _isLocked = data['is_locked'] == true;
+        });
+      }
+    } catch (_) {
+      // No saved picks yet — start fresh
+    }
+  }
+
+  String? _nameToCode(String name) {
+    if (name.isEmpty) return null;
+    final d = getDriverData(name);
+    return d?.code ?? (name.length == 3 ? name : null);
+  }
+
+  String _codeToName(String code) {
+    final d = getDriverData(code);
+    return d?.name ?? code;
+  }
+
+  Future<void> _submitPicks() async {
     if (_podiumPicks.any((pick) => pick == null)) {
       setState(() => _showError = true);
       return;
     }
-    setState(() {
-      _showError = false;
-      _isLocked = true;
-    });
+    setState(() { _showError = false; _isSaving = true; });
+
+    final nextRace = ref.read(nextRaceProvider);
+    if (nextRace == null) {
+      setState(() => _isSaving = false);
+      return;
+    }
+
+    try {
+      final client = ref.read(apiClientProvider);
+      await client.post('/api/user/picks', data: {
+        'race_name': nextRace.name,
+        'race_date': nextRace.date.toIso8601String(),
+        'podium_p1': _codeToName(_podiumPicks[0]!),
+        'podium_p2': _codeToName(_podiumPicks[1]!),
+        'podium_p3': _codeToName(_podiumPicks[2]!),
+        'pole_sitter': _codeToName(_poleSitter),
+        'fastest_lap': _codeToName(_fastestLap),
+        'safety_cars': _safetyCars,
+        'first_team_to_pit': _firstTeamToPit,
+        'confidence': _confidence.toInt(),
+      });
+      setState(() => _isLocked = true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not save picks: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  void _editPicks() {
+    if (_isPermanentlyLocked) return;
+    setState(() => _isLocked = false);
   }
 
   void _openDriverPicker(int slotIndex) {
@@ -662,48 +750,65 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
               SizedBox(
                 width: double.infinity,
                 height: 50,
-                child: _isLocked
+                child: _isPermanentlyLocked
+                    ? Container(
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF141419),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.white12),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.lock_rounded, size: 16, color: Colors.grey),
+                            SizedBox(width: 8),
+                            Text(
+                              'PREDICTIONS CLOSED',
+                              style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 11, fontWeight: FontWeight.w900, color: Colors.grey, letterSpacing: 1),
+                            ),
+                          ],
+                        ),
+                      )
+                    : _isLocked
                     ? OutlinedButton(
-                        onPressed: () => setState(() => _isLocked = false),
+                        onPressed: _editPicks,
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: Colors.white24, width: 1.5),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
-                        child: const Text(
-                          'EDIT PICKS',
-                          style: TextStyle(
-                            fontFamily: 'Formula1Wide',
-                            fontSize: 11,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: 1,
-                          ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.lock_rounded, size: 16, color: Colors.white),
+                            SizedBox(width: 8),
+                            Text(
+                              'PICKS LOCKED · TAP TO EDIT',
+                              style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1),
+                            ),
+                          ],
                         ),
                       )
                     : ElevatedButton(
-                        onPressed: _submitPicks,
+                        onPressed: _isSaving ? null : _submitPicks,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: accentColor,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           elevation: 0,
                         ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'LOCK MY PICKS',
-                              style: TextStyle(
-                                fontFamily: 'Formula1Wide',
-                                fontSize: 11,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.black,
-                                letterSpacing: 1,
+                        child: _isSaving
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                            : const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'LOCK MY PICKS',
+                                    style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 11, fontWeight: FontWeight.w900, color: Colors.black, letterSpacing: 1),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Icon(Icons.lock_rounded, color: Colors.black, size: 18),
+                                ],
                               ),
-                            ),
-                            SizedBox(width: 8),
-                            Icon(Icons.arrow_forward_rounded, color: Colors.black, size: 18),
-                          ],
-                        ),
                       ),
               ),
             ],

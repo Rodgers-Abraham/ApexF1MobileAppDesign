@@ -78,7 +78,9 @@ class LiveNewsItem(BaseModel):
     url: str
     source: str
     published_at: str
-    image_url: str
+    image_url: str = ""
+    time_ago: str = ""
+    category: str = "F1"
 
 class SessionStatusResponse(BaseModel):
     is_live: bool
@@ -151,6 +153,58 @@ async def get_race_events_endpoint():
 async def get_live_news_endpoint():
     news = f1_api_client.get_live_news()
     return [LiveNewsItem(**n) for n in news]
+
+
+class RaceRecapEntry(BaseModel):
+    round: str
+    race_name: str
+    circuit_name: str = ""
+    country: str = ""
+    date: str
+    winner_driver: str = ""
+    winner_team: str = ""
+    is_completed: bool
+
+@router.get("/recaps", response_model=List[RaceRecapEntry])
+async def get_race_recaps():
+    from datetime import datetime, timezone
+    results = f1_api_client.get_season_results(2026)
+    calendar = f1_api_client.get_calendar(2026)
+    now = datetime.now(timezone.utc).date().isoformat()
+
+    # Index calendar by race name for date lookup
+    cal_by_name = {r["name"]: r for r in calendar}
+
+    if results:
+        recaps = []
+        for r in results:
+            recaps.append(RaceRecapEntry(
+                round=r.get("round", ""),
+                race_name=r.get("race_name", ""),
+                circuit_name=r.get("circuit_name") or "",
+                country=r.get("country") or "",
+                date=r.get("date", ""),
+                winner_driver=r.get("winner", {}).get("driver", "") if r.get("winner") else "",
+                winner_team=r.get("winner", {}).get("constructor", "") if r.get("winner") else "",
+                is_completed=True,
+            ))
+        return recaps
+
+    # Fallback: completed races from calendar (date in past)
+    recaps = []
+    for idx, r in enumerate(calendar):
+        if r["date"] <= now:
+            recaps.append(RaceRecapEntry(
+                round=r["round"],
+                race_name=r["name"],
+                circuit_name=r["circuit"],
+                country=r.get("country_code", ""),
+                date=r["date"],
+                winner_driver="",
+                winner_team="",
+                is_completed=True,
+            ))
+    return recaps
 
 class TrackConditionsResponse(BaseModel):
     track_temperature: str

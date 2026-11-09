@@ -563,9 +563,11 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                           overlayColor: Colors.cyanAccent.withValues(alpha: 0.2),
                         ),
                         child: Slider(
-                          value: replayState.currentLap.toDouble().clamp(1.0, replayState.totalLaps.toDouble()),
+                          value: replayState.totalLaps > 0
+                              ? replayState.currentLap.toDouble().clamp(1.0, replayState.totalLaps.toDouble())
+                              : 1.0,
                           min: 1.0,
-                          max: replayState.totalLaps.toDouble(),
+                          max: replayState.totalLaps > 1 ? replayState.totalLaps.toDouble() : 2.0,
                           divisions: replayState.totalLaps > 1 ? replayState.totalLaps - 1 : 1,
                           label: 'Lap ${replayState.currentLap}',
                           onChanged: (val) {

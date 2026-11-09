@@ -244,6 +244,8 @@ class LiveNewsArticle {
   final String source;
   final String publishedAt;
   final String imageUrl;
+  final String timeAgo;
+  final String category;
 
   LiveNewsArticle({
     required this.title,
@@ -252,10 +254,9 @@ class LiveNewsArticle {
     required this.source,
     required this.publishedAt,
     required this.imageUrl,
+    this.timeAgo = '',
+    this.category = 'F1',
   });
-
-  String get category => 'OFFICIAL';
-  String get timeAgo => publishedAt;
 
   factory LiveNewsArticle.fromJson(Map<String, dynamic> json) {
     return LiveNewsArticle(
@@ -265,6 +266,8 @@ class LiveNewsArticle {
       source: json['source']?.toString() ?? 'F1 News',
       publishedAt: json['published_at']?.toString() ?? 'Just now',
       imageUrl: json['image_url']?.toString() ?? '',
+      timeAgo: json['time_ago']?.toString() ?? '',
+      category: json['category']?.toString() ?? 'F1',
     );
   }
 }

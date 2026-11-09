@@ -49,7 +49,7 @@ backend/                FastAPI Python server
 | Database | Neon Postgres |
 | Auth | JWT (HS256) |
 | AI | Google Gemini via backend proxy |
-| Data | Jolpica (Ergast) F1 API + OpenF1 telemetry |
+| Data | Sportradar F1 API (trial v2) |
 | Hosting | Render (free tier) |
 
 ## Getting Started
@@ -97,7 +97,7 @@ For Android emulator connecting to local backend, the app auto-maps `localhost` 
 
 ### Deployment
 
-The backend deploys to Render via `render.yaml`. Set `DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`, and `ALLOWED_ORIGINS` in Render environment variables.
+The backend deploys to Render via `render.yaml`. Set `DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`, `SPORTRADAR_API_KEY`, and `ALLOWED_ORIGINS` in Render environment variables.
 
 For mobile releases, build with:
 

@@ -8,6 +8,7 @@ import '../widgets/race_control_widget.dart';
 import '../widgets/race_pulse_widget.dart';
 import '../widgets/news_rail_widget.dart';
 import '../widgets/season_calendar_widget.dart';
+import '../widgets/race_recaps_widget.dart';
 
 export '../../data/calendar_provider.dart' show RaceEvent, getCircuitAssetPath, getCountryFlag, monthAbbrev, calendarProvider, nextRaceProvider, circuitHistoryProvider;
 
@@ -139,6 +140,8 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
             const SizedBox(height: 22),
             NewsRailWidget(accent: accentColor),
             const SizedBox(height: 22),
+            RaceRecapsWidget(accent: accentColor),
+            const SizedBox(height: 22),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -159,7 +162,7 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
             const SizedBox(height: 30),
             const Center(
               child: Text(
-                'Built with official 2026 FIA data & OpenF1 telemetry',
+                'Powered by Sportradar F1 API · 2026 Season',
                 style: TextStyle(fontFamily: 'Formula1', fontSize: 9.5, color: Colors.grey),
               ),
             ),

@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Import routes
-from api.routes import auth, chatbot, predictor, sessions, telemetry, history
+from api.routes import auth, chatbot, predictor, sessions, telemetry, history, picks
 
 # Import config & database
 from core.config import get_settings
@@ -68,6 +68,7 @@ app.include_router(predictor.router, prefix="/api/predictor", tags=["ML Predicto
 app.include_router(sessions.router, prefix="/api/sessions", tags=["Race Sessions"])
 app.include_router(telemetry.router, prefix="/api/f1", tags=["F1 Dynamic Data"])
 app.include_router(history.router, prefix="/api/f1/history", tags=["F1 Historical Archive"])
+app.include_router(picks.router, prefix="/api/user", tags=["User Predictions"])
 
 @app.get("/")
 @app.get("/health")

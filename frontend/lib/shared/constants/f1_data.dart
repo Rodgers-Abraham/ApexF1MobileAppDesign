@@ -454,7 +454,17 @@ DriverData2026? getDriverData(String query) {
   for (var driver in kDrivers2026List) {
     if (driver.code.toLowerCase() == clean ||
         driver.name.toLowerCase() == clean ||
-        driver.name.toLowerCase().contains(clean)) {
+        driver.name.toLowerCase().contains(clean) ||
+        clean.contains(driver.name.toLowerCase())) {
+      return driver;
+    }
+  }
+  // Fallback: match by last name only
+  final queryParts = clean.split(' ');
+  final lastName = queryParts.isNotEmpty ? queryParts.last : clean;
+  for (var driver in kDrivers2026List) {
+    final driverParts = driver.name.toLowerCase().split(' ');
+    if (driverParts.isNotEmpty && driverParts.last == lastName) {
       return driver;
     }
   }
