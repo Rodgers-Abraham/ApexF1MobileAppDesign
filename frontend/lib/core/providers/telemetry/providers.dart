@@ -116,47 +116,73 @@ final raceFlagStatusProvider = StateNotifierProvider.autoDispose<RaceFlagStatusN
   return RaceFlagStatusNotifier(ref);
 });
 
+class ReplayLapEntry {
+  final int lap;
+  final String phase; // e.g. "Q1", "Q2", "Q3", or "" for race laps
+  final List<LiveTelemetry> positions;
+
+  const ReplayLapEntry({required this.lap, required this.phase, required this.positions});
+}
+
 class RaceReplayState {
   final String meetingName;
   final String circuitName;
+  final String sessionType; // 'race' | 'qualifying' | 'sprint'
   final int currentLap;
   final int totalLaps;
   final bool isPlaying;
   final bool isLoading;
+  final String? loadError;
   final List<LiveTelemetry> telemetry;
   final RaceFlagStatus flagStatus;
+  final List<ReplayLapEntry> allLaps; // full session loaded at once
 
   const RaceReplayState({
-    required this.meetingName,
-    required this.circuitName,
-    required this.currentLap,
-    required this.totalLaps,
+    this.meetingName = '',
+    this.circuitName = '',
+    this.sessionType = 'race',
+    this.currentLap = 1,
+    this.totalLaps = 0,
     this.isPlaying = false,
     this.isLoading = false,
-    required this.telemetry,
+    this.loadError,
+    this.telemetry = const [],
     this.flagStatus = RaceFlagStatus.defaultStatus,
+    this.allLaps = const [],
   });
 
   RaceReplayState copyWith({
     String? meetingName,
     String? circuitName,
+    String? sessionType,
     int? currentLap,
     int? totalLaps,
     bool? isPlaying,
     bool? isLoading,
+    String? loadError,
     List<LiveTelemetry>? telemetry,
     RaceFlagStatus? flagStatus,
+    List<ReplayLapEntry>? allLaps,
   }) {
     return RaceReplayState(
       meetingName: meetingName ?? this.meetingName,
       circuitName: circuitName ?? this.circuitName,
+      sessionType: sessionType ?? this.sessionType,
       currentLap: currentLap ?? this.currentLap,
       totalLaps: totalLaps ?? this.totalLaps,
       isPlaying: isPlaying ?? this.isPlaying,
       isLoading: isLoading ?? this.isLoading,
+      loadError: loadError,
       telemetry: telemetry ?? this.telemetry,
       flagStatus: flagStatus ?? this.flagStatus,
+      allLaps: allLaps ?? this.allLaps,
     );
+  }
+
+  String get lapLabel {
+    if (allLaps.isEmpty) return 'LAP $currentLap';
+    final entry = allLaps.firstWhere((l) => l.lap == currentLap, orElse: () => allLaps.first);
+    return entry.phase.isNotEmpty ? entry.phase : 'LAP $currentLap';
   }
 }
 
@@ -164,60 +190,140 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
   final Ref _ref;
   Timer? _playTimer;
 
-  RaceReplayNotifier(this._ref)
-      : super(const RaceReplayState(
-          meetingName: 'Singapore Grand Prix',
-          circuitName: 'Marina Bay Street Circuit',
-          currentLap: 1,
-          totalLaps: 62,
-          telemetry: [],
-        )) {
-    loadLap('Singapore Grand Prix', 1);
-  }
+  RaceReplayNotifier(this._ref) : super(const RaceReplayState());
 
-  Future<void> selectMeeting(String meetingName) async {
+  Future<void> selectSession({
+    required int year,
+    required int round,
+    required String meetingName,
+    required String sessionType,
+  }) async {
     _playTimer?.cancel();
     state = state.copyWith(
       meetingName: meetingName,
+      sessionType: sessionType,
       currentLap: 1,
       isPlaying: false,
       isLoading: true,
+      loadError: null,
+      allLaps: [],
+      telemetry: [],
     );
-    await loadLap(meetingName, 1);
+
+    try {
+      final client = _ref.read(apiClientProvider);
+      final resp = await client.get('/api/f1/replay/$year/$round/$sessionType');
+      final data = resp.data as Map<String, dynamic>;
+      final rawLaps = (data['laps'] as List?) ?? [];
+      final totalLaps = (data['total_laps'] as num?)?.toInt() ?? rawLaps.length;
+
+      final entries = rawLaps.map((lapRaw) {
+        final lap = lapRaw as Map<String, dynamic>;
+        final lapNum = (lap['lap'] as num?)?.toInt() ?? 0;
+        final phase = lap['phase']?.toString() ?? '';
+        final rawPositions = (lap['positions'] as List?) ?? [];
+        final positions = rawPositions.map((p) {
+          final pos = p as Map<String, dynamic>;
+          return _posToTelemetry(pos);
+        }).toList();
+        return ReplayLapEntry(lap: lapNum, phase: phase, positions: positions);
+      }).toList();
+
+      if (mounted) {
+        state = state.copyWith(
+          meetingName: data['race_name']?.toString() ?? meetingName,
+          circuitName: data['circuit']?.toString() ?? '',
+          sessionType: data['session_type']?.toString() ?? sessionType,
+          totalLaps: totalLaps,
+          currentLap: 1,
+          allLaps: entries,
+          isLoading: false,
+          telemetry: entries.isNotEmpty ? entries.first.positions : [],
+        );
+      }
+    } catch (e) {
+      debugPrint('Session replay error: $e');
+      if (mounted) {
+        state = state.copyWith(
+          isLoading: false,
+          loadError: 'Timing data not yet available for this session. Try again later.',
+        );
+      }
+    }
   }
 
-  Future<void> setLap(int lap) async {
-    final clamped = lap.clamp(1, state.totalLaps);
-    if (clamped == state.currentLap && state.telemetry.isNotEmpty && !state.isLoading) return;
-    await loadLap(state.meetingName, clamped);
+  LiveTelemetry _posToTelemetry(Map<String, dynamic> p) {
+    final teamName = p['team']?.toString() ?? '';
+    final driverData = _colorForTeam(teamName);
+    return LiveTelemetry(
+      pos: p['pos']?.toString() ?? '',
+      name: p['name']?.toString() ?? '',
+      driverNumber: 0,
+      team: teamName,
+      gap: p['gap']?.toString() ?? '',
+      interval: p['interval']?.toString() ?? '',
+      positionsGained: 0,
+      status: 'ON TRACK',
+      dnfReason: '',
+      tyre: '',
+      tyreLife: '',
+      lastLap: p['lap_time']?.toString() ?? '',
+      bestLap: '',
+      isFastestLap: false,
+      pitStops: 0,
+      drs: false,
+      speed: '',
+      gear: '',
+      color: driverData,
+      x: 0.0,
+      y: 0.0,
+    );
   }
 
-  Future<void> nextLap() async {
+  String _colorForTeam(String team) {
+    const colors = {
+      'Red Bull Racing': '#3671C6',
+      'Ferrari': '#E8002D',
+      'McLaren': '#FF8000',
+      'Mercedes': '#27F4D2',
+      'Aston Martin': '#229971',
+      'Alpine': '#00A1E8',
+      'Williams': '#64C4FF',
+      'Racing Bulls': '#6692FF',
+      'Haas': '#B6BABD',
+      'Audi': '#2B4562',
+      'Cadillac': '#FFFFFF',
+    };
+    return colors[team] ?? '#FFFFFF';
+  }
+
+  void setLap(int lap) {
+    final clamped = lap.clamp(1, state.totalLaps > 0 ? state.totalLaps : 1);
+    final entry = state.allLaps.firstWhere(
+      (l) => l.lap == clamped,
+      orElse: () => state.allLaps.isNotEmpty ? state.allLaps.first : ReplayLapEntry(lap: 1, phase: '', positions: []),
+    );
+    state = state.copyWith(currentLap: clamped, telemetry: entry.positions);
+  }
+
+  void nextLap() {
     if (state.currentLap < state.totalLaps) {
-      await loadLap(state.meetingName, state.currentLap + 1);
+      setLap(state.currentLap + 1);
     } else {
       pause();
     }
   }
 
-  Future<void> prevLap() async {
-    if (state.currentLap > 1) {
-      await loadLap(state.meetingName, state.currentLap - 1);
-    }
+  void prevLap() {
+    if (state.currentLap > 1) setLap(state.currentLap - 1);
   }
 
-  void togglePlay() {
-    if (state.isPlaying) {
-      pause();
-    } else {
-      play();
-    }
-  }
+  void togglePlay() => state.isPlaying ? pause() : play();
 
   void play() {
     _playTimer?.cancel();
     state = state.copyWith(isPlaying: true);
-    _playTimer = Timer.periodic(const Duration(milliseconds: 1500), (timer) {
+    _playTimer = Timer.periodic(const Duration(milliseconds: 800), (_) {
       if (state.currentLap < state.totalLaps) {
         nextLap();
       } else {
@@ -231,40 +337,9 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
     state = state.copyWith(isPlaying: false);
   }
 
-  Future<void> loadLap(String meetingName, int lap) async {
-    try {
-      final client = _ref.read(apiClientProvider);
-      final response = await client.get(
-        '/api/f1/telemetry/replay',
-        queryParameters: {'meeting': meetingName, 'lap': lap},
-      );
-      final data = response.data as Map<String, dynamic>;
-      final list = (data['telemetry'] as List?) ?? [];
-      final telemetryItems = list
-          .map((i) => LiveTelemetry.fromJson(i as Map<String, dynamic>))
-          .toList();
-      final total = (data['total_laps'] as num?)?.toInt() ?? 60;
-      final circuit = data['circuit_name']?.toString() ?? '';
-      final flagData = data['flag_status'] as Map<String, dynamic>?;
-
-      if (mounted) {
-        state = state.copyWith(
-          meetingName: data['meeting_name']?.toString() ?? meetingName,
-          circuitName: circuit,
-          currentLap: lap,
-          totalLaps: total,
-          isLoading: false,
-          telemetry: telemetryItems.isNotEmpty ? telemetryItems : state.telemetry,
-          flagStatus: flagData != null ? RaceFlagStatus.fromJson(flagData) : state.flagStatus,
-        );
-      }
-    } catch (e) {
-      debugPrint('Replay load lap notice: $e');
-      if (mounted) {
-        state = state.copyWith(isLoading: false);
-      }
-    }
-  }
+  // Legacy — kept so old code compiles, redirects are ignored
+  Future<void> loadLap(String meetingName, int lap) async {}
+  Future<void> selectMeeting(String meetingName) async {}
 
   @override
   void dispose() {

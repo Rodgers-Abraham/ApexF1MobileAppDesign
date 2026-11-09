@@ -761,6 +761,254 @@ class F1ApiClient:
             "strategies": [],
         }
 
+    # ------------------------------------------------------------------
+    # SESSION REPLAY — historical data via Jolpica/Ergast
+    # ------------------------------------------------------------------
+
+    JOLPICA_BASE = "https://api.jolpi.ca/ergast/f1"
+
+    def _jolpica_get(self, path: str):
+        url = f"{self.JOLPICA_BASE}/{path}"
+        try:
+            resp = requests.get(url, timeout=15, headers={"Accept": "application/json"})
+            if resp.status_code == 200:
+                return resp.json()
+            print(f"Jolpica {path}: HTTP {resp.status_code}")
+        except Exception as e:
+            print(f"Jolpica {path} error: {e}")
+        return None
+
+    @staticmethod
+    def _lap_ms(t: str) -> int:
+        try:
+            if ":" in t:
+                m, s = t.split(":", 1)
+                return int(int(m) * 60_000 + float(s) * 1000)
+            return int(float(t) * 1000)
+        except Exception:
+            return 0
+
+    @staticmethod
+    def _q_secs(t: str) -> float:
+        try:
+            if ":" in t:
+                m, s = t.split(":", 1)
+                return int(m) * 60 + float(s)
+            return float(t)
+        except Exception:
+            return float("inf")
+
+    def get_session_replay(self, year: int, round_num: int, session_type: str = "race"):
+        cache_key = f"session_replay_{year}_{round_num}_{session_type}"
+        cached = self._get_cached(cache_key)
+        if cached is not None:
+            return cached
+
+        if session_type == "qualifying":
+            result = self._qualifying_replay(year, round_num)
+        elif session_type == "sprint":
+            result = self._sprint_replay(year, round_num)
+        else:
+            result = self._race_replay(year, round_num)
+
+        if result:
+            self._set_cache(cache_key, result, 86400 * 7)
+        return result
+
+    def _race_replay(self, year: int, round_num: int):
+        laps_raw = self._jolpica_get(f"{year}/{round_num}/laps.json?limit=2000")
+        results_raw = self._jolpica_get(f"{year}/{round_num}/results.json")
+        if not laps_raw or not results_raw:
+            return None
+
+        try:
+            race = laps_raw["MRData"]["RaceTable"]["Races"][0]
+            laps_data = race.get("Laps", [])
+            if not laps_data:
+                return None
+
+            # Build driver map from results
+            driver_info = {}
+            for r in results_raw["MRData"]["RaceTable"]["Races"][0].get("Results", []):
+                d, c = r.get("Driver", {}), r.get("Constructor", {})
+                did = d.get("driverId", "")
+                driver_info[did] = {
+                    "name": f"{d.get('givenName','')} {d.get('familyName','')}".strip(),
+                    "code": d.get("code", did[:3].upper()),
+                    "team": _normalize_team(c.get("name", "")),
+                }
+
+            cumulative = {}
+            all_laps = []
+
+            for lap in laps_data:
+                lap_num = int(lap["number"])
+                entries = {}
+                for t in lap.get("Timings", []):
+                    did = t["driverId"]
+                    ms = self._lap_ms(t.get("time", ""))
+                    cumulative[did] = cumulative.get(did, 0) + ms
+                    entries[did] = {
+                        "pos": int(t.get("position", 99)),
+                        "driver_id": did,
+                        "lap_time": t.get("time", ""),
+                        "cum_ms": cumulative[did],
+                    }
+
+                sorted_e = sorted(entries.values(), key=lambda x: x["pos"])
+                leader_ms = sorted_e[0]["cum_ms"] if sorted_e else 0
+                prev_leader_ms = 0
+
+                positions = []
+                for i, e in enumerate(sorted_e):
+                    info = driver_info.get(e["driver_id"], {
+                        "name": e["driver_id"].capitalize(),
+                        "code": e["driver_id"][:3].upper(),
+                        "team": "",
+                    })
+                    gap_ms = e["cum_ms"] - leader_ms
+                    gap = "LEADER" if gap_ms == 0 else f"+{gap_ms/1000:.3f}s"
+                    if i == 0:
+                        interval = "LEADER"
+                    else:
+                        int_ms = e["cum_ms"] - sorted_e[i - 1]["cum_ms"]
+                        interval = f"+{int_ms/1000:.3f}s"
+
+                    positions.append({
+                        "pos": e["pos"],
+                        "driver_id": e["driver_id"],
+                        "name": info["name"],
+                        "code": info["code"],
+                        "team": info["team"],
+                        "lap_time": e["lap_time"],
+                        "gap": gap,
+                        "interval": interval,
+                    })
+
+                all_laps.append({"lap": lap_num, "positions": positions})
+
+            total_laps = max(l["lap"] for l in all_laps) if all_laps else 0
+            return {
+                "session_type": "race",
+                "race_name": race.get("raceName", ""),
+                "circuit": race.get("Circuit", {}).get("circuitName", ""),
+                "year": year,
+                "round": round_num,
+                "total_laps": total_laps,
+                "laps": all_laps,
+            }
+        except (KeyError, IndexError, ValueError) as e:
+            print(f"Race replay parse error: {e}")
+            return None
+
+    def _qualifying_replay(self, year: int, round_num: int):
+        data = self._jolpica_get(f"{year}/{round_num}/qualifying.json")
+        if not data:
+            return None
+
+        try:
+            races = data["MRData"]["RaceTable"].get("Races", [])
+            if not races:
+                return None
+            race = races[0]
+            raw = race.get("QualifyingResults", [])
+
+            results = []
+            for r in raw:
+                d, c = r.get("Driver", {}), r.get("Constructor", {})
+                results.append({
+                    "pos": int(r.get("position", 99)),
+                    "driver_id": d.get("driverId", ""),
+                    "name": f"{d.get('givenName','')} {d.get('familyName','')}".strip(),
+                    "code": d.get("code", ""),
+                    "team": _normalize_team(c.get("name", "")),
+                    "q1": r.get("Q1", ""), "q2": r.get("Q2", ""), "q3": r.get("Q3", ""),
+                })
+
+            all_laps = []
+            for idx, (phase, key) in enumerate([("Q1", "q1"), ("Q2", "q2"), ("Q3", "q3")], start=1):
+                phase_r = sorted(
+                    [r for r in results if r[key]],
+                    key=lambda x: self._q_secs(x[key]),
+                )
+                if not phase_r:
+                    continue
+                leader_secs = self._q_secs(phase_r[0][key])
+                positions = []
+                for i, r in enumerate(phase_r):
+                    secs = self._q_secs(r[key])
+                    gap = "POLE" if i == 0 else f"+{secs - leader_secs:.3f}s"
+                    if i == 0:
+                        interval = "POLE"
+                    else:
+                        prev_secs = self._q_secs(phase_r[i - 1][key])
+                        interval = f"+{secs - prev_secs:.3f}s"
+                    positions.append({
+                        "pos": i + 1,
+                        "driver_id": r["driver_id"],
+                        "name": r["name"],
+                        "code": r["code"],
+                        "team": r["team"],
+                        "lap_time": r[key],
+                        "gap": gap,
+                        "interval": interval,
+                    })
+                all_laps.append({"lap": idx, "phase": phase, "positions": positions})
+
+            return {
+                "session_type": "qualifying",
+                "race_name": race.get("raceName", ""),
+                "circuit": race.get("Circuit", {}).get("circuitName", ""),
+                "year": year,
+                "round": round_num,
+                "total_laps": len(all_laps),
+                "laps": all_laps,
+            }
+        except (KeyError, IndexError, ValueError) as e:
+            print(f"Qualifying replay parse error: {e}")
+            return None
+
+    def _sprint_replay(self, year: int, round_num: int):
+        # Sprint results from Jolpica (available from 2021 onwards for sprint weekends)
+        data = self._jolpica_get(f"{year}/{round_num}/sprint.json")
+        if not data:
+            return None
+        try:
+            races = data["MRData"]["RaceTable"].get("Races", [])
+            if not races:
+                return None
+            race = races[0]
+            sprint_results = race.get("SprintResults", [])
+            if not sprint_results:
+                return None
+
+            positions = []
+            for r in sprint_results:
+                d, c = r.get("Driver", {}), r.get("Constructor", {})
+                positions.append({
+                    "pos": int(r.get("position", 99)),
+                    "driver_id": d.get("driverId", ""),
+                    "name": f"{d.get('givenName','')} {d.get('familyName','')}".strip(),
+                    "code": d.get("code", ""),
+                    "team": _normalize_team(c.get("name", "")),
+                    "lap_time": r.get("FastestLap", {}).get("Time", {}).get("time", ""),
+                    "gap": r.get("Time", {}).get("time", r.get("status", "")),
+                    "interval": "",
+                })
+            positions.sort(key=lambda x: x["pos"])
+            return {
+                "session_type": "sprint",
+                "race_name": race.get("raceName", ""),
+                "circuit": race.get("Circuit", {}).get("circuitName", ""),
+                "year": year,
+                "round": round_num,
+                "total_laps": 1,
+                "laps": [{"lap": 1, "phase": "FINAL", "positions": positions}],
+            }
+        except (KeyError, IndexError, ValueError) as e:
+            print(f"Sprint replay parse error: {e}")
+            return None
+
     def get_race_replay(self, meeting_name: str, lap: int = 1):
         return {
             "meeting_name": meeting_name,
@@ -772,7 +1020,7 @@ class F1ApiClient:
             "flag_status": {
                 "flag": "GREEN",
                 "title": "TRACK CLEAR",
-                "message": "No replay data available",
+                "message": "Use /api/f1/replay/{year}/{round}/{session} for session replay",
                 "safety_car_active": False,
                 "vsc_active": False,
                 "red_flag_active": False,

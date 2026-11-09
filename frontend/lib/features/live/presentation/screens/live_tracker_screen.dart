@@ -30,7 +30,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   late AnimationController _waveAnimController;
   final AudioPlayer _audioPlayer = AudioPlayer();
   StreamSubscription? _playerCompleteSubscription;
-  String _selectedReplayMeeting = 'Singapore Grand Prix';
+  String _selectedReplayMeeting = '';
   int _playbackProgressMs = 0;
   Timer? _playbackTimer;
 
@@ -127,9 +127,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
     final sessionStatus = sessionStatusAsync.value;
     final isLive = sessionStatus?.isLive ?? false;
     final effectiveMeetingName = isLive
-        ? (sessionStatus?.meetingName ??
-            latestSessionAsync.value?.meetingName ??
-            'Singapore Grand Prix')
+        ? (sessionStatus?.meetingName ?? latestSessionAsync.value?.meetingName ?? '')
         : replayState.meetingName;
     final telemetryList = isLive
         ? (telemetryAsync.value ?? [])
@@ -378,7 +376,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                                           sessionStatus?.sessionName.toLowerCase().contains('fp') == true)
                                       ? (sessionStatus?.sessionName.toUpperCase() ?? 'PRACTICE 2')
                                       : 'LAP 34')
-                                  : 'LAP ${replayState.currentLap}',
+                                  : replayState.lapLabel,
                               style: const TextStyle(
                                 fontFamily: 'Formula1',
                                 fontSize: 16,
@@ -603,6 +601,50 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                 ),
               ),
               const SizedBox(height: 14),
+
+              // Replay — empty / error state
+              if (!isLive && replayState.allLaps.isEmpty) ...[
+                GestureDetector(
+                  onTap: () => _showReplayRaceSelector(context),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 14),
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF141419),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3)),
+                    ),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.history_rounded, color: Colors.cyanAccent, size: 32),
+                        const SizedBox(height: 10),
+                        if (replayState.isLoading)
+                          const CircularProgressIndicator(color: Colors.cyanAccent)
+                        else ...[
+                          Text(
+                            replayState.loadError ?? 'TAP TO SELECT A SESSION REPLAY',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Formula1Wide',
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              color: replayState.loadError != null ? Colors.redAccent : Colors.cyanAccent,
+                            ),
+                          ),
+                          if (replayState.loadError == null) ...[
+                            const SizedBox(height: 6),
+                            const Text(
+                              'Choose a past race and session to replay\ntiming data lap by lap',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontFamily: 'Formula1', fontSize: 10, color: Colors.grey),
+                            ),
+                          ],
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
 
               // View Body based on Mode Switcher
               if (_selectedMode == LiveMode.timing) ...[
@@ -860,94 +902,38 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
 
   void _showReplayRaceSelector(BuildContext context) {
     final calendarAsync = ref.read(calendarProvider);
-    final replayRaces = calendarAsync.whenOrNull(
-      data: (races) => races
-          .where((r) => r.date.isBefore(DateTime.now()))
-          .map((r) => r.name)
-          .toList(),
+    final pastRaces = calendarAsync.whenOrNull(
+      data: (races) => races.where((r) => r.date.isBefore(DateTime.now())).toList(),
     ) ?? [];
+
+    if (pastRaces.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No completed races available for replay.')),
+      );
+      return;
+    }
 
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF141419),
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'SELECT RACE WEEK REPLAY',
-                        style: TextStyle(
-                          fontFamily: 'Formula1Wide',
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.grey, size: 20),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      onPressed: () => Navigator.pop(ctx),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: replayRaces.length,
-                    itemBuilder: (context, i) {
-                      final race = replayRaces[i];
-                      final isSelected = race == _selectedReplayMeeting;
-                      return ListTile(
-                        dense: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                        tileColor: isSelected ? Colors.cyanAccent.withValues(alpha: 0.1) : null,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        leading: Icon(
-                          isSelected ? Icons.check_circle_rounded : Icons.history_rounded,
-                          color: isSelected ? Colors.cyanAccent : Colors.grey,
-                          size: 18,
-                        ),
-                        title: Text(
-                          race,
-                          style: TextStyle(
-                            fontFamily: 'Formula1',
-                            fontSize: 12,
-                            fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
-                            color: isSelected ? Colors.cyanAccent : Colors.white,
-                          ),
-                        ),
-                        onTap: () {
-                          setState(() {
-                            _selectedReplayMeeting = race;
-                          });
-                          ref.read(raceReplayProvider.notifier).selectMeeting(race);
-                          Navigator.pop(ctx);
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+      builder: (ctx) => _ReplaySessionPicker(
+        pastRaces: pastRaces,
+        selectedMeeting: _selectedReplayMeeting,
+        onSelected: (race, sessionType) {
+          setState(() => _selectedReplayMeeting = race.name);
+          ref.read(raceReplayProvider.notifier).selectSession(
+            year: race.date.year,
+            round: int.tryParse(race.round) ?? 1,
+            meetingName: race.name,
+            sessionType: sessionType,
+          );
+          Navigator.pop(ctx);
+        },
+      ),
     );
   }
 
@@ -1627,3 +1613,198 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   }
 }
 // Widget classes extracted to ../widgets/ — see imports above.
+
+/// Two-step bottom sheet: pick a race, then pick a session type.
+class _ReplaySessionPicker extends StatefulWidget {
+  final List<RaceEvent> pastRaces;
+  final String selectedMeeting;
+  final void Function(RaceEvent race, String sessionType) onSelected;
+
+  const _ReplaySessionPicker({
+    required this.pastRaces,
+    required this.selectedMeeting,
+    required this.onSelected,
+  });
+
+  @override
+  State<_ReplaySessionPicker> createState() => _ReplaySessionPickerState();
+}
+
+class _ReplaySessionPickerState extends State<_ReplaySessionPicker> {
+  RaceEvent? _pickedRace;
+
+  static const _sessions = [
+    {'type': 'race', 'label': 'RACE DAY', 'icon': Icons.emoji_events_rounded},
+    {'type': 'qualifying', 'label': 'QUALIFYING', 'icon': Icons.timer_rounded},
+    {'type': 'sprint', 'label': 'SPRINT', 'icon': Icons.bolt_rounded},
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      maxChildSize: 0.92,
+      minChildSize: 0.4,
+      expand: false,
+      builder: (ctx, scrollController) {
+        return Container(
+          color: const Color(0xFF141419),
+          child: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 10),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    if (_pickedRace != null) ...[
+                      GestureDetector(
+                        onTap: () => setState(() => _pickedRace = null),
+                        child: const Icon(Icons.chevron_left_rounded, color: Colors.cyanAccent, size: 22),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    Expanded(
+                      child: Text(
+                        _pickedRace == null ? 'SELECT RACE' : 'SELECT SESSION',
+                        style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(ctx),
+                      child: const Icon(Icons.close, color: Colors.grey, size: 20),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 4),
+              if (_pickedRace != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                  child: Text(
+                    _pickedRace!.name,
+                    style: const TextStyle(fontFamily: 'Formula1', fontSize: 10, color: Colors.grey),
+                  ),
+                ),
+              const Divider(color: Color(0xFF202028)),
+              Expanded(
+                child: _pickedRace == null
+                    ? _buildRaceList(scrollController)
+                    : _buildSessionList(),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildRaceList(ScrollController ctrl) {
+    final reversed = widget.pastRaces.reversed.toList();
+    return ListView.builder(
+      controller: ctrl,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      itemCount: reversed.length,
+      itemBuilder: (context, i) {
+        final race = reversed[i];
+        final isSelected = race.name == widget.selectedMeeting;
+        return ListTile(
+          dense: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          tileColor: isSelected ? Colors.cyanAccent.withValues(alpha: 0.08) : null,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          leading: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'RD ${race.round}',
+                style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 8, fontWeight: FontWeight.w900, color: Colors.grey),
+              ),
+              Text(
+                getCountryFlag(race.countryCode),
+                style: const TextStyle(fontSize: 16),
+              ),
+            ],
+          ),
+          title: Text(
+            race.name.replaceAll(' Grand Prix', ' GP'),
+            style: TextStyle(
+              fontFamily: 'Formula1',
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
+              color: isSelected ? Colors.cyanAccent : Colors.white,
+            ),
+          ),
+          subtitle: Text(
+            race.date.toIso8601String().substring(0, 10),
+            style: const TextStyle(fontFamily: 'Formula1', fontSize: 9, color: Colors.grey),
+          ),
+          trailing: const Icon(Icons.chevron_right_rounded, color: Colors.grey, size: 18),
+          onTap: () => setState(() => _pickedRace = race),
+        );
+      },
+    );
+  }
+
+  Widget _buildSessionList() {
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      children: [
+        for (final s in _sessions)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: GestureDetector(
+              onTap: () => widget.onSelected(_pickedRace!, s['type'] as String),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A1A22),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.cyanAccent.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(s['icon'] as IconData, color: Colors.cyanAccent, size: 20),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            s['label'] as String,
+                            style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            s['type'] == 'race'
+                                ? 'Lap-by-lap timing tower progression'
+                                : s['type'] == 'qualifying'
+                                    ? 'Q1 → Q2 → Q3 session breakdown'
+                                    : 'Sprint race final results',
+                            style: const TextStyle(fontFamily: 'Formula1', fontSize: 9, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.play_circle_filled_rounded, color: Colors.cyanAccent, size: 22),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
