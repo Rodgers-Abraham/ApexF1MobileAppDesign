@@ -16,3 +16,5 @@ services:
         generateValue: true
       - key: ALLOWED_ORIGINS
         value: "*"
+      - key: SPORTRADAR_API_KEY
+        sync: false

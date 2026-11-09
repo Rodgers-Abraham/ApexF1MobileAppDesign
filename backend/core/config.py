@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     # API Keys
     openrouter_key: str | None = None
     gemini_keys: Union[list[str], str] = []
+    sportradar_api_key: str | None = None
 
     # CORS
     allowed_origins: str = "http://localhost:3000,http://localhost:8000,http://localhost:8080"
