@@ -35,8 +35,8 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
     final nextRace = ref.read(nextRaceProvider);
     if (nextRace == null) return;
 
-    // Check if race has already started (permanent lock)
-    if (DateTime.now().isAfter(nextRace.date)) {
+    // Permanently lock 30 minutes before qualifying
+    if (nextRace.predictionsLocked) {
       setState(() {
         _isLocked = true;
         _isPermanentlyLocked = true;
@@ -267,6 +267,17 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
     final themeState = ref.watch(themeProvider);
     final accentColor = themeState.selectedTeam.primaryColor;
     final maxReward = ((50 * _confidence) / 100).round();
+    final nextRace = ref.watch(nextRaceProvider);
+    final lockTime = nextRace?.predictionsLockTime;
+    final now = DateTime.now();
+    final lockDiff = (lockTime != null && lockTime.isAfter(now)) ? lockTime.difference(now) : Duration.zero;
+    final lockLabel = _isPermanentlyLocked
+        ? 'LOCKED'
+        : lockDiff == Duration.zero
+            ? 'LOCKED'
+            : lockDiff.inDays > 0
+                ? '${lockDiff.inDays}D ${lockDiff.inHours % 24}H ${lockDiff.inMinutes % 60}M'
+                : '${lockDiff.inHours.toString().padLeft(2, '0')}:${(lockDiff.inMinutes % 60).toString().padLeft(2, '0')}:${(lockDiff.inSeconds % 60).toString().padLeft(2, '0')}';
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B0B0E),
@@ -377,12 +388,12 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                           ),
                         ),
                         Text(
-                          '18:42:18',
+                          lockLabel,
                           style: TextStyle(
                             fontFamily: 'Formula1Wide',
                             fontSize: 11,
                             fontWeight: FontWeight.w900,
-                            color: accentColor,
+                            color: _isPermanentlyLocked ? Colors.grey : accentColor,
                           ),
                         ),
                       ],

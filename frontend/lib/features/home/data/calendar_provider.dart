@@ -1,6 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/session_provider.dart';
 
+class RaceSession {
+  final String name; // FP1, FP2, FP3, Qualifying, Race
+  final DateTime dateTime;
+
+  const RaceSession({required this.name, required this.dateTime});
+
+  factory RaceSession.fromJson(Map<String, dynamic> json) {
+    return RaceSession(
+      name: json['name']?.toString() ?? '',
+      dateTime: DateTime.tryParse(json['datetime']?.toString() ?? '') ?? DateTime.now(),
+    );
+  }
+
+  bool get isQuali => name == 'Qualifying';
+  bool get isRace => name == 'Race';
+}
+
 class RaceEvent {
   final String name;
   final String circuit;
@@ -10,6 +27,7 @@ class RaceEvent {
   final double lengthKm;
   final int turns;
   final int drsZones;
+  final List<RaceSession> sessions;
 
   const RaceEvent({
     required this.name,
@@ -20,9 +38,32 @@ class RaceEvent {
     this.lengthKm = 5.3,
     this.turns = 16,
     this.drsZones = 2,
+    this.sessions = const [],
   });
 
+  /// Approximate qualifying datetime (session data or fallback: race day - 1 at 14:00)
+  DateTime get qualiDateTime {
+    for (final s in sessions) {
+      if (s.isQuali) return s.dateTime;
+    }
+    return DateTime(date.year, date.month, date.day - 1, 14, 0);
+  }
+
+  /// Predictions lock 30 minutes before qualifying
+  DateTime get predictionsLockTime => qualiDateTime.subtract(const Duration(minutes: 30));
+
+  bool get predictionsLocked => DateTime.now().isAfter(predictionsLockTime);
+
+  /// Next upcoming session within this race weekend
+  RaceSession? nextSession(DateTime now) {
+    for (final s in sessions) {
+      if (s.dateTime.isAfter(now)) return s;
+    }
+    return null;
+  }
+
   factory RaceEvent.fromJson(Map<String, dynamic> json) {
+    final rawSessions = json['sessions'] as List? ?? [];
     return RaceEvent(
       name: json['name']?.toString() ?? '',
       circuit: json['circuit']?.toString() ?? '',
@@ -32,6 +73,9 @@ class RaceEvent {
       lengthKm: (json['length_km'] as num?)?.toDouble() ?? 5.3,
       turns: (json['turns'] as num?)?.toInt() ?? 16,
       drsZones: (json['drs_zones'] as num?)?.toInt() ?? 2,
+      sessions: rawSessions
+          .map((s) => RaceSession.fromJson(s as Map<String, dynamic>))
+          .toList(),
     );
   }
 }
@@ -51,6 +95,22 @@ final nextRaceProvider = Provider.autoDispose<RaceEvent?>((ref) {
       if (r.date.isAfter(now)) return r;
     }
     return calendar.isNotEmpty ? calendar.last : null;
+  }).value;
+});
+
+/// Returns the very next session across all races — could be FP1, Qualifying, Race, etc.
+final nextSessionProvider = Provider.autoDispose<({RaceEvent race, RaceSession session})?>((ref) {
+  final calendarAsync = ref.watch(calendarProvider);
+  return calendarAsync.whenData((calendar) {
+    final now = DateTime.now();
+    for (final race in calendar) {
+      for (final s in race.sessions) {
+        if (s.dateTime.isAfter(now)) {
+          return (race: race, session: s);
+        }
+      }
+    }
+    return null;
   }).value;
 });
 

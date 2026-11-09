@@ -123,6 +123,8 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
     final sessionStatusAsync = ref.watch(sessionLiveStatusProvider);
     final flagStatusAsync = ref.watch(raceFlagStatusProvider);
     final replayState = ref.watch(raceReplayProvider);
+    // Watch calendar so the replay picker always has fresh data
+    ref.watch(calendarProvider);
 
     final sessionStatus = sessionStatusAsync.value;
     final isLive = sessionStatus?.isLive ?? false;

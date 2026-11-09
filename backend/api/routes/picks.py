@@ -36,12 +36,16 @@ class RacePicksResponse(BaseModel):
     submitted_at: Optional[str] = None
 
 
-def _is_race_locked(race_date: str) -> bool:
+def _is_predictions_locked(race_date: str) -> bool:
+    """Lock predictions 30 minutes before qualifying (approximated as race_date - 1 day at 13:30 UTC)."""
     try:
         rd = datetime.fromisoformat(race_date)
         if not rd.tzinfo:
             rd = rd.replace(tzinfo=timezone.utc)
-        return datetime.now(timezone.utc) >= rd
+        # Approximate qualifying lock: race day - 1 day + 13:30 UTC (30 min before quali at 14:00)
+        from datetime import timedelta
+        quali_lock = rd - timedelta(days=1, minutes=30)
+        return datetime.now(timezone.utc) >= quali_lock
     except Exception:
         return False
 
@@ -50,8 +54,8 @@ def _is_race_locked(race_date: str) -> bool:
 async def save_picks(req: RacePicksRequest, current_user: dict = Depends(get_current_user)):
     user_id = current_user["id"]
 
-    if _is_race_locked(req.race_date):
-        raise HTTPException(status_code=400, detail="Predictions are locked — race has already started.")
+    if _is_predictions_locked(req.race_date):
+        raise HTTPException(status_code=400, detail="Predictions are locked — qualifying has started.")
 
     with get_db_connection() as conn:
         existing = conn.execute(

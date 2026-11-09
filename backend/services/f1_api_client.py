@@ -215,24 +215,51 @@ class F1ApiClient:
             length_m = venue.get("length", 0)
             turns = (venue.get("curves_right", 0) or 0) + (venue.get("curves_left", 0) or 0)
 
+            race_date_str = stage.get("scheduled", "")[:10]
             races.append({
                 "name": gp_name,
                 "circuit": venue.get("name", ""),
                 "country_code": venue.get("country_code", ""),
-                "date": stage.get("scheduled", "")[:10],
+                "date": race_date_str,
                 "round": str(idx + 1),
                 "length_km": round(length_m / 1000, 3) if length_m else 0.0,
                 "turns": turns,
                 "drs_zones": self._estimate_drs_zones(turns),
+                "sessions": self._approx_sessions(race_date_str),
             })
 
         if year == 2026:
             now_date = datetime.now(timezone.utc).date().isoformat()
             has_future = any(r["date"] >= now_date for r in races)
             if not races or not has_future:
-                races = FALLBACK_2026_CALENDAR[:]
+                races = [
+                    {**r, "sessions": self._approx_sessions(r["date"])}
+                    for r in FALLBACK_2026_CALENDAR
+                ]
         self._set_cache(cache_key, races, 21600)
         return races
+
+    @staticmethod
+    def _approx_sessions(race_date_str: str) -> list:
+        """
+        Compute approximate UTC session times from race date.
+        Assumes race at 14:00 UTC; FP1/FP2 on Friday, FP3/Qualifying on Saturday.
+        These are approximations — exact times vary by circuit and timezone.
+        """
+        try:
+            from datetime import timedelta
+            rd = datetime.strptime(race_date_str, "%Y-%m-%d").replace(
+                hour=14, minute=0, second=0, microsecond=0, tzinfo=timezone.utc
+            )
+            return [
+                {"name": "FP1",        "datetime": (rd - timedelta(days=2, hours=4)).isoformat()},
+                {"name": "FP2",        "datetime": (rd - timedelta(days=2)).isoformat()},
+                {"name": "FP3",        "datetime": (rd - timedelta(days=1, hours=4)).isoformat()},
+                {"name": "Qualifying", "datetime": (rd - timedelta(days=1)).isoformat()},
+                {"name": "Race",       "datetime": rd.isoformat()},
+            ]
+        except Exception:
+            return []
 
     def _estimate_drs_zones(self, turns: int) -> int:
         if turns >= 16:

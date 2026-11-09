@@ -35,6 +35,7 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
   Widget build(BuildContext context) {
     final calendarAsync = ref.watch(calendarProvider);
     final nextRace = ref.watch(nextRaceProvider);
+    final nextSessionData = ref.watch(nextSessionProvider);
     final sessionStatus = ref.watch(sessionLiveStatusProvider).value;
     final isLiveNow = sessionStatus?.isLive ?? false;
 
@@ -56,6 +57,16 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
         }
 
         final now = DateTime.now();
+
+        // Next session (any session type)
+        final nextSession = nextSessionData?.session;
+        final nextSessionRace = nextSessionData?.race;
+        final sessionIsNotRace = nextSession != null && !nextSession.isRace;
+        final sessionDiff = nextSession != null && nextSession.dateTime.isAfter(now)
+            ? nextSession.dateTime.difference(now)
+            : null;
+
+        // Race countdown
         final diff = nextRace.date.isAfter(now) ? nextRace.date.difference(now) : Duration.zero;
         final d = diff.inDays;
         final h = diff.inHours % 24;
@@ -212,7 +223,59 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 14),
+                    // Next session strip (shown when next session isn't the race itself)
+                    if (sessionIsNotRace && sessionDiff != null) ...[
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1A1A22),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFF2E2E3A)),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.cyanAccent.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(3),
+                                border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.5)),
+                              ),
+                              child: Text(
+                                nextSession.name.toUpperCase(),
+                                style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 8, fontWeight: FontWeight.w900, color: Colors.cyanAccent),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            if (nextSessionRace?.name != nextRace.name)
+                              Expanded(
+                                child: Text(
+                                  nextSessionRace?.name.replaceAll(' Grand Prix', ' GP') ?? '',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontFamily: 'Formula1', fontSize: 9.5, color: Colors.white70),
+                                ),
+                              )
+                            else
+                              const Spacer(),
+                            Text(
+                              _formatSessionCountdown(sessionDiff),
+                              style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 10, fontWeight: FontWeight.w900, color: Colors.cyanAccent),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    // Race countdown header label
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        'RACE STARTS IN',
+                        style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 8, fontWeight: FontWeight.bold, color: Color(0xFF8F909A), letterSpacing: 0.8),
+                      ),
+                    ),
                     Container(
                       decoration: BoxDecoration(
                         color: const Color(0xFF070709).withValues(alpha: 0.8),
@@ -306,6 +369,12 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
         );
       },
     );
+  }
+
+  String _formatSessionCountdown(Duration d) {
+    if (d.inDays > 0) return '${d.inDays}D ${d.inHours % 24}H';
+    if (d.inHours > 0) return '${d.inHours}H ${d.inMinutes % 60}M';
+    return '${d.inMinutes}M ${d.inSeconds % 60}S';
   }
 
   Widget _buildCountdownCell(String value, String label, bool hasRightBorder) {
