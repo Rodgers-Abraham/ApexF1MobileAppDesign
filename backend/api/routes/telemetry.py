@@ -221,12 +221,12 @@ async def get_race_recaps():
 
 
 @router.get("/replay/{year}/{round_num}/{session_type}")
-async def get_session_replay_endpoint(year: int, round_num: int, session_type: str):
+async def get_session_replay_endpoint(year: int, round_num: int, session_type: str, race_name: str = ""):
     from fastapi import HTTPException
     valid_sessions = {"race", "qualifying", "sprint"}
     if session_type not in valid_sessions:
         raise HTTPException(status_code=400, detail=f"session_type must be one of {valid_sessions}")
-    data = f1_api_client.get_session_replay(year, round_num, session_type)
+    data = f1_api_client.get_session_replay(year, round_num, session_type, race_name=race_name)
     if not data:
         raise HTTPException(status_code=404, detail="Session replay data not yet available for this race.")
     return data

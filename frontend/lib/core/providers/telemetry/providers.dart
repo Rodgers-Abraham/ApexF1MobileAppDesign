@@ -212,7 +212,8 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
 
     try {
       final client = _ref.read(apiClientProvider);
-      final resp = await client.get('/api/f1/replay/$year/$round/$sessionType');
+      final encodedName = Uri.encodeComponent(meetingName);
+      final resp = await client.get('/api/f1/replay/$year/$round/$sessionType?race_name=$encodedName');
       final data = resp.data as Map<String, dynamic>;
       final rawLaps = (data['laps'] as List?) ?? [];
       final totalLaps = (data['total_laps'] as num?)?.toInt() ?? rawLaps.length;

@@ -807,52 +807,12 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
         ),
         const SizedBox(height: 2),
 
-        // Rows list
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: telemetryList.length,
-          itemBuilder: (context, index) {
-            final d = telemetryList[index];
-            final driverMeta = getDriverData(d.name);
-            final code = driverMeta?.code ?? d.name.split(' ').last.substring(0, 3).toUpperCase();
-            final isSelected = code == _selectedDriverCode;
-
-            Color teamColor = Colors.white;
-            try {
-              final hex = d.color.replaceAll('#', '');
-              teamColor = Color(int.parse('FF$hex', radix: 16));
-            } catch (_) {
-              teamColor = getDriverTeamColor(d.name);
-            }
-
-            final isFastest = d.isFastestLap ||
-                (overallFastestLapTime.isNotEmpty &&
-                    (d.bestLap == overallFastestLapTime || d.lastLap == overallFastestLapTime));
-
-            return FigmaTimingRowWidget(
-              pos: d.pos,
-              code: code,
-              name: d.name,
-              team: d.team,
-              driverNumber: d.driverNumber,
-              gap: d.gap,
-              interval: d.interval,
-              positionsGained: d.positionsGained,
-              status: d.status,
-              dnfReason: d.dnfReason,
-              tyre: d.tyre,
-              tyreLife: d.tyreLife,
-              pitStops: d.pitStops,
-              lastLap: d.lastLap.isNotEmpty ? d.lastLap : (d.bestLap.isNotEmpty ? d.bestLap : '-'),
-              isFastestLap: isFastest,
-              drs: d.drs,
-              teamColor: teamColor,
-              isSelected: isSelected,
-              portraitAsset: driverMeta?.portraitAsset ?? '',
-              onTap: () => setState(() => _selectedDriverCode = code),
-            );
-          },
+        // Animated timing tower — cards slide smoothly on position changes
+        _AnimatedTimingStack(
+          drivers: telemetryList,
+          overallFastestLapTime: overallFastestLapTime,
+          selectedDriverCode: _selectedDriverCode,
+          onDriverTap: (code) => setState(() => _selectedDriverCode = code),
         ),
         const SizedBox(height: 12),
 
@@ -1807,6 +1767,90 @@ class _ReplaySessionPickerState extends State<_ReplaySessionPicker> {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Animated timing tower — each driver card gets a ValueKey so Flutter
+/// smoothly animates position changes between laps instead of snapping.
+class _AnimatedTimingStack extends StatelessWidget {
+  final List<LiveTelemetry> drivers;
+  final String overallFastestLapTime;
+  final String selectedDriverCode;
+  final void Function(String code) onDriverTap;
+
+  const _AnimatedTimingStack({
+    required this.drivers,
+    required this.overallFastestLapTime,
+    required this.selectedDriverCode,
+    required this.onDriverTap,
+  });
+
+  static const double _rowH = 52.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: drivers.length * _rowH,
+      child: Stack(
+        children: drivers.asMap().entries.map((entry) {
+          final index = entry.key;
+          final d = entry.value;
+
+          final driverMeta = getDriverData(d.name);
+          final lastName = d.name.split(' ').lastOrNull ?? d.name;
+          final code = driverMeta?.code ??
+              lastName.substring(0, lastName.length.clamp(0, 3)).toUpperCase();
+          final isSelected = code == selectedDriverCode;
+
+          Color teamColor = Colors.white;
+          try {
+            final hex = d.color.replaceAll('#', '');
+            teamColor = Color(int.parse('FF$hex', radix: 16));
+          } catch (_) {
+            teamColor = getDriverTeamColor(d.name);
+          }
+
+          final isFastest = d.isFastestLap ||
+              (overallFastestLapTime.isNotEmpty &&
+                  (d.bestLap == overallFastestLapTime ||
+                      d.lastLap == overallFastestLapTime));
+
+          return AnimatedPositioned(
+            key: ValueKey(d.name),
+            duration: const Duration(milliseconds: 700),
+            curve: Curves.easeInOut,
+            top: index * _rowH,
+            left: 0,
+            right: 0,
+            height: _rowH,
+            child: FigmaTimingRowWidget(
+              pos: d.pos,
+              code: code,
+              name: d.name,
+              team: d.team,
+              driverNumber: d.driverNumber,
+              gap: d.gap,
+              interval: d.interval,
+              positionsGained: d.positionsGained,
+              status: d.status,
+              dnfReason: d.dnfReason,
+              tyre: d.tyre,
+              tyreLife: d.tyreLife,
+              pitStops: d.pitStops,
+              lastLap: d.lastLap.isNotEmpty
+                  ? d.lastLap
+                  : (d.bestLap.isNotEmpty ? d.bestLap : '-'),
+              isFastestLap: isFastest,
+              drs: d.drs,
+              teamColor: teamColor,
+              isSelected: isSelected,
+              portraitAsset: driverMeta?.portraitAsset ?? '',
+              onTap: () => onDriverTap(code),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 }

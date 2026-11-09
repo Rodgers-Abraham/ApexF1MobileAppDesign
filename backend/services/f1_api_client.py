@@ -835,7 +835,37 @@ class F1ApiClient:
         except Exception:
             return float("inf")
 
-    def get_session_replay(self, year: int, round_num: int, session_type: str = "race"):
+    def _resolve_jolpica_round(self, year: int, race_name_hint: str) -> int | None:
+        """Find the correct Jolpica round number for a race by matching its name."""
+        cache_key = f"jolpica_rounds_{year}"
+        cached = self._get_cached(cache_key)
+        if cached is None:
+            data = self._jolpica_get(f"{year}/races.json?limit=30")
+            if not data:
+                return None
+            races = data.get("MRData", {}).get("RaceTable", {}).get("Races", [])
+            cached = races
+            self._set_cache(cache_key, cached, 86400)
+
+        hint = race_name_hint.lower().replace(" grand prix", "").replace(" gp", "").strip()
+        for race in cached:
+            name = race.get("raceName", "").lower().replace(" grand prix", "").strip()
+            circuit = race.get("Circuit", {}).get("circuitName", "").lower()
+            locality = race.get("Circuit", {}).get("Location", {}).get("locality", "").lower()
+            country = race.get("Circuit", {}).get("Location", {}).get("country", "").lower()
+            if hint in name or name in hint or hint in locality or hint in country or hint in circuit:
+                return int(race.get("round", 0))
+        return None
+
+    def get_session_replay(self, year: int, round_num: int, session_type: str = "race", race_name: str = ""):
+        # Resolve the correct Jolpica round number from the race name to avoid
+        # mismatches between our fallback calendar numbering and Jolpica's.
+        if race_name:
+            jolpica_round = self._resolve_jolpica_round(year, race_name)
+            if jolpica_round and jolpica_round != round_num:
+                print(f"Corrected round for '{race_name}': {round_num} -> {jolpica_round}")
+                round_num = jolpica_round
+
         cache_key = f"session_replay_{year}_{round_num}_{session_type}"
         cached = self._get_cached(cache_key)
         if cached is not None:
