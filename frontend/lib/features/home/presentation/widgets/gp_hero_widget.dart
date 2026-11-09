@@ -6,6 +6,7 @@ import '../../../../core/providers/telemetry_provider.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../shared/constants/countries.dart';
+import '../../../../shared/widgets/error_retry_widget.dart';
 import '../../data/calendar_provider.dart';
 
 class GPHeroWidget extends ConsumerStatefulWidget {
@@ -48,9 +49,11 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
         height: 200,
         child: Center(child: CircularProgressIndicator()),
       ),
-      error: (_, __) => const SizedBox(
+      error: (_, __) => ErrorRetryWidget(
+        message: 'Calendar unavailable. Check your connection.',
+        icon: Icons.calendar_month_rounded,
         height: 100,
-        child: Center(child: Text('Calendar unavailable', style: TextStyle(color: Colors.grey))),
+        onRetry: () => ref.invalidate(calendarProvider),
       ),
       data: (calendar) {
         if (calendar.isEmpty || nextRace == null) {

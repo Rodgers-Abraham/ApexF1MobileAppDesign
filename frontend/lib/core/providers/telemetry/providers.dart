@@ -517,6 +517,15 @@ final sessionLiveStatusProvider = StateNotifierProvider.autoDispose<SessionLiveS
   return SessionLiveStatusNotifier(ref);
 });
 
+/// True when the backend responded successfully at least once recently.
+/// Derived from sessionLiveStatusProvider — if it errors, the backend is unreachable.
+final backendReachableProvider = Provider.autoDispose<bool>((ref) {
+  final status = ref.watch(sessionLiveStatusProvider);
+  // Data = reachable; loading = unknown (assume reachable until proven otherwise)
+  // error = unreachable
+  return !status.hasError;
+});
+
 final trackConditionsProvider = FutureProvider.autoDispose<TrackConditions>((ref) async {
   final client = ref.watch(apiClientProvider);
   final response = await client.get('/api/f1/telemetry/track-conditions');

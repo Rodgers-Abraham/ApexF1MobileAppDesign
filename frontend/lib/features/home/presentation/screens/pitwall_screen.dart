@@ -9,6 +9,7 @@ import '../widgets/race_pulse_widget.dart';
 import '../widgets/news_rail_widget.dart';
 import '../widgets/season_calendar_widget.dart';
 import '../widgets/race_recaps_widget.dart';
+import '../../../../shared/widgets/error_retry_widget.dart';
 
 export '../../data/calendar_provider.dart' show RaceEvent, getCircuitAssetPath, getCountryFlag, monthAbbrev, calendarProvider, nextRaceProvider, circuitHistoryProvider;
 
@@ -34,6 +35,7 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
     final sessionStatusAsync = ref.watch(sessionLiveStatusProvider);
     final isLive = sessionStatusAsync.value?.isLive ?? false;
     final nextRace = ref.watch(nextRaceProvider);
+    final backendReachable = ref.watch(backendReachableProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B0B0E),
@@ -126,7 +128,17 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: Column(
+        children: [
+          if (!backendReachable) const BackendOfflineBanner(),
+          Expanded(child: _buildScrollBody(context, accentColor)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScrollBody(BuildContext context, Color accentColor) {
+    return SingleChildScrollView(
         controller: _scrollController,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Column(
@@ -169,7 +181,6 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
             const SizedBox(height: 60),
           ],
         ),
-      ),
     );
   }
 }

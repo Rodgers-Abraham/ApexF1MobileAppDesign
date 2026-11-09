@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/providers/telemetry_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../shared/constants/f1_data.dart';
+import '../../../../shared/widgets/error_retry_widget.dart';
 
 class StandingsScreen extends ConsumerStatefulWidget {
   const StandingsScreen({super.key});
@@ -135,22 +136,20 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
           // Drivers Standings
           driversAsync.when(
             loading: () => const Center(child: CircularProgressIndicator(color: Colors.red)),
-            error: (err, stack) => Center(
-              child: Text(
-                'Error loading standings: $err',
-                style: AppFonts.regular(color: Colors.grey),
-              ),
+            error: (err, stack) => ErrorRetryWidget(
+              message: 'Could not load driver standings.\nCheck your connection.',
+              icon: Icons.people_alt_rounded,
+              onRetry: () => ref.invalidate(liveDriverStandingsProvider),
             ),
             data: (drivers) => _buildDriversView(accentColor, drivers),
           ),
           // Constructors Standings
           constructorsAsync.when(
             loading: () => const Center(child: CircularProgressIndicator(color: Colors.red)),
-            error: (err, stack) => Center(
-              child: Text(
-                'Error loading standings: $err',
-                style: AppFonts.regular(color: Colors.grey),
-              ),
+            error: (err, stack) => ErrorRetryWidget(
+              message: 'Could not load constructor standings.\nCheck your connection.',
+              icon: Icons.construction_rounded,
+              onRetry: () => ref.invalidate(liveConstructorStandingsProvider),
             ),
             data: (constructors) => _buildConstructorsView(accentColor, themeState.selectedTeam.name, constructors),
           ),
