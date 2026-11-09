@@ -4,8 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../shared/constants/f1_data.dart';
+import '../../../../shared/constants/countries.dart';
 
-enum OnboardingStep { selectTeam, auth }
+enum OnboardingStep { selectTeam, selectCountry, auth }
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -17,13 +18,16 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   OnboardingStep _currentStep = OnboardingStep.selectTeam;
   F1Team? _tempSelectedTeam;
+  CountryTz? _selectedCountry;
   bool _isLoginMode = false;
+  String _countrySearch = '';
 
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
   final _driverController = TextEditingController();
+  final _countrySearchController = TextEditingController();
 
   @override
   void dispose() {
@@ -31,20 +35,25 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     _passwordController.dispose();
     _nameController.dispose();
     _driverController.dispose();
+    _countrySearchController.dispose();
     super.dispose();
   }
 
   void _nextStep() {
-    if (_tempSelectedTeam == null) return;
-    setState(() {
-      _currentStep = OnboardingStep.auth;
-    });
+    if (_currentStep == OnboardingStep.selectTeam) {
+      if (_tempSelectedTeam == null) return;
+      setState(() => _currentStep = OnboardingStep.selectCountry);
+    } else if (_currentStep == OnboardingStep.selectCountry) {
+      setState(() => _currentStep = OnboardingStep.auth);
+    }
   }
 
   void _backStep() {
-    setState(() {
-      _currentStep = OnboardingStep.selectTeam;
-    });
+    if (_currentStep == OnboardingStep.auth) {
+      setState(() => _currentStep = OnboardingStep.selectCountry);
+    } else if (_currentStep == OnboardingStep.selectCountry) {
+      setState(() => _currentStep = OnboardingStep.selectTeam);
+    }
   }
 
   Future<void> _submitAuth() async {
@@ -60,7 +69,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (_isLoginMode) {
       success = await ref.read(authProvider.notifier).login(email, password);
     } else {
-      success = await ref.read(authProvider.notifier).register(email, password, name, teamName, favouriteDriver);
+      success = await ref.read(authProvider.notifier).register(
+        email, password, name, teamName, favouriteDriver,
+        country: _selectedCountry?.name,
+      );
     }
 
     if (success && mounted) {
@@ -264,8 +276,124 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         ),
                       ),
                     ),
+                  ] else if (_currentStep == OnboardingStep.selectCountry) ...[
+                    // STEP 2: Country Selection
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+                          onPressed: _backStep,
+                        ),
+                        const Expanded(
+                          child: Text(
+                            'WHERE ARE YOU FROM?',
+                            style: TextStyle(fontFamily: 'Outfit', fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 6),
+                      child: Text(
+                        'We use your country to show session times in your local timezone.',
+                        style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.4),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      child: TextField(
+                        controller: _countrySearchController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: 'Search country...',
+                          hintStyle: const TextStyle(color: Colors.grey),
+                          prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                          filled: true,
+                          fillColor: const Color(0xFF1E1E1E),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        onChanged: (v) => setState(() => _countrySearch = v),
+                      ),
+                    ),
+                    Expanded(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        itemCount: kCountries.where((c) => c.name.toLowerCase().contains(_countrySearch.toLowerCase())).length,
+                        itemBuilder: (ctx, i) {
+                          final filtered = kCountries.where((c) => c.name.toLowerCase().contains(_countrySearch.toLowerCase())).toList();
+                          final country = filtered[i];
+                          final isSelected = _selectedCountry?.name == country.name;
+                          return GestureDetector(
+                            onTap: () => setState(() => _selectedCountry = country),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: isSelected ? const Color(0xFF1E1E1E) : const Color(0xFF161616),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isSelected ? accentColor : Colors.white.withValues(alpha: 0.05),
+                                  width: isSelected ? 2 : 1,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(country.flag, style: const TextStyle(fontSize: 22)),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      country.name,
+                                      style: TextStyle(
+                                        fontFamily: 'Outfit',
+                                        fontSize: 14,
+                                        fontWeight: isSelected ? FontWeight.w900 : FontWeight.w500,
+                                        color: isSelected ? Colors.white : Colors.white70,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    'UTC${country.utcOffset >= 0 ? "+" : ""}${country.utcOffset == country.utcOffset.truncateToDouble() ? country.utcOffset.toInt().toString() : country.utcOffset.toString()} ${country.abbr}',
+                                    style: TextStyle(fontFamily: 'Outfit', fontSize: 11, color: isSelected ? accentColor : Colors.grey),
+                                  ),
+                                  if (isSelected) ...[
+                                    const SizedBox(width: 8),
+                                    Icon(Icons.check_circle_rounded, color: accentColor, size: 18),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      child: Column(
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: ElevatedButton(
+                              onPressed: _nextStep,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: accentColor,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              ),
+                              child: Text(
+                                _selectedCountry != null ? 'CONTINUE AS ${_selectedCountry!.name.toUpperCase()}' : 'SKIP — SET LATER',
+                                style: const TextStyle(fontFamily: 'Outfit', fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 1),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ] else ...[
-                    // STEP 2: Authentication
+                    // STEP 3: Authentication
                     Row(
                       children: [
                         IconButton(

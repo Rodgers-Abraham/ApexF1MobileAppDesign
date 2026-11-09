@@ -842,33 +842,74 @@ class F1ApiClient:
             self._set_cache(cache_key, result, 86400 * 7)
         return result
 
+    def _fetch_all_laps_paginated(self, year: int, round_num: int) -> tuple:
+        """Fetch all lap timing data with pagination. Returns (race_meta, all_laps_list)."""
+        all_laps = []
+        race_meta = {}
+        offset = 0
+        per_page = 100  # 100 laps per page covers every F1 race
+
+        while True:
+            data = self._jolpica_get(
+                f"{year}/{round_num}/laps.json?limit={per_page}&offset={offset}"
+            )
+            if not data:
+                break
+            mr = data.get("MRData", {})
+            total = int(mr.get("total", 0))
+            races = mr.get("RaceTable", {}).get("Races", [])
+            if not races:
+                break
+            if not race_meta:
+                race_meta = races[0]
+            laps = races[0].get("Laps", [])
+            all_laps.extend(laps)
+            offset += per_page
+            if offset >= total or not laps:
+                break
+
+        return race_meta, all_laps
+
     def _race_replay(self, year: int, round_num: int):
-        laps_raw = self._jolpica_get(f"{year}/{round_num}/laps.json?limit=2000")
         results_raw = self._jolpica_get(f"{year}/{round_num}/results.json")
-        if not laps_raw or not results_raw:
+        race_meta, all_lap_data = self._fetch_all_laps_paginated(year, round_num)
+
+        if not all_lap_data or not results_raw:
             return None
 
         try:
-            race = laps_raw["MRData"]["RaceTable"]["Races"][0]
-            laps_data = race.get("Laps", [])
-            if not laps_data:
-                return None
-
-            # Build driver map from results
+            # Build driver map from results (also contains grid position)
             driver_info = {}
+            grid_entries = []
             for r in results_raw["MRData"]["RaceTable"]["Races"][0].get("Results", []):
                 d, c = r.get("Driver", {}), r.get("Constructor", {})
                 did = d.get("driverId", "")
-                driver_info[did] = {
+                grid_pos = int(r.get("grid", 99))
+                info = {
                     "name": f"{d.get('givenName','')} {d.get('familyName','')}".strip(),
                     "code": d.get("code", did[:3].upper()),
                     "team": _normalize_team(c.get("name", "")),
+                    "grid": grid_pos,
                 }
+                driver_info[did] = info
+                grid_entries.append({
+                    "pos": grid_pos,
+                    "driver_id": did,
+                    "name": info["name"],
+                    "code": info["code"],
+                    "team": info["team"],
+                    "lap_time": "Grid",
+                    "gap": "",
+                    "interval": "",
+                })
+
+            # Sort grid by starting position
+            grid_entries.sort(key=lambda x: x["pos"])
 
             cumulative = {}
             all_laps = []
 
-            for lap in laps_data:
+            for lap in all_lap_data:
                 lap_num = int(lap["number"])
                 entries = {}
                 for t in lap.get("Timings", []):
@@ -884,7 +925,6 @@ class F1ApiClient:
 
                 sorted_e = sorted(entries.values(), key=lambda x: x["pos"])
                 leader_ms = sorted_e[0]["cum_ms"] if sorted_e else 0
-                prev_leader_ms = 0
 
                 positions = []
                 for i, e in enumerate(sorted_e):
@@ -895,11 +935,7 @@ class F1ApiClient:
                     })
                     gap_ms = e["cum_ms"] - leader_ms
                     gap = "LEADER" if gap_ms == 0 else f"+{gap_ms/1000:.3f}s"
-                    if i == 0:
-                        interval = "LEADER"
-                    else:
-                        int_ms = e["cum_ms"] - sorted_e[i - 1]["cum_ms"]
-                        interval = f"+{int_ms/1000:.3f}s"
+                    interval = "LEADER" if i == 0 else f"+{(e['cum_ms'] - sorted_e[i-1]['cum_ms'])/1000:.3f}s"
 
                     positions.append({
                         "pos": e["pos"],
@@ -912,17 +948,24 @@ class F1ApiClient:
                         "interval": interval,
                     })
 
-                all_laps.append({"lap": lap_num, "positions": positions})
+                all_laps.append({"lap": lap_num, "phase": "", "positions": positions})
 
             total_laps = max(l["lap"] for l in all_laps) if all_laps else 0
+
+            # Prepend grid as lap 0
+            result_laps = [{"lap": 0, "phase": "GRID", "positions": grid_entries}] + all_laps
+
+            race_name = race_meta.get("raceName", "")
+            circuit = race_meta.get("Circuit", {}).get("circuitName", "")
+
             return {
                 "session_type": "race",
-                "race_name": race.get("raceName", ""),
-                "circuit": race.get("Circuit", {}).get("circuitName", ""),
+                "race_name": race_name,
+                "circuit": circuit,
                 "year": year,
                 "round": round_num,
                 "total_laps": total_laps,
-                "laps": all_laps,
+                "laps": result_laps,
             }
         except (KeyError, IndexError, ValueError) as e:
             print(f"Race replay parse error: {e}")

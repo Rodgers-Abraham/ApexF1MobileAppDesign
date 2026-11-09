@@ -158,7 +158,8 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT NOT NULL,
     name TEXT,
     favourite_team TEXT DEFAULT 'Ferrari',
-    favourite_driver TEXT
+    favourite_driver TEXT,
+    country TEXT
 );
 
 CREATE TABLE IF NOT EXISTS predictions (
@@ -223,7 +224,8 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT NOT NULL,
     name TEXT,
     favourite_team TEXT DEFAULT 'Ferrari',
-    favourite_driver TEXT
+    favourite_driver TEXT,
+    country TEXT
 );
 
 CREATE TABLE IF NOT EXISTS predictions (
@@ -311,6 +313,7 @@ def init_db():
         for migration in [
             "ALTER TABLE users ADD COLUMN name TEXT;",
             "ALTER TABLE users ADD COLUMN favourite_driver TEXT;",
+            "ALTER TABLE users ADD COLUMN country TEXT;",
         ]:
             try:
                 cursor.execute(migration)

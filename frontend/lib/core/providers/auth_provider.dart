@@ -14,6 +14,7 @@ class AuthState {
   final String? name;
   final String? favouriteTeam;
   final String? favouriteDriver;
+  final String? country;
   final bool isLoading;
   final String? errorMessage;
 
@@ -23,6 +24,7 @@ class AuthState {
     this.name,
     this.favouriteTeam,
     this.favouriteDriver,
+    this.country,
     this.isLoading = false,
     this.errorMessage,
   });
@@ -35,6 +37,7 @@ class AuthState {
     String? name,
     String? favouriteTeam,
     String? favouriteDriver,
+    String? country,
     bool? isLoading,
     String? errorMessage,
   }) {
@@ -44,6 +47,7 @@ class AuthState {
       name: name ?? this.name,
       favouriteTeam: favouriteTeam ?? this.favouriteTeam,
       favouriteDriver: favouriteDriver ?? this.favouriteDriver,
+      country: country ?? this.country,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
     );
@@ -75,6 +79,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           name: userData['name'],
           favouriteTeam: userData['favourite_team'],
           favouriteDriver: userData['favourite_driver'],
+          country: userData['country'],
         );
 
         _updateAppTheme(userData['favourite_team']);
@@ -121,7 +126,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     return fallback;
   }
 
-  Future<bool> register(String email, String password, String name, String favouriteTeam, String favouriteDriver) async {
+  Future<bool> register(String email, String password, String name, String favouriteTeam, String favouriteDriver, {String? country}) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final response = await _dio.post('/api/auth/register', data: {
@@ -130,11 +135,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
         'name': name.isNotEmpty ? name : null,
         'favourite_team': favouriteTeam,
         'favourite_driver': favouriteDriver.isNotEmpty ? favouriteDriver : null,
+        if (country != null) 'country': country,
       });
 
       final data = response.data;
       final token = data['token'];
-      
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_tokenKey, token);
       await prefs.setString(_userKey, jsonEncode(data));
@@ -146,6 +152,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         name: data['name'],
         favouriteTeam: data['favourite_team'],
         favouriteDriver: data['favourite_driver'],
+        country: data['country'],
       );
 
       _updateAppTheme(data['favourite_team']);
@@ -182,6 +189,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         name: data['name'],
         favouriteTeam: data['favourite_team'],
         favouriteDriver: data['favourite_driver'],
+        country: data['country'],
       );
 
       _updateAppTheme(data['favourite_team']);
@@ -293,6 +301,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(ref);
+});
+
+/// Returns the user's CountryTz if they have a country set, otherwise null.
+/// Import countries.dart to use CountryTz.
+final userCountryTzProvider = Provider<dynamic>((ref) {
+  // Returns CountryTz? — typed as dynamic to avoid circular import;
+  // callers should import countries.dart and cast.
+  final country = ref.watch(authProvider).country;
+  if (country == null) return null;
+  // Import inline to avoid circular deps — the function is in countries.dart
+  return country;
 });
 
 

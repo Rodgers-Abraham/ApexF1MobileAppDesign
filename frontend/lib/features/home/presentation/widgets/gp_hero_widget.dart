@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/providers/telemetry_provider.dart';
+import '../../../../core/providers/auth_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
+import '../../../../shared/constants/countries.dart';
 import '../../data/calendar_provider.dart';
 
 class GPHeroWidget extends ConsumerStatefulWidget {
@@ -38,6 +40,8 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
     final nextSessionData = ref.watch(nextSessionProvider);
     final sessionStatus = ref.watch(sessionLiveStatusProvider).value;
     final isLiveNow = sessionStatus?.isLive ?? false;
+    final userCountryName = ref.watch(authProvider).country;
+    final userTz = userCountryName != null ? findCountry(userCountryName) : null;
 
     return calendarAsync.when(
       loading: () => const SizedBox(
@@ -260,9 +264,20 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
                               )
                             else
                               const Spacer(),
-                            Text(
-                              _formatSessionCountdown(sessionDiff),
-                              style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 10, fontWeight: FontWeight.w900, color: Colors.cyanAccent),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _formatSessionCountdown(sessionDiff),
+                                  style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 10, fontWeight: FontWeight.w900, color: Colors.cyanAccent),
+                                ),
+                                if (userTz != null)
+                                  Text(
+                                    fmtLocalTime(nextSession.dateTime.toUtc(), userTz),
+                                    style: const TextStyle(fontFamily: 'Formula1', fontSize: 8, color: Colors.white54),
+                                  ),
+                              ],
                             ),
                           ],
                         ),

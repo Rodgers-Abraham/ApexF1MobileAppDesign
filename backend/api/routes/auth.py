@@ -15,6 +15,7 @@ class UserRegister(BaseModel):
     name: Optional[str] = None
     favourite_team: Optional[str] = "Ferrari"
     favourite_driver: Optional[str] = None
+    country: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -27,6 +28,7 @@ class ProfileUpdate(BaseModel):
     name: Optional[str] = None
     favourite_driver: Optional[str] = None
     new_password: Optional[str] = None
+    country: Optional[str] = None
 
 class AuthResponse(BaseModel):
     token: str
@@ -34,6 +36,7 @@ class AuthResponse(BaseModel):
     name: Optional[str] = None
     favourite_team: str
     favourite_driver: Optional[str] = None
+    country: Optional[str] = None
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -45,12 +48,13 @@ def _build_user_dict(row: sqlite3.Row) -> dict:
         "name": row["name"],
         "favourite_team": row["favourite_team"],
         "favourite_driver": row["favourite_driver"],
+        "country": row["country"] if "country" in row.keys() else None,
     }
 
 
 def _get_user_by_email(cursor, email: str):
     cursor.execute(
-        "SELECT id, email, name, favourite_team, favourite_driver FROM users WHERE email = ?",
+        "SELECT id, email, name, favourite_team, favourite_driver, country FROM users WHERE email = ?",
         (email.lower(),),
     )
     return cursor.fetchone()
@@ -68,8 +72,8 @@ async def register(user_in: UserRegister):
 
         try:
             cursor.execute(
-                "INSERT INTO users (email, password_hash, name, favourite_team, favourite_driver) VALUES (?, ?, ?, ?, ?)",
-                (user_in.email.lower(), pwd_hash, user_in.name, user_in.favourite_team, user_in.favourite_driver),
+                "INSERT INTO users (email, password_hash, name, favourite_team, favourite_driver, country) VALUES (?, ?, ?, ?, ?, ?)",
+                (user_in.email.lower(), pwd_hash, user_in.name, user_in.favourite_team, user_in.favourite_driver, user_in.country),
             )
             conn.commit()
         except DBIntegrityError:
@@ -80,19 +84,21 @@ async def register(user_in: UserRegister):
 
         # Fetch the newly created user
         cursor.execute(
-            "SELECT id, email, name, favourite_team, favourite_driver FROM users WHERE email = ?",
+            "SELECT id, email, name, favourite_team, favourite_driver, country FROM users WHERE email = ?",
             (user_in.email.lower(),),
         )
         user = cursor.fetchone()
 
     token = create_access_token({"email": user["email"]})
 
+    country = user["country"] if "country" in user.keys() else None
     return AuthResponse(
         token=token,
         email=user["email"],
         name=user["name"],
         favourite_team=user["favourite_team"],
         favourite_driver=user["favourite_driver"],
+        country=country,
     )
 
 
@@ -101,7 +107,7 @@ async def login(user_in: UserLogin):
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT id, email, password_hash, name, favourite_team, favourite_driver FROM users WHERE email = ?",
+            "SELECT id, email, password_hash, name, favourite_team, favourite_driver, country FROM users WHERE email = ?",
             (user_in.email.lower(),),
         )
         user = cursor.fetchone()
@@ -120,12 +126,14 @@ async def login(user_in: UserLogin):
 
     token = create_access_token({"email": user["email"]})
 
+    country = user["country"] if "country" in user.keys() else None
     return AuthResponse(
         token=token,
         email=user["email"],
         name=user["name"],
         favourite_team=user["favourite_team"],
         favourite_driver=user["favourite_driver"],
+        country=country,
     )
 
 
@@ -136,6 +144,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         "name": current_user.get("name"),
         "favourite_team": current_user["favourite_team"],
         "favourite_driver": current_user.get("favourite_driver"),
+        "country": current_user.get("country"),
     }
 
 
@@ -161,6 +170,10 @@ async def update_profile(profile_in: ProfileUpdate, current_user: dict = Depends
             updates.append("password_hash = ?")
             params.append(pwd_hash)
 
+        if profile_in.country is not None:
+            updates.append("country = ?")
+            params.append(profile_in.country)
+
         if not updates:
             return _build_user_dict(current_user)
 
@@ -171,7 +184,7 @@ async def update_profile(profile_in: ProfileUpdate, current_user: dict = Depends
 
         # Fetch updated user
         cursor.execute(
-            "SELECT id, email, name, favourite_team, favourite_driver FROM users WHERE id = ?",
+            "SELECT id, email, name, favourite_team, favourite_driver, country FROM users WHERE id = ?",
             (current_user["id"],),
         )
         user = cursor.fetchone()
