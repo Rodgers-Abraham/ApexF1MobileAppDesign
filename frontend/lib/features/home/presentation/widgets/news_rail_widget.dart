@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/providers/telemetry_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
+import '../../../../shared/widgets/skeleton_widget.dart';
 
 class NewsRailWidget extends ConsumerWidget {
   final Color accent;
@@ -35,10 +36,7 @@ class NewsRailWidget extends ConsumerWidget {
           builder: (context) {
             final articles = newsAsync.valueOrNull ?? [];
             if (newsAsync.isLoading && articles.isEmpty) {
-              return const SizedBox(
-                height: 220,
-                child: Center(child: CircularProgressIndicator(color: Colors.red)),
-              );
+              return const SkeletonCardRow(count: 3, cardWidth: 280, cardHeight: 235);
             }
             if (articles.isEmpty) {
               return Container(

@@ -307,17 +307,33 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<bool> deleteAccount() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    if (firebaseUser == null) {
+      state = state.copyWith(isLoading: false, errorMessage: 'Not signed in.');
+      return false;
+    }
     try {
-      final firebaseUser = FirebaseAuth.instance.currentUser;
-      if (firebaseUser == null) throw Exception('Not authenticated');
-      final idToken = await firebaseUser.getIdToken();
-      await _dio.delete(
-        '/api/auth/delete',
-        options: Options(headers: {'Authorization': 'Bearer $idToken'}),
-      );
+      // Delete Neon profile — best-effort, don't block if backend is unreachable
+      try {
+        final idToken = await firebaseUser.getIdToken();
+        await _dio.delete(
+          '/api/auth/delete',
+          options: Options(headers: {'Authorization': 'Bearer $idToken'}),
+        );
+      } catch (backendErr) {
+        debugPrint('Backend delete notice (proceeding): $backendErr');
+      }
+      // Always delete the Firebase account regardless of backend result
       await firebaseUser.delete();
       await logout();
       return true;
+    } on FirebaseAuthException catch (e) {
+      // re-authentication may be required for sensitive operations
+      String msg = e.code == 'requires-recent-login'
+          ? 'Please sign out and sign back in, then try deleting again.'
+          : e.message ?? 'Failed to delete account.';
+      state = state.copyWith(isLoading: false, errorMessage: msg);
+      return false;
     } catch (e) {
       final msg = _extractErrorMessage(e, 'Failed to delete account');
       state = state.copyWith(isLoading: false, errorMessage: msg);

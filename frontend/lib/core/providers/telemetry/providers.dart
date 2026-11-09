@@ -124,6 +124,24 @@ class ReplayLapEntry {
   const ReplayLapEntry({required this.lap, required this.phase, required this.positions});
 }
 
+class DriverReplaySummary {
+  final String driverName;
+  final String driverCode;
+  final String team;
+  final int finalPosition;
+  final String fastestLap;
+  final int fastestLapNum;
+
+  const DriverReplaySummary({
+    required this.driverName,
+    required this.driverCode,
+    required this.team,
+    required this.finalPosition,
+    required this.fastestLap,
+    required this.fastestLapNum,
+  });
+}
+
 class RaceReplayState {
   final String meetingName;
   final String circuitName;
@@ -136,6 +154,7 @@ class RaceReplayState {
   final List<LiveTelemetry> telemetry;
   final RaceFlagStatus flagStatus;
   final List<ReplayLapEntry> allLaps; // full session loaded at once
+  final String? focusedDriverName; // driver being highlighted
 
   const RaceReplayState({
     this.meetingName = '',
@@ -149,6 +168,7 @@ class RaceReplayState {
     this.telemetry = const [],
     this.flagStatus = RaceFlagStatus.defaultStatus,
     this.allLaps = const [],
+    this.focusedDriverName,
   });
 
   RaceReplayState copyWith({
@@ -163,6 +183,8 @@ class RaceReplayState {
     List<LiveTelemetry>? telemetry,
     RaceFlagStatus? flagStatus,
     List<ReplayLapEntry>? allLaps,
+    String? focusedDriverName,
+    bool clearFocusedDriver = false,
   }) {
     return RaceReplayState(
       meetingName: meetingName ?? this.meetingName,
@@ -176,6 +198,7 @@ class RaceReplayState {
       telemetry: telemetry ?? this.telemetry,
       flagStatus: flagStatus ?? this.flagStatus,
       allLaps: allLaps ?? this.allLaps,
+      focusedDriverName: clearFocusedDriver ? null : (focusedDriverName ?? this.focusedDriverName),
     );
   }
 
@@ -183,6 +206,57 @@ class RaceReplayState {
     if (allLaps.isEmpty) return 'LAP $currentLap';
     final entry = allLaps.firstWhere((l) => l.lap == currentLap, orElse: () => allLaps.first);
     return entry.phase.isNotEmpty ? entry.phase : 'LAP $currentLap';
+  }
+
+  bool get isAtEnd => totalLaps > 0 && currentLap >= totalLaps;
+
+  /// Compute a summary for the focused driver at the current lap.
+  DriverReplaySummary? get focusedDriverSummary {
+    if (focusedDriverName == null || allLaps.isEmpty) return null;
+    final hint = focusedDriverName!.toLowerCase();
+
+    // Find driver in current (or last) lap
+    final currentEntry = allLaps.firstWhere(
+      (l) => l.lap == currentLap,
+      orElse: () => allLaps.last,
+    );
+
+    // Find fastest lap across all laps
+    String fastest = '';
+    int fastestLapNum = 0;
+    double fastestSecs = double.infinity;
+    for (final lap in allLaps) {
+      if (lap.lap == 0) continue; // skip grid
+      final driver = lap.positions.where((d) =>
+          d.name.toLowerCase().contains(hint) || hint.contains(d.name.toLowerCase())).firstOrNull;
+      if (driver == null) continue;
+      final t = driver.lastLap;
+      if (t.isNotEmpty && t.contains(':')) {
+        try {
+          final parts = t.split(':');
+          final secs = double.parse(parts[0]) * 60 + double.parse(parts[1]);
+          if (secs < fastestSecs) {
+            fastestSecs = secs;
+            fastest = t;
+            fastestLapNum = lap.lap;
+          }
+        } catch (_) {}
+      }
+    }
+
+    final driverData = currentEntry.positions.firstWhere(
+      (d) => d.name.toLowerCase().contains(hint) || hint.contains(d.name.toLowerCase()),
+      orElse: () => currentEntry.positions.isEmpty ? currentEntry.positions.first : currentEntry.positions.last,
+    );
+
+    return DriverReplaySummary(
+      driverName: driverData.name,
+      driverCode: driverData.team.isNotEmpty ? driverData.team.substring(0, 2) : '??',
+      team: driverData.team,
+      finalPosition: int.tryParse(driverData.pos) ?? 0,
+      fastestLap: fastest,
+      fastestLapNum: fastestLapNum,
+    );
   }
 }
 
@@ -336,6 +410,14 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
   void pause() {
     _playTimer?.cancel();
     state = state.copyWith(isPlaying: false);
+  }
+
+  void setFocusedDriver(String? driverName) {
+    if (driverName == null) {
+      state = state.copyWith(clearFocusedDriver: true);
+    } else {
+      state = state.copyWith(focusedDriverName: driverName);
+    }
   }
 
   // Legacy — kept so old code compiles, redirects are ignored

@@ -7,6 +7,7 @@ import '../../../../core/providers/auth_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../shared/constants/countries.dart';
 import '../../../../shared/widgets/error_retry_widget.dart';
+import '../../../../shared/widgets/skeleton_widget.dart';
 import '../../data/calendar_provider.dart';
 
 class GPHeroWidget extends ConsumerStatefulWidget {
@@ -45,10 +46,7 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
     final userTz = userCountryName != null ? findCountry(userCountryName) : null;
 
     return calendarAsync.when(
-      loading: () => const SizedBox(
-        height: 200,
-        child: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () => const SkeletonHeroCard(),
       error: (_, __) => ErrorRetryWidget(
         message: 'Calendar unavailable. Check your connection.',
         icon: Icons.calendar_month_rounded,

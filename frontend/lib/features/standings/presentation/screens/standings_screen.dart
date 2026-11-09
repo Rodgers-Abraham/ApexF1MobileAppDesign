@@ -5,6 +5,7 @@ import '../../../../core/providers/telemetry_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../shared/constants/f1_data.dart';
 import '../../../../shared/widgets/error_retry_widget.dart';
+import '../../../../shared/widgets/skeleton_widget.dart';
 
 class StandingsScreen extends ConsumerStatefulWidget {
   const StandingsScreen({super.key});
@@ -135,7 +136,7 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
         children: [
           // Drivers Standings
           driversAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator(color: Colors.red)),
+            loading: () => const SkeletonStandingsList(count: 10),
             error: (err, stack) => ErrorRetryWidget(
               message: 'Could not load driver standings.\nCheck your connection.',
               icon: Icons.people_alt_rounded,
@@ -145,7 +146,7 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
           ),
           // Constructors Standings
           constructorsAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator(color: Colors.red)),
+            loading: () => const SkeletonStandingsList(count: 10),
             error: (err, stack) => ErrorRetryWidget(
               message: 'Could not load constructor standings.\nCheck your connection.',
               icon: Icons.construction_rounded,

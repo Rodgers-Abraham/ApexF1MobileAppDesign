@@ -857,26 +857,52 @@ class F1ApiClient:
                 return int(race.get("round", 0))
         return None
 
+    @staticmethod
+    def _name_matches(actual: str, hint: str) -> bool:
+        """True if the actual race name matches the hint (tolerant comparison)."""
+        if not actual or not hint:
+            return True  # no hint → don't reject
+        a = actual.lower().replace(" grand prix", "").strip()
+        h = hint.lower().replace(" grand prix", "").replace(" gp", "").strip()
+        return h in a or a in h
+
     def get_session_replay(self, year: int, round_num: int, session_type: str = "race", race_name: str = ""):
-        # Resolve the correct Jolpica round number from the race name to avoid
-        # mismatches between our fallback calendar numbering and Jolpica's.
+        # 1. Try Jolpica race list to get the authoritative round number
         if race_name:
             jolpica_round = self._resolve_jolpica_round(year, race_name)
             if jolpica_round and jolpica_round != round_num:
-                print(f"Corrected round for '{race_name}': {round_num} -> {jolpica_round}")
+                print(f"Round correction for '{race_name}': {round_num} → {jolpica_round}")
                 round_num = jolpica_round
 
         cache_key = f"session_replay_{year}_{round_num}_{session_type}"
         cached = self._get_cached(cache_key)
         if cached is not None:
-            return cached
+            # Verify cache still matches the requested race name
+            if not race_name or self._name_matches(cached.get("race_name", ""), race_name):
+                return cached
 
-        if session_type == "qualifying":
-            result = self._qualifying_replay(year, round_num)
-        elif session_type == "sprint":
-            result = self._sprint_replay(year, round_num)
-        else:
-            result = self._race_replay(year, round_num)
+        def _do(rnd):
+            if session_type == "qualifying":
+                return self._qualifying_replay(year, rnd)
+            elif session_type == "sprint":
+                return self._sprint_replay(year, rnd)
+            return self._race_replay(year, rnd)
+
+        result = _do(round_num)
+
+        # 2. If we got data but the race name doesn't match, search ±1/±2 rounds
+        if result and race_name and not self._name_matches(result.get("race_name", ""), race_name):
+            print(f"Name mismatch: got '{result.get('race_name')}', expected '{race_name}'. Searching adjacent rounds.")
+            for adj in [round_num + 1, round_num - 1, round_num + 2, round_num - 2]:
+                if adj < 1 or adj > 30:
+                    continue
+                adj_result = _do(adj)
+                if adj_result and self._name_matches(adj_result.get("race_name", ""), race_name):
+                    print(f"Found correct race at round {adj}")
+                    result = adj_result
+                    # Cache under the correct round key
+                    self._set_cache(f"session_replay_{year}_{adj}_{session_type}", result, 86400 * 7)
+                    return result
 
         if result:
             self._set_cache(cache_key, result, 86400 * 7)

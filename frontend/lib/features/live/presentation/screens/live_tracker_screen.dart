@@ -648,6 +648,13 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                 ),
               ],
 
+              // Replay: driver focus picker + end-of-race summary card
+              if (!isLive && replayState.allLaps.isNotEmpty && _selectedMode == LiveMode.timing) ...[
+                _buildDriverFocusPicker(replayState, accentColor),
+                if (replayState.isAtEnd && replayState.focusedDriverSummary != null)
+                  _buildDriverSummaryCard(replayState.focusedDriverSummary!, accentColor),
+              ],
+
               // View Body based on Mode Switcher
               if (_selectedMode == LiveMode.timing) ...[
                 _buildTimingTower(telemetryList, isLive ? telemetryAsync.isLoading : replayState.isLoading),
@@ -661,6 +668,120 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
             ],
           ),
         ),
+    );
+  }
+
+  Widget _buildDriverFocusPicker(RaceReplayState replayState, Color accent) {
+    final drivers = replayState.telemetry;
+    if (drivers.isEmpty) return const SizedBox.shrink();
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      height: 36,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: drivers.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 6),
+        itemBuilder: (context, i) {
+          final d = drivers[i];
+          final meta = getDriverData(d.name);
+          final code = meta?.code ?? d.name.split(' ').lastOrNull?.substring(0, 3).toUpperCase() ?? '???';
+          Color teamColor = Colors.white;
+          try {
+            final hex = d.color.replaceAll('#', '');
+            teamColor = Color(int.parse('FF$hex', radix: 16));
+          } catch (_) {}
+          final isFocused = replayState.focusedDriverName == d.name;
+          return GestureDetector(
+            onTap: () => ref.read(raceReplayProvider.notifier).setFocusedDriver(isFocused ? null : d.name),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: isFocused ? teamColor.withValues(alpha: 0.2) : const Color(0xFF141419),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: isFocused ? teamColor : Colors.white12, width: isFocused ? 1.5 : 1),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isFocused) Icon(Icons.star_rounded, size: 10, color: teamColor),
+                  if (isFocused) const SizedBox(width: 3),
+                  Text(
+                    code,
+                    style: TextStyle(
+                      fontFamily: 'Formula1Wide',
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w900,
+                      color: isFocused ? teamColor : Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDriverSummaryCard(DriverReplaySummary summary, Color accent) {
+    final pos = summary.finalPosition;
+    final posColor = pos == 1 ? const Color(0xFFFFD700) : pos == 2 ? const Color(0xFFC0C0C0) : pos == 3 ? const Color(0xFFCD7F32) : Colors.white;
+    final teamData = getTeamData(summary.team);
+    final teamColor = teamData?.primaryColor ?? accent;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF141419),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: teamColor.withValues(alpha: 0.5), width: 1.5),
+        boxShadow: [BoxShadow(color: teamColor.withValues(alpha: 0.08), blurRadius: 16)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.flag_rounded, size: 12, color: Colors.white54),
+              const SizedBox(width: 6),
+              Text('RACE RESULT — ${summary.driverName.toUpperCase()}',
+                  style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 9, fontWeight: FontWeight.w900, color: Colors.white54, letterSpacing: 0.8)),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(color: posColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(4), border: Border.all(color: posColor.withValues(alpha: 0.5))),
+                child: Text('P$pos', style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 13, fontWeight: FontWeight.w900, color: posColor)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              _statTile('FASTEST LAP', summary.fastestLap.isNotEmpty ? summary.fastestLap : '—', const Color(0xFFBB00FF)),
+              const SizedBox(width: 12),
+              _statTile('LAP', summary.fastestLapNum > 0 ? 'L${summary.fastestLapNum}' : '—', Colors.white54),
+              const SizedBox(width: 12),
+              _statTile('TEAM', summary.team, teamColor),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statTile(String label, String value, Color color) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 7.5, color: Colors.white38, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 3),
+          Text(value, maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontFamily: 'Formula1', fontSize: 11, fontWeight: FontWeight.w900, color: color)),
+        ],
+      ),
     );
   }
 
