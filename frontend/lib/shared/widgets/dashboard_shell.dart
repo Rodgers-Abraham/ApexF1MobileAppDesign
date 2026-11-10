@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/theme_provider.dart';
+import '../theme/app_design_system.dart';
 
 class DashboardShell extends ConsumerWidget {
   final Widget child;
@@ -16,8 +17,8 @@ class DashboardShell extends ConsumerWidget {
     if (location.startsWith('/live')) return 1;
     if (location.startsWith('/standings')) return 2;
     if (location.startsWith('/predictor')) return 3;
-    if (location.startsWith('/settings')) return 4;
-    return 0; // Default to Pitwall (/)
+    if (location.startsWith('/chat')) return 4;
+    return 0;
   }
 
   void _onItemTapped(int index, BuildContext context) {
@@ -35,7 +36,7 @@ class DashboardShell extends ConsumerWidget {
         context.go('/predictor');
         break;
       case 4:
-        context.go('/settings');
+        context.go('/chat');
         break;
     }
   }
@@ -47,76 +48,45 @@ class DashboardShell extends ConsumerWidget {
     final selectedIndex = _getSelectedIndex(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0B0E),
+      backgroundColor: DS.bg,
       body: child,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF101014),
+          color: DS.surface0,
           border: Border(
-            top: BorderSide(
-              color: Colors.white.withValues(alpha: 0.07),
-              width: 1,
-            ),
+            top: BorderSide(color: DS.outline, width: 1),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.7),
-              blurRadius: 25,
-              offset: const Offset(0, -5),
-            ),
-          ],
         ),
         child: SafeArea(
           top: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
+          child: SizedBox(
+            height: 56,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildNavItem(
-                  context: context,
-                  index: 0,
-                  currentIndex: selectedIndex,
-                  label: 'PITWALL',
-                  icon: Icons.dashboard_outlined,
-                  activeIcon: Icons.dashboard_rounded,
-                  accentColor: accentColor,
+                  context: context, index: 0, currentIndex: selectedIndex,
+                  label: 'PITWALL', icon: Icons.dashboard_outlined,
+                  activeIcon: Icons.dashboard_rounded, accentColor: accentColor,
                 ),
                 _buildNavItem(
-                  context: context,
-                  index: 1,
-                  currentIndex: selectedIndex,
-                  label: 'LIVE',
-                  icon: Icons.track_changes_outlined,
-                  activeIcon: Icons.track_changes_rounded,
-                  accentColor: accentColor,
+                  context: context, index: 1, currentIndex: selectedIndex,
+                  label: 'TIMING', icon: Icons.timer_outlined,
+                  activeIcon: Icons.timer_rounded, accentColor: accentColor,
                 ),
                 _buildNavItem(
-                  context: context,
-                  index: 2,
-                  currentIndex: selectedIndex,
-                  label: 'STANDINGS',
-                  icon: Icons.emoji_events_outlined,
-                  activeIcon: Icons.emoji_events_rounded,
-                  accentColor: accentColor,
+                  context: context, index: 2, currentIndex: selectedIndex,
+                  label: 'STANDINGS', icon: Icons.emoji_events_outlined,
+                  activeIcon: Icons.emoji_events_rounded, accentColor: accentColor,
                 ),
                 _buildNavItem(
-                  context: context,
-                  index: 3,
-                  currentIndex: selectedIndex,
-                  label: 'PREDICTOR',
-                  icon: Icons.gps_fixed_outlined,
-                  activeIcon: Icons.gps_fixed_rounded,
-                  accentColor: accentColor,
+                  context: context, index: 3, currentIndex: selectedIndex,
+                  label: 'PREDICT', icon: Icons.gps_fixed_outlined,
+                  activeIcon: Icons.gps_fixed_rounded, accentColor: accentColor,
                 ),
                 _buildNavItem(
-                  context: context,
-                  index: 4,
-                  currentIndex: selectedIndex,
-                  label: 'SETTINGS',
-                  icon: Icons.settings_outlined,
-                  activeIcon: Icons.settings_rounded,
-                  accentColor: accentColor,
+                  context: context, index: 4, currentIndex: selectedIndex,
+                  label: 'APEX AI', icon: Icons.psychology_outlined,
+                  activeIcon: Icons.psychology_rounded, accentColor: accentColor,
                 ),
               ],
             ),
@@ -140,50 +110,39 @@ class DashboardShell extends ConsumerWidget {
     return Expanded(
       child: InkWell(
         onTap: () => _onItemTapped(index, context),
-        borderRadius: BorderRadius.circular(10),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isSelected ? activeIcon : icon,
-                size: 20,
-                color: isSelected ? accentColor : Colors.grey[500],
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Top accent pill
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: isSelected ? 24 : 0,
+              height: 2,
+              decoration: BoxDecoration(
+                color: accentColor,
+                borderRadius: BorderRadius.circular(1),
               ),
-              const SizedBox(height: 3),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Formula1Wide',
-                  fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
-                  fontSize: 7.5,
-                  letterSpacing: 0.4,
-                  color: isSelected ? Colors.white : Colors.grey[500],
-                ),
+            ),
+            const SizedBox(height: 4),
+            Icon(
+              isSelected ? activeIcon : icon,
+              size: 20,
+              color: isSelected ? accentColor : DS.textMuted,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: DS.labelCaps(
+                size: 7.5,
+                color: isSelected ? DS.textPrimary : DS.textMuted,
+              ).copyWith(
+                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w500,
               ),
-              const SizedBox(height: 2),
-              Container(
-                width: 14,
-                height: 2,
-                decoration: BoxDecoration(
-                  color: isSelected ? accentColor : Colors.transparent,
-                  borderRadius: BorderRadius.circular(2),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: accentColor.withValues(alpha: 0.8),
-                            blurRadius: 4,
-                          ),
-                        ]
-                      : null,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
