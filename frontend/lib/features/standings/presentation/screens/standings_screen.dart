@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/providers/telemetry_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
+import '../../../../shared/theme/app_design_system.dart';
+import '../../../../shared/widgets/ds_app_bar.dart';
 import '../../../../shared/constants/f1_data.dart';
 import '../../../../shared/widgets/error_retry_widget.dart';
 import '../../../../shared/widgets/skeleton_widget.dart';
@@ -38,97 +40,61 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
     final constructorsAsync = ref.watch(liveConstructorStandingsProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0B0E),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF101014),
-        elevation: 0,
-        title: Row(
+      backgroundColor: DS.bg,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight + 72),
+        child: Column(
           children: [
+            DSAppBar(
+              subtitle: 'TRACKSIDE TELEMETRY',
+              isLive: true,
+              liveLabel: 'LIVE R24',
+              latencyMs: '12',
+            ),
+            // Season progress
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(3),
-              ),
-              child: const Text(
-                'A',
-                style: TextStyle(
-                  fontFamily: 'Formula1Wide',
-                  fontWeight: FontWeight.w900,
-                  fontSize: 13,
-                  color: Color(0xFF0B0B0E),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'APEX',
-              style: AppFonts.wide(fontSize: 14, fontWeight: FontWeight.w900, color: Colors.white),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              'F1',
-              style: AppFonts.wide(fontSize: 12, fontWeight: FontWeight.w900, color: const Color(0xFFFF1744)),
-            ),
-            const Spacer(),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFF18181E),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-              ),
-              child: Text(
-                '2026 SEASON',
-                style: AppFonts.number(fontSize: 9, color: Colors.grey[400]!, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            padding: const EdgeInsets.all(3),
-            decoration: BoxDecoration(
-              color: const Color(0xFF0F0F13),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFF202028)),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              indicator: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(6),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    blurRadius: 8,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              color: DS.surface1,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text('STANDINGS // 2026 SEASON', style: DS.labelCaps(size: 8, color: DS.textMuted)),
+                      const Spacer(),
+                      Text('ROUND 12/24', style: DS.labelCaps(size: 8, color: DS.orange)),
+                      const SizedBox(width: 6),
+                      DSWidgets.statusChip('50% COMPLETED', color: DS.orange, size: 8),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  ClipRRect(
+                    borderRadius: DS.aeroCornerSm,
+                    child: LinearProgressIndicator(value: 0.5, backgroundColor: DS.surface3, valueColor: AlwaysStoppedAnimation<Color>(DS.orange), minHeight: 3),
                   ),
                 ],
               ),
-              indicatorSize: TabBarIndicatorSize.tab,
-              labelColor: const Color(0xFF09090C),
-              unselectedLabelColor: const Color(0xFF8F909A),
-              labelStyle: const TextStyle(
-                fontFamily: 'Formula1Wide',
-                fontWeight: FontWeight.w900,
-                fontSize: 11,
-                letterSpacing: 0.8,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontFamily: 'Formula1Wide',
-                fontWeight: FontWeight.bold,
-                fontSize: 11,
-                letterSpacing: 0.8,
-              ),
-              dividerColor: Colors.transparent,
-              tabs: const [
-                Tab(text: 'DRIVERS'),
-                Tab(text: 'CONSTRUCTORS'),
-              ],
             ),
-          ),
+            // Tab bar
+            Container(
+              color: DS.surface0,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              child: TabBar(
+                controller: _tabController,
+                indicator: BoxDecoration(color: DS.textPrimary, borderRadius: DS.aeroCornerSm),
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelColor: DS.bg,
+                unselectedLabelColor: DS.textMuted,
+                dividerColor: Colors.transparent,
+                labelStyle: DS.driverCode(size: 11),
+                unselectedLabelStyle: DS.labelCaps(size: 11),
+                tabs: const [
+                  Tab(text: 'DRIVERS'),
+                  Tab(text: 'CONSTRUCTORS'),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
       body: TabBarView(

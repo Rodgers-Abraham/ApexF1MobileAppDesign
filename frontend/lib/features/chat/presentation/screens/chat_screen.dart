@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../../../../shared/theme/theme_provider.dart';
+import '../../../../shared/theme/app_design_system.dart';
+import '../../../../shared/widgets/ds_app_bar.dart';
 import '../../../../core/utils/api_config.dart';
 
 class ChatMessage {
@@ -152,182 +154,263 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeState = ref.watch(themeProvider);
+    ref.watch(themeProvider); // keep theme subscription alive
     final chatState = ref.watch(chatNotifierProvider);
-    final accentColor = themeState.selectedTeam.primaryColor;
+
+    final suggestions = [
+      'Who leads the 2026 championship points?',
+      'Best tyre strategy for Interlagos in wet?',
+      'Explain DRS zones & flap aero limits',
+      'Compare Verstappen vs Norris telemetry',
+    ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: accentColor.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(Icons.psychology_rounded, color: accentColor, size: 20),
-            ),
-            const SizedBox(width: 10),
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('F1-IQ CHATBOT', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                Text('Strictly F1 Expert Assistant', style: TextStyle(fontSize: 10, color: Colors.grey)),
-              ],
-            ),
-          ],
-        ),
-        actions: const [],
+      backgroundColor: DS.bg,
+      appBar: DSAppBar(
+        subtitle: 'APEX INTELLIGENCE',
+        isLive: true,
+        liveLabel: 'GEMINI',
+        latencyMs: '12',
       ),
       body: Column(
         children: [
+          // Track status bar
+          Container(
+            color: DS.surface0,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            child: Row(
+              children: [
+                Container(width: 6, height: 6, decoration: BoxDecoration(color: DS.green, shape: BoxShape.circle)),
+                const SizedBox(width: 6),
+                Text('TRACK STATUS: GREEN', style: DS.labelCaps(size: 8, color: DS.green)),
+                Text('  //  AIR 26°C · TRACK 38.4°C  |  ENGINE ACTIVE', style: DS.labelCaps(size: 8, color: DS.textMuted)),
+              ],
+            ),
+          ),
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: chatState.messages.length + (chatState.isLoading ? 1 : 0),
+              padding: const EdgeInsets.all(12),
+              itemCount: chatState.messages.length == 1
+                  ? chatState.messages.length + 1  // +1 for suggestions
+                  : chatState.messages.length + (chatState.isLoading ? 1 : 0),
               itemBuilder: (context, index) {
-                if (index == chatState.messages.length) {
+                // Show AI identity card + suggestions after first message
+                if (chatState.messages.length == 1 && index == 1) {
+                  return _buildSuggestionsPanel(suggestions);
+                }
+
+                if (chatState.isLoading && index == chatState.messages.length) {
                   return Align(
                     alignment: Alignment.centerLeft,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1E1E1E),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(accentColor),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _AiAvatar(),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            decoration: BoxDecoration(color: DS.surface2, borderRadius: DS.aeroCorner, border: Border.all(color: DS.outline)),
+                            child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: DS.teal)),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                   );
                 }
 
                 final msg = chatState.messages[index];
-                return Align(
-                  alignment: msg.isUser ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.75,
+                if (msg.isUser) {
+                  return Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(color: DS.red, borderRadius: DS.aeroCorner),
+                      child: Text(msg.text, style: DS.body(size: 13, color: DS.redText)),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: msg.isUser ? accentColor : const Color(0xFF161616),
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(16),
-                        topRight: const Radius.circular(16),
-                        bottomLeft: Radius.circular(msg.isUser ? 16 : 4),
-                        bottomRight: Radius.circular(msg.isUser ? 4 : 16),
-                      ),
-                      border: msg.isUser 
-                          ? null
-                          : Border.all(color: Colors.white.withOpacity(0.05)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          msg.text,
-                          style: TextStyle(
-                            color: msg.isUser ? Colors.white : const Color(0xFFE1E1E1),
-                            fontSize: 14.5,
-                            height: 1.4,
+                  );
+                }
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _AiAvatar(),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(color: DS.surface2, borderRadius: DS.aeroCorner, border: Border.all(color: DS.outline)),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('APEX AI INSIGHT', style: DS.labelCaps(size: 8, color: DS.teal)),
+                              const SizedBox(height: 6),
+                              Text(msg.text, style: DS.body(size: 13, color: DS.textPrimary)),
+                              if (msg.citations.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 6, runSpacing: 4,
+                                  children: msg.citations.map((cite) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(color: DS.surface3, borderRadius: DS.aeroCornerSm, border: Border.all(color: DS.outline)),
+                                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                        const Icon(Icons.bookmark_outline, size: 9, color: Color(0xFF29DEC9)),
+                                        const SizedBox(width: 3),
+                                        Text(cite, style: DS.labelCaps(size: 8, color: DS.teal)),
+                                      ]),
+                                    );
+                                  }).toList(),
+                                )
+                              ],
+                            ],
                           ),
                         ),
-                        if (msg.citations.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 6,
-                            runSpacing: 4,
-                            children: msg.citations.map((cite) {
-                              return Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: accentColor.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: accentColor.withOpacity(0.3)),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.bookmark_outline, size: 10, color: accentColor),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      cite,
-                                      style: TextStyle(color: accentColor, fontSize: 9, fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
-                          )
-                        ]
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 );
               },
             ),
           ),
-          
+
           if (chatState.error != null)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                chatState.error!,
-                style: const TextStyle(color: Colors.red, fontSize: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: DS.red.withValues(alpha: 0.1), borderRadius: DS.aeroCornerSm, border: Border.all(color: DS.red.withValues(alpha: 0.4))),
+                child: Text(chatState.error!, style: DS.body(size: 11, color: DS.red)),
               ),
             ),
-            
-          // Input field
+
+          // Input bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF0F0F0F),
-              border: Border(top: BorderSide(color: Colors.white.withOpacity(0.05))),
+              color: DS.surface0,
+              border: Border(top: BorderSide(color: DS.outline)),
             ),
             child: Row(
               children: [
+                Icon(Icons.mic_none, size: 20, color: DS.textMuted),
+                const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
                     controller: _controller,
-                    enabled: true,
-                    style: const TextStyle(color: Colors.white),
+                    style: DS.body(size: 13, color: DS.textPrimary),
                     decoration: InputDecoration(
-                      hintText: 'Ask about driver history, rules, schedules...',
-                      hintStyle: TextStyle(color: Colors.grey[600], fontSize: 13),
+                      hintText: 'Ask telemetry, rules, or strategy...',
+                      hintStyle: DS.body(size: 13, color: DS.textMuted),
                       filled: true,
-                      fillColor: const Color(0xFF161616),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      fillColor: DS.surface1,
+                      border: OutlineInputBorder(borderRadius: DS.aeroCorner, borderSide: BorderSide(color: DS.outline)),
+                      enabledBorder: OutlineInputBorder(borderRadius: DS.aeroCorner, borderSide: BorderSide(color: DS.outline)),
+                      focusedBorder: OutlineInputBorder(borderRadius: DS.aeroCorner, borderSide: BorderSide(color: DS.red)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      isDense: true,
                     ),
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _send(),
                   ),
                 ),
                 const SizedBox(width: 8),
-                IconButton(
-                  onPressed: _send,
-                  icon: Icon(Icons.send_rounded, color: accentColor),
+                GestureDetector(
+                  onTap: _send,
+                  child: Container(
+                    width: 36, height: 36,
+                    decoration: BoxDecoration(color: DS.red, shape: BoxShape.circle),
+                    child: const Icon(Icons.arrow_upward_rounded, color: Colors.white, size: 18),
+                  ),
                 ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSuggestionsPanel(List<String> suggestions) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // AI card
+          DSWidgets.leftAccentCard(
+            accent: DS.orange,
+            bgColor: DS.surface1,
+            child: Row(
+              children: [
+                _AiAvatar(),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(children: [
+                        Text('Apex Chief Strategist', style: DS.headlineMd(size: 13)),
+                        const SizedBox(width: 6),
+                        DSWidgets.statusChip('V1.5 PRO', color: DS.orange, size: 8),
+                      ]),
+                      const SizedBox(height: 4),
+                      Text('Pitwall telemetry analysis, strategy simulation and F1 history ready for query.', style: DS.body(size: 11)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Suggestion chips
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2, childAspectRatio: 2.5, crossAxisSpacing: 8, mainAxisSpacing: 8),
+            itemCount: suggestions.length,
+            itemBuilder: (_, i) => GestureDetector(
+              onTap: () {
+                _controller.text = suggestions[i];
+                _send();
+              },
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: DS.surface2,
+                  borderRadius: DS.aeroCornerSm,
+                  border: Border(left: BorderSide(color: DS.red, width: 2)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(child: Text(suggestions[i], style: DS.body(size: 10, color: DS.textVariant))),
+                    Icon(Icons.arrow_forward, size: 12, color: DS.textMuted),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+}
+
+class _AiAvatar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 28, height: 28,
+      decoration: BoxDecoration(color: DS.tealDark, borderRadius: DS.aeroCornerSm),
+      alignment: Alignment.center,
+      child: Text('A', style: DS.driverCode(size: 13, color: DS.teal)),
     );
   }
 }

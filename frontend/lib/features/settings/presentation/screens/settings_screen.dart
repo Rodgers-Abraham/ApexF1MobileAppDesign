@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../shared/constants/f1_data.dart';
 import '../../../../shared/theme/theme_provider.dart';
+import '../../../../shared/theme/app_design_system.dart';
+import '../../../../shared/widgets/ds_app_bar.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -141,84 +143,66 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final accentColor = themeState.selectedTeam.primaryColor;
     final currentTeam = themeState.selectedTeam;
 
+    final authState = ref.watch(authProvider);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0B0E),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF101014),
-        elevation: 0,
-        titleSpacing: 16,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFF1744),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: const Text(
-                'A',
-                style: TextStyle(
-                  fontFamily: 'Formula1Wide',
-                  fontWeight: FontWeight.w900,
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            RichText(
-              text: const TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'APEX ',
-                    style: TextStyle(
-                      fontFamily: 'Formula1',
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
-                      color: Colors.white,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  TextSpan(
-                    text: 'SYSTEM',
-                    style: TextStyle(
-                      fontFamily: 'Formula1Wide',
-                      fontWeight: FontWeight.w900,
-                      fontSize: 14,
-                      color: Color(0xFFFF1744),
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+      backgroundColor: DS.bg,
+      appBar: DSAppBar(
+        subtitle: 'PIT LANE SETTINGS',
+        isLive: false,
+        latencyMs: '12',
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 28),
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Screen Title
-            Text(
-              'APEX F1 SYSTEM',
-              style: TextStyle(
-                fontFamily: 'Formula1Wide',
-                fontSize: 10,
-                letterSpacing: 1.5,
-                color: Colors.grey[400],
-                fontWeight: FontWeight.bold,
+            // Profile card
+            DSWidgets.leftAccentCard(
+              accent: accentColor,
+              bgColor: DS.surface1,
+              child: Row(
+                children: [
+                  Container(
+                    width: 48, height: 48,
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.2),
+                      borderRadius: DS.aeroCornerSm,
+                      border: Border.all(color: accentColor.withValues(alpha: 0.5)),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      (authState.name?.isNotEmpty == true ? authState.name![0] : 'A').toUpperCase(),
+                      style: DS.display(size: 20, color: accentColor),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(authState.name ?? 'DRIVER', style: DS.headline(size: 15)),
+                        Text(authState.email ?? '', style: DS.body(size: 11)),
+                        const SizedBox(height: 4),
+                        DSWidgets.statusChip(authState.favouriteTeam ?? 'F1 TEAM', color: accentColor, size: 8),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.edit_outlined, size: 18, color: DS.textMuted),
+                ],
               ),
             ),
-            const SizedBox(height: 3),
-            const Text(
-              'SETTINGS',
-              style: TextStyle(
-                fontFamily: 'Formula1',
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Row(
+                children: [
+                  Icon(Icons.verified_outlined, size: 12, color: DS.teal),
+                  const SizedBox(width: 4),
+                  Text('APEX TELEMETRY PRO', style: DS.labelCaps(size: 8, color: DS.teal)),
+                  const Spacer(),
+                  Text('VIP PADDOCK PASS', style: DS.labelCaps(size: 8, color: DS.orange)),
+                ],
               ),
             ),
             const SizedBox(height: 20),

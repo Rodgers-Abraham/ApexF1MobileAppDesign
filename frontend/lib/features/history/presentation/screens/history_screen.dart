@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/session_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
+import '../../../../shared/theme/app_design_system.dart';
+import '../../../../shared/widgets/ds_app_bar.dart';
 import '../../../home/presentation/screens/pitwall_screen.dart' show getCircuitAssetPath;
 
 // Providers for historical F1 data
@@ -52,29 +54,35 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final seasonRacesAsync = ref.watch(seasonRacesProvider(_selectedYear));
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Image.asset(
-              'assets/logo.png',
-              height: 22,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => const SizedBox(),
-            ),
-            const SizedBox(width: 8),
-            Text('HISTORICAL ARCHIVE', style: AppFonts.header(fontSize: 15, fontWeight: FontWeight.w900)),
-          ],
-        ),
+      backgroundColor: DS.bg,
+      appBar: DSAppBar(
+        subtitle: 'DATABASE ONLINE // FIA OFFICIAL CLASSIFICATION ARCH V4.92',
+        isLive: false,
+        latencyMs: '12',
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Search Input Box
-            TextFormField(
+            // Header
+            Row(
+              children: [
+                Container(width: 3, height: 20, color: DS.red),
+                const SizedBox(width: 8),
+                Text('♦ F1 ARCHIVE // 2010 – 2026', style: DS.headline(size: 16)),
+                const Spacer(),
+                DSWidgets.statusChip('24 RNDS', color: DS.orange, size: 8),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text('Historical race results, official classifications, and telemetry replays across turbo-hybrid and ground-effect eras.', style: DS.body(size: 11)),
+            const SizedBox(height: 16),
+
+            // Search
+            TextField(
               controller: _searchController,
-              style: const TextStyle(color: Colors.white),
+              style: DS.telemetry(size: 13),
               onChanged: (val) {
                 setState(() {
                   _searchQuery = val.trim();
@@ -85,78 +93,67 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 });
               },
               decoration: InputDecoration(
-                hintText: 'Search circuit (SPA, SIL, MON), driver (Senna), team, or year...',
-                hintStyle: AppFonts.regular(color: Colors.grey[500]!, fontSize: 13),
-                fillColor: const Color(0xFF141418),
+                hintText: 'Search: SPA, Senna, Ferrari, 2024...',
+                hintStyle: DS.body(size: 12, color: DS.textMuted),
                 filled: true,
-                prefixIcon: Icon(Icons.search_rounded, color: accentColor),
+                fillColor: DS.surface1,
+                prefixIcon: Icon(Icons.search, size: 18, color: DS.textMuted),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear_rounded, color: Colors.grey),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() {
-                            _searchQuery = '';
-                          });
-                        },
+                        icon: Icon(Icons.clear, size: 16, color: DS.textMuted),
+                        onPressed: () { _searchController.clear(); setState(() => _searchQuery = ''); },
                       )
                     : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: accentColor, width: 1.5),
-                ),
+                border: OutlineInputBorder(borderRadius: DS.aeroCorner, borderSide: BorderSide(color: DS.outline)),
+                enabledBorder: OutlineInputBorder(borderRadius: DS.aeroCorner, borderSide: BorderSide(color: DS.outline)),
+                focusedBorder: OutlineInputBorder(borderRadius: DS.aeroCorner, borderSide: BorderSide(color: DS.red)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                isDense: true,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 14),
 
-            // Smart Multi-Category Search Result Card
+            // Smart search results
             if (_searchQuery.isNotEmpty) ...[
               _SmartSearchCard(query: _searchQuery, accentColor: accentColor),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
             ],
 
-            // Quick Year Filter Horizontal Bar
-            Text('CHOOSE SEASON YEAR (1950 – 2026)', style: AppFonts.header(fontSize: 11, color: Colors.grey[400]!, letterSpacing: 1)),
-            const SizedBox(height: 10),
+            // Year filter
+            Text('SELECT SEASON', style: DS.labelCaps(size: 8, color: DS.textMuted)),
+            const SizedBox(height: 8),
 
             seasonsAsync.when(
-              loading: () => const SizedBox(height: 40, child: Center(child: CircularProgressIndicator())),
-              error: (err, stack) => _YearFilterBar(
+              loading: () => const SizedBox(height: 40, child: Center(child: CircularProgressIndicator(color: Color(0xFFE10600)))),
+              error: (_, __) => _DSYearFilterBar(
                 selectedYear: _selectedYear,
-                years: const [2026, 2025, 2024, 2023, 2021, 2004, 1988, 1976, 1950],
-                accentColor: accentColor,
+                years: const [2026, 2025, 2024, 2023, 2022, 2021, 2020],
                 onYearSelected: (y) => setState(() => _selectedYear = y),
               ),
               data: (seasons) {
-                final yearList = seasons.map((s) => int.tryParse(s['season']?.toString() ?? '') ?? 2026).where((y) => y >= 1950 && y <= 2026).toList();
-                return _YearFilterBar(
+                final yearList = seasons.map((s) => int.tryParse(s['season']?.toString() ?? '') ?? 2026).where((y) => y >= 2010 && y <= 2026).toList();
+                return _DSYearFilterBar(
                   selectedYear: _selectedYear,
-                  years: yearList,
-                  accentColor: accentColor,
+                  years: yearList.isNotEmpty ? yearList : const [2026, 2025, 2024],
                   onYearSelected: (y) => setState(() => _selectedYear = y),
                 );
               },
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            // Season Header Title
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: accentColor.withOpacity(0.4)),
-                  ),
-                  child: Text('SEASON $_selectedYear', style: AppFonts.number(color: accentColor, fontSize: 12, fontWeight: FontWeight.w900)),
-                ),
-                const SizedBox(width: 12),
-                Text('GRAND PRIX RESULTS', style: AppFonts.header(fontSize: 12, color: Colors.grey[300]!, letterSpacing: 1)),
+            // Season header
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(color: DS.surface1, borderRadius: DS.aeroCornerSm, border: Border.all(color: DS.outline)),
+              child: Row(
+                children: [
+                  Container(width: 3, height: 14, color: accentColor),
+                  const SizedBox(width: 8),
+                  Text('SEASON $_selectedYear', style: DS.driverCode(size: 12, color: accentColor)),
+                  const SizedBox(width: 10),
+                  Text('GRAND PRIX RESULTS', style: DS.labelCaps(size: 8)),
+                  const Spacer(),
+                  Text('TAP RACE FOR REPLAY', style: DS.labelCaps(size: 8, color: DS.teal)),
               ],
             ),
             const SizedBox(height: 12),
@@ -269,48 +266,38 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   }
 }
 
-class _YearFilterBar extends StatelessWidget {
+class _DSYearFilterBar extends StatelessWidget {
   final int selectedYear;
   final List<int> years;
-  final Color accentColor;
   final ValueChanged<int> onYearSelected;
 
-  const _YearFilterBar({
+  const _DSYearFilterBar({
     required this.selectedYear,
     required this.years,
-    required this.accentColor,
     required this.onYearSelected,
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 38,
+      height: 36,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: years.length,
         itemBuilder: (context, index) {
           final year = years[index];
           final isSelected = year == selectedYear;
-
           return GestureDetector(
             onTap: () => onYearSelected(year),
             child: Container(
               margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
               decoration: BoxDecoration(
-                color: isSelected ? accentColor : const Color(0xFF141418),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: isSelected ? accentColor : Colors.white.withOpacity(0.08)),
+                color: isSelected ? DS.red : DS.surface1,
+                borderRadius: DS.aeroCornerSm,
+                border: Border.all(color: isSelected ? DS.red : DS.outline),
               ),
-              child: Text(
-                '$year',
-                style: AppFonts.number(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: isSelected ? Colors.white : Colors.grey[400]!,
-                ),
-              ),
+              child: Text('$year', style: DS.telemetry(size: 12, color: isSelected ? DS.redText : DS.textMuted)),
             ),
           );
         },

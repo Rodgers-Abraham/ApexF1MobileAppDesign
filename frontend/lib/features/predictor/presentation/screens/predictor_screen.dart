@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/theme/theme_provider.dart';
+import '../../../../shared/theme/app_design_system.dart';
+import '../../../../shared/widgets/ds_app_bar.dart';
 import '../../../../shared/constants/f1_data.dart';
 import '../../../../core/providers/session_provider.dart';
 import '../../../../features/home/data/calendar_provider.dart';
@@ -280,58 +282,12 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                 : '${lockDiff.inHours.toString().padLeft(2, '0')}:${(lockDiff.inMinutes % 60).toString().padLeft(2, '0')}:${(lockDiff.inSeconds % 60).toString().padLeft(2, '0')}';
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0B0E),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF101014),
-        elevation: 0,
-        titleSpacing: 16,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFF1744),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: const Text(
-                'A',
-                style: TextStyle(
-                  fontFamily: 'Formula1Wide',
-                  fontWeight: FontWeight.w900,
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            RichText(
-              text: const TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'APEX ',
-                    style: TextStyle(
-                      fontFamily: 'Formula1',
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
-                      color: Colors.white,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  TextSpan(
-                    text: 'PREDICTOR',
-                    style: TextStyle(
-                      fontFamily: 'Formula1Wide',
-                      fontWeight: FontWeight.w900,
-                      fontSize: 14,
-                      color: Color(0xFFFF1744),
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+      backgroundColor: DS.bg,
+      appBar: DSAppBar(
+        subtitle: 'TRACKSIDE TELEMETRY',
+        isLive: true,
+        liveLabel: 'LIVE R24',
+        latencyMs: '12',
       ),
       body: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 28),

@@ -5,6 +5,8 @@ import 'package:audioplayers/audioplayers.dart';
 import '../../../../core/providers/session_provider.dart';
 import '../../../../core/providers/telemetry_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
+import '../../../../shared/theme/app_design_system.dart';
+import '../../../../shared/widgets/ds_app_bar.dart';
 import '../../../../shared/constants/f1_data.dart';
 import '../../../home/presentation/screens/pitwall_screen.dart';
 import '../widgets/timing_row_widget.dart';
@@ -139,103 +141,17 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
         : replayState.flagStatus;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0B0E),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF101014),
-        elevation: 0,
-        titleSpacing: 16,
-        title: Row(
-          children: [
-            // Apex Logo mark
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFF1744),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: const Text(
-                'A',
-                style: TextStyle(
-                  fontFamily: 'Formula1Wide',
-                  fontWeight: FontWeight.w900,
-                  fontSize: 14,
-                  color: Colors.white,
-                  letterSpacing: 0,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            RichText(
-              text: const TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'APEX ',
-                    style: TextStyle(
-                      fontFamily: 'Formula1',
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
-                      color: Colors.white,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  TextSpan(
-                    text: 'F1',
-                    style: TextStyle(
-                      fontFamily: 'Formula1Wide',
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
-                      color: Color(0xFFFF1744),
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Spacer(),
-            // Live / Race Replay status badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
-              decoration: BoxDecoration(
-                color: (isLive ? const Color(0xFF00E676) : Colors.cyanAccent)
-                    .withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isLive
-                      ? const Color(0xFF00E676).withValues(alpha: 0.6)
-                      : Colors.cyanAccent.withValues(alpha: 0.6),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: isLive ? const Color(0xFF00E676) : Colors.cyanAccent,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    isLive ? '${sessionStatus?.sessionName.toUpperCase() ?? 'SESSION'} LIVE' : 'RACE REPLAY',
-                    style: TextStyle(
-                      fontFamily: 'Formula1',
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w800,
-                      color: isLive ? const Color(0xFF00E676) : Colors.cyanAccent,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+      backgroundColor: DS.bg,
+      appBar: DSAppBar(
+        subtitle: 'PITWALL TELEMETRY',
+        isLive: isLive,
+        liveLabel: isLive
+            ? '${sessionStatus?.sessionName.toUpperCase() ?? 'LIVE'} TRACK'
+            : 'REPLAY',
+        latencyMs: '12',
       ),
       body: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
