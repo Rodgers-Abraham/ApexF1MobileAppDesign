@@ -39,6 +39,9 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   // Replay position-change tracking
   int _lastReplayLap = -1;
   Map<String, int> _prevReplayPositions = {};
+  // Overtake toast
+  String? _overtakeToastText;
+  Timer? _overtakeTimer;
 
   @override
   void initState() {
@@ -61,6 +64,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   @override
   void dispose() {
     _playbackTimer?.cancel();
+    _overtakeTimer?.cancel();
     _playerCompleteSubscription?.cancel();
     _audioPlayer.dispose();
     _waveAnimController.dispose();
@@ -143,21 +147,30 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
         ? flagStatusAsync.value
         : replayState.flagStatus;
 
-    // Update position-change map when lap advances
+    // Update position-change map when lap advances + detect overtakes
     if (!isLive && replayState.currentLap != _lastReplayLap && replayState.currentLap > 1) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         final prevLapEntry = replayState.allLaps.firstWhere(
           (l) => l.lap == replayState.currentLap - 1,
           orElse: () => const ReplayLapEntry(lap: -1, phase: '', positions: []));
+        final newPrevPositions = prevLapEntry.positions.isNotEmpty
+            ? {for (final p in prevLapEntry.positions) if ((int.tryParse(p.pos) ?? 0) > 0) p.name: int.tryParse(p.pos) ?? 0}
+            : _prevReplayPositions;
+        // Detect overtakes (gained 2+ places)
+        if (newPrevPositions.isNotEmpty) {
+          for (final d in replayState.telemetry) {
+            final curr = int.tryParse(d.pos) ?? 99;
+            final prev = newPrevPositions[d.name] ?? 99;
+            if (curr < prev && prev - curr >= 2 && curr > 0) {
+              _showOvertakeToast(d.name, prev, curr, replayState.currentLap);
+              break;
+            }
+          }
+        }
         setState(() {
           _lastReplayLap = replayState.currentLap;
-          if (prevLapEntry.positions.isNotEmpty) {
-            _prevReplayPositions = {
-              for (final p in prevLapEntry.positions)
-                if ((int.tryParse(p.pos) ?? 0) > 0) p.name: int.tryParse(p.pos) ?? 0
-            };
-          }
+          _prevReplayPositions = newPrevPositions;
         });
       });
     }
@@ -423,6 +436,26 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
 
               // View Body based on Mode Switcher
               if (_selectedMode == LiveMode.timing) ...[
+                // Replay: overtake toast + race control event banner
+                if (!isLive && replayState.allLaps.isNotEmpty) ...[
+                  if (_overtakeToastText != null)
+                    AnimatedOpacity(
+                      opacity: 1.0,
+                      duration: const Duration(milliseconds: 400),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: DS.orange.withValues(alpha: 0.15),
+                          borderRadius: DS.aeroCornerSm,
+                          border: Border.all(color: DS.orange.withValues(alpha: 0.4)),
+                        ),
+                        child: Text(_overtakeToastText!, style: DS.labelCaps(size: 9, color: DS.orange)),
+                      ),
+                    ),
+                  if (replayState.currentLapEvents.isNotEmpty)
+                    _buildRaceEventBanner(replayState.currentLapEvents),
+                ],
                 // Replay uses custom tower with lap time + position change arrows
                 if (!isLive && replayState.allLaps.isNotEmpty)
                   _buildReplayTimingTower(replayState)
@@ -570,6 +603,39 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
         ),
         Text('L${replayState.totalLaps}', style: DS.telemetry(size: 11, color: DS.textMuted)),
       ]),
+      // Event marker dots on scrubber track
+      if (replayState.flagEventLaps.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.only(left: 32, right: 32, bottom: 2),
+          child: SizedBox(
+            height: 6,
+            child: LayoutBuilder(builder: (ctx, constraints) {
+              final w = constraints.maxWidth;
+              final total = replayState.totalLaps;
+              if (total <= 0) return const SizedBox.shrink();
+              return Stack(
+                clipBehavior: Clip.none,
+                children: replayState.flagEventLaps.map((lap) {
+                  final x = (lap / total) * w;
+                  final evts = replayState.lapEventMap[lap]!;
+                  final notable = evts.firstWhere(
+                    (e) => e.isNotable, orElse: () => evts.first);
+                  return Positioned(
+                    left: x.clamp(0.0, w - 4),
+                    top: 1,
+                    child: Container(
+                      width: 4, height: 4,
+                      decoration: BoxDecoration(
+                        color: notable.eventColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              );
+            }),
+          ),
+        ),
       // Controls row
       Row(children: [
         _ctrlBtn(Icons.skip_previous_rounded, () => notifier.setLap(1)),
@@ -632,6 +698,62 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
         child: Icon(icon, size: 22, color: DS.textMuted),
       ),
     );
+  }
+
+  // ─────────────────────────────────────────────────────
+  // REPLAY: Race control event banner (SC / VSC / Red flag)
+  // ─────────────────────────────────────────────────────
+
+  Widget _buildRaceEventBanner(List<RaceControlEvent> events) {
+    // Sort: red flag first, then SC, VSC, then others
+    final sorted = [...events]..sort((a, b) {
+      int p(RaceControlEvent e) {
+        if (e.isRedFlag) return 0;
+        if (e.isSafetyCar) return 1;
+        if (e.isVsc) return 2;
+        if (e.isScEnding || e.isVscEnding) return 3;
+        return 4;
+      }
+      return p(a).compareTo(p(b));
+    });
+    final primary = sorted.first;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: primary.eventColor.withValues(alpha: 0.15),
+        borderRadius: DS.aeroCornerSm,
+        border: Border(left: BorderSide(color: primary.eventColor, width: 3)),
+      ),
+      child: Row(children: [
+        Icon(primary.icon, size: 14, color: primary.eventColor),
+        const SizedBox(width: 8),
+        Text('LAP ${primary.lap}', style: DS.labelCaps(size: 8, color: primary.eventColor)),
+        const SizedBox(width: 6),
+        Container(width: 1, height: 12, color: primary.eventColor.withValues(alpha: 0.4)),
+        const SizedBox(width: 6),
+        Expanded(child: Text(primary.displayLabel, style: DS.labelCaps(size: 9, color: primary.eventColor))),
+        ...sorted.skip(1).take(2).map((e) => Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: DSWidgets.statusChip(e.displayLabel, color: e.eventColor, size: 7),
+        )),
+      ]),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────
+  // REPLAY: Overtake toast
+  // ─────────────────────────────────────────────────────
+
+  void _showOvertakeToast(String driverName, int from, int to, int lap) {
+    _overtakeTimer?.cancel();
+    final parts = driverName.trim().split(' ');
+    final code = parts.last.length >= 3 ? parts.last.substring(0, 3).toUpperCase() : parts.last.toUpperCase();
+    setState(() => _overtakeToastText = '⚡ $code  P$from → P$to  •  LAP $lap');
+    _overtakeTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _overtakeToastText = null);
+    });
   }
 
   // ─────────────────────────────────────────────────────
