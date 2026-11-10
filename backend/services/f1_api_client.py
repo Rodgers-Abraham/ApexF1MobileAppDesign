@@ -804,15 +804,24 @@ class F1ApiClient:
 
     JOLPICA_BASE = "https://api.jolpi.ca/ergast/f1"
 
-    def _jolpica_get(self, path: str):
+    def _jolpica_get(self, path: str, retries: int = 1):
         url = f"{self.JOLPICA_BASE}/{path}"
-        try:
-            resp = requests.get(url, timeout=15, headers={"Accept": "application/json"})
-            if resp.status_code == 200:
-                return resp.json()
-            print(f"Jolpica {path}: HTTP {resp.status_code}")
-        except Exception as e:
-            print(f"Jolpica {path} error: {e}")
+        for attempt in range(retries + 1):
+            try:
+                resp = requests.get(url, timeout=15, headers={"Accept": "application/json"})
+                if resp.status_code == 200:
+                    return resp.json()
+                if resp.status_code == 429:
+                    wait = min(int(resp.headers.get("Retry-After", "3")), 5)
+                    if attempt < retries:
+                        time.sleep(wait)
+                        continue
+                    print(f"Jolpica {path}: rate limited (429) — skipping")
+                    return None
+                print(f"Jolpica {path}: HTTP {resp.status_code}")
+            except Exception as e:
+                print(f"Jolpica {path} error: {e}")
+            break
         return None
 
     @staticmethod
@@ -847,38 +856,74 @@ class F1ApiClient:
             cached = races
             self._set_cache(cache_key, cached, 86400)
 
-        hint = race_name_hint.lower().replace(" grand prix", "").replace(" gp", "").strip()
         for race in cached:
-            name = race.get("raceName", "").lower().replace(" grand prix", "").strip()
-            circuit = race.get("Circuit", {}).get("circuitName", "").lower()
-            locality = race.get("Circuit", {}).get("Location", {}).get("locality", "").lower()
-            country = race.get("Circuit", {}).get("Location", {}).get("country", "").lower()
-            if hint in name or name in hint or hint in locality or hint in country or hint in circuit:
-                return int(race.get("round", 0))
+            race_name_full = race.get("raceName", "")
+            circuit = race.get("Circuit", {}).get("circuitName", "")
+            locality = race.get("Circuit", {}).get("Location", {}).get("locality", "")
+            country = race.get("Circuit", {}).get("Location", {}).get("country", "")
+            # Try each field with _name_matches
+            for candidate in [race_name_full, circuit, locality, country]:
+                if candidate and self._name_matches(candidate, race_name_hint):
+                    return int(race.get("round", 0))
         return None
 
-    @staticmethod
-    def _name_matches(actual: str, hint: str) -> bool:
-        """True if the actual race name matches the hint (tolerant comparison)."""
+    _GP_PREFIXES = [
+        "grand prix", "gran premio de la", "gran premio de los",
+        "gran premio del", "gran premio de", "gran premio",
+        "grosser preis von", "großer preis von",
+        "prix de la", "prix du", "prix de",
+    ]
+
+    @classmethod
+    def _name_matches(cls, actual: str, hint: str) -> bool:
+        """True if the actual race name matches the hint (multilingual, tolerant)."""
         if not actual or not hint:
             return True  # no hint → don't reject
-        a = actual.lower().replace(" grand prix", "").strip()
-        h = hint.lower().replace(" grand prix", "").replace(" gp", "").strip()
-        return h in a or a in h
+
+        def _strip(s: str) -> str:
+            s = s.lower().strip()
+            for prefix in cls._GP_PREFIXES:
+                s = s.replace(prefix, "").strip()
+            return s
+
+        a = _strip(actual)
+        h = _strip(hint)
+
+        # Direct substring
+        if h in a or a in h:
+            return True
+
+        # Word-level: any significant word (len>3) exactly in common
+        h_words = {w for w in h.split() if len(w) > 3}
+        a_words = {w for w in a.split() if len(w) > 3}
+        if h_words & a_words:
+            return True
+
+        # Stem matching (5-char prefix): handles "mexican"↔"mexico", "brazilian"↔"brazil"
+        for hw in h_words:
+            for aw in a_words:
+                min_len = min(len(hw), len(aw), 5)
+                if min_len >= 5 and hw[:min_len] == aw[:min_len]:
+                    return True
+        return False
 
     def get_session_replay(self, year: int, round_num: int, session_type: str = "race", race_name: str = ""):
-        # 1. Try Jolpica race list to get the authoritative round number
+        # 1. Try Jolpica race list to get the authoritative round number.
+        #    If the race list confirms the round, trust it and skip post-fetch check.
+        round_verified_by_list = False
         if race_name:
             jolpica_round = self._resolve_jolpica_round(year, race_name)
-            if jolpica_round and jolpica_round != round_num:
-                print(f"Round correction for '{race_name}': {round_num} → {jolpica_round}")
-                round_num = jolpica_round
+            if jolpica_round:
+                if jolpica_round != round_num:
+                    print(f"Round correction for '{race_name}': {round_num} → {jolpica_round}")
+                    round_num = jolpica_round
+                round_verified_by_list = True
 
         cache_key = f"session_replay_{year}_{round_num}_{session_type}"
         cached = self._get_cached(cache_key)
         if cached is not None:
-            # Verify cache still matches the requested race name
-            if not race_name or self._name_matches(cached.get("race_name", ""), race_name):
+            # Accept cached data if round was verified, or names match
+            if round_verified_by_list or not race_name or self._name_matches(cached.get("race_name", ""), race_name):
                 return cached
 
         def _do(rnd):
@@ -890,19 +935,30 @@ class F1ApiClient:
 
         result = _do(round_num)
 
-        # 2. If we got data but the race name doesn't match, search ±1/±2 rounds
-        if result and race_name and not self._name_matches(result.get("race_name", ""), race_name):
-            print(f"Name mismatch: got '{result.get('race_name')}', expected '{race_name}'. Searching adjacent rounds.")
-            for adj in [round_num + 1, round_num - 1, round_num + 2, round_num - 2]:
+        # 2. Post-fetch name verification — only needed when race list lookup failed
+        if not round_verified_by_list and result and race_name and not self._name_matches(result.get("race_name", ""), race_name):
+            print(f"Name mismatch: got '{result.get('race_name')}', wanted '{race_name}'. Trying ±1 round.")
+            found = False
+            for adj in [round_num + 1, round_num - 1]:
                 if adj < 1 or adj > 30:
                     continue
                 adj_result = _do(adj)
-                if adj_result and self._name_matches(adj_result.get("race_name", ""), race_name):
-                    print(f"Found correct race at round {adj}")
+                if adj_result is None:
+                    continue  # 429 or error — stop, don't burn more quota
+                if self._name_matches(adj_result.get("race_name", ""), race_name):
+                    print(f"Correct race found at round {adj}")
                     result = adj_result
-                    # Cache under the correct round key
+                    # Cache under the corrected round key
                     self._set_cache(f"session_replay_{year}_{adj}_{session_type}", result, 86400 * 7)
+                    # Also cache the round mapping so next time we hit the right round directly
+                    self._set_cache(f"jolpica_round_{year}_{race_name.lower()[:20]}", adj, 86400 * 30)
                     return result
+                # Got a different wrong race — stop immediately to conserve quota
+                break
+            if not found:
+                # Return None so frontend shows "not available" rather than wrong race
+                print(f"Could not confirm correct race for '{race_name}' — returning None to avoid wrong data")
+                return None
 
         if result:
             self._set_cache(cache_key, result, 86400 * 7)
