@@ -154,7 +154,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   Text('GRAND PRIX RESULTS', style: DS.labelCaps(size: 8)),
                   const Spacer(),
                   Text('TAP RACE FOR REPLAY', style: DS.labelCaps(size: 8, color: DS.teal)),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 12),
 
