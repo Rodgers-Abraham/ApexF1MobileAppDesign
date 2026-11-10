@@ -15,6 +15,7 @@ class AuthState {
   final String? favouriteTeam;
   final String? favouriteDriver;
   final String? country;
+  final String? rivalDriver;
   final bool isLoading;
   final String? errorMessage;
 
@@ -25,6 +26,7 @@ class AuthState {
     this.favouriteTeam,
     this.favouriteDriver,
     this.country,
+    this.rivalDriver,
     this.isLoading = false,
     this.errorMessage,
   });
@@ -38,6 +40,7 @@ class AuthState {
     String? favouriteTeam,
     String? favouriteDriver,
     String? country,
+    String? rivalDriver,
     bool? isLoading,
     String? errorMessage,
   }) {
@@ -48,6 +51,7 @@ class AuthState {
       favouriteTeam: favouriteTeam ?? this.favouriteTeam,
       favouriteDriver: favouriteDriver ?? this.favouriteDriver,
       country: country ?? this.country,
+      rivalDriver: rivalDriver ?? this.rivalDriver,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage);
   }
@@ -78,7 +82,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
             name: userData['name'],
             favouriteTeam: userData['favourite_team'],
             favouriteDriver: userData['favourite_driver'],
-            country: userData['country']);
+            country: userData['country'],
+            rivalDriver: userData['rival_driver']);
           _updateAppTheme(userData['favourite_team']);
         } catch (_) {}
       }
@@ -106,7 +111,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
             name: userData['name'],
             favouriteTeam: userData['favourite_team'],
             favouriteDriver: userData['favourite_driver'],
-            country: userData['country']);
+            country: userData['country'],
+            rivalDriver: userData['rival_driver']);
           _updateAppTheme(userData['favourite_team']);
         } catch (_) {}
       }
@@ -134,7 +140,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       name: data['name'],
       favouriteTeam: data['favourite_team'],
       favouriteDriver: data['favourite_driver'],
-      country: data['country']);
+      country: data['country'],
+      rivalDriver: data['rival_driver']);
     _updateAppTheme(data['favourite_team']);
   }
 
@@ -175,6 +182,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     String favouriteTeam,
     String favouriteDriver, {
     String? country,
+    String? rivalDriver,
   }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
@@ -194,9 +202,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
         'favourite_team': favouriteTeam,
         if (favouriteDriver.isNotEmpty) 'favourite_driver': favouriteDriver,
         if (country != null) 'country': country,
+        if (rivalDriver != null) 'rival_driver': rivalDriver,
       });
 
-      await _persistAndSetState(user.uid, response.data as Map<String, dynamic>);
+      final responseData = Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+      if (rivalDriver != null) responseData['rival_driver'] = rivalDriver;
+      await _persistAndSetState(user.uid, responseData);
       return true;
     } catch (e) {
       final msg = _extractErrorMessage(e, 'Registration failed');

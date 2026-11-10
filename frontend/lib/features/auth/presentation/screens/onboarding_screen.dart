@@ -1,1484 +1,958 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../shared/theme/theme_provider.dart';
-import '../../../../shared/theme/app_design_system.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../shared/constants/f1_data.dart';
 import '../../../../shared/constants/countries.dart';
+import '../../../../shared/theme/theme_provider.dart';
+import '../../../../shared/theme/app_design_system.dart';
 
-enum OnboardingStep { selectTeam, selectCountry, auth, celebration }
+enum OnboardingStep { details, selectTeam, selectDriver, celebration }
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
-
   @override
   ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
-  OnboardingStep _currentStep = OnboardingStep.selectTeam;
-  F1Team? _tempSelectedTeam;
-  CountryTz? _selectedCountry;
+  OnboardingStep _step = OnboardingStep.details;
   bool _isLoginMode = false;
-  String _countrySearch = '';
-  bool _obscurePassword = true;
-  String _registeredName = '';
 
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _nameController = TextEditingController();
-  final _countrySearchController = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  final _nameCtrl = TextEditingController();
+  bool _obscurePassword = true;
+  CountryTz? _selectedCountry;
+
+  F1Team? _selectedTeam;
+
+  DriverData2026? _primaryDriver;
+  DriverData2026? _rivalDriver;
+  bool _showAllRivals = false;
+
+  String _registeredName = '';
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _nameController.dispose();
-    _countrySearchController.dispose();
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
+    _nameCtrl.dispose();
     super.dispose();
   }
 
-  void _nextStep() {
-    if (_currentStep == OnboardingStep.selectTeam) {
-      if (_tempSelectedTeam == null) return;
-      setState(() => _currentStep = OnboardingStep.selectCountry);
-    } else if (_currentStep == OnboardingStep.selectCountry) {
-      setState(() => _currentStep = OnboardingStep.auth);
-    }
-  }
-
-  void _backStep() {
-    if (_currentStep == OnboardingStep.auth) {
-      setState(() => _currentStep = OnboardingStep.selectCountry);
-    } else if (_currentStep == OnboardingStep.selectCountry) {
-      setState(() => _currentStep = OnboardingStep.selectTeam);
-    }
-  }
-
-  Future<void> _submitAuth() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
-    final name = _nameController.text.trim();
-    final teamName = _tempSelectedTeam?.name ?? 'Ferrari';
-
-    bool success = false;
-    if (_isLoginMode) {
-      success = await ref.read(authProvider.notifier).login(email, password);
-      if (success && mounted) context.go('/');
-    } else {
-      success = await ref.read(authProvider.notifier).register(
-        email, password, name, teamName, '',
-        country: _selectedCountry?.name);
-      if (success && mounted) {
-        setState(() {
-          _registeredName = name.isNotEmpty ? name : email.split('@').first;
-          _currentStep = OnboardingStep.celebration;
-        });
-      }
+  int get _currentStepIndex {
+    switch (_step) {
+      case OnboardingStep.details: return 0;
+      case OnboardingStep.selectTeam: return 1;
+      case OnboardingStep.selectDriver: return 2;
+      case OnboardingStep.celebration: return 3;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
-    final accent = _tempSelectedTeam?.primaryColor ?? DS.red;
-
+    final accentColor = _selectedTeam?.primaryColor ?? DS.red;
     return Scaffold(
       backgroundColor: DS.bg,
       body: SafeArea(
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 280),
-          switchInCurve: Curves.easeOut,
-          switchOutCurve: Curves.easeIn,
-          child: _buildStep(authState, accent))));
+        child: Column(
+          children: [
+            _buildHeader(accentColor),
+            if (!_isLoginMode) _buildStepIndicator(accentColor),
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: _buildCurrentStep(context, accentColor),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
-  Widget _buildStep(AuthState authState, Color accent) {
-    switch (_currentStep) {
+  Widget _buildHeader(Color accentColor) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      decoration: BoxDecoration(
+        color: DS.surface0,
+        border: Border(bottom: BorderSide(color: DS.outline)),
+      ),
+      child: Row(
+        children: [
+          Container(width: 3, height: 24, color: DS.red),
+          const SizedBox(width: 10),
+          Row(children: [
+            Text('APEX', style: DS.driverCode(size: 14, color: DS.textPrimary)),
+            const SizedBox(width: 4),
+            DSWidgets.redBadge('F1', size: 9),
+          ]),
+          const SizedBox(width: 10),
+          Container(width: 1, height: 20, color: DS.outline),
+          const SizedBox(width: 10),
+          Text(
+            _isLoginMode ? 'DRIVER SIGN IN' : 'SUPERLICENSE APPLICATION',
+            style: DS.labelCaps(size: 8, color: DS.textMuted),
+          ),
+          const Spacer(),
+          GestureDetector(
+            onTap: () => setState(() {
+              _isLoginMode = !_isLoginMode;
+              _step = OnboardingStep.details;
+            }),
+            child: DSWidgets.statusChip(
+              _isLoginMode ? 'REGISTER' : 'SIGN IN',
+              color: DS.teal,
+              size: 8,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepIndicator(Color accentColor) {
+    final steps = ['DETAILS', 'TEAM', 'DRIVERS', 'LICENSE'];
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: DS.surface0,
+      child: Row(
+        children: steps.asMap().entries.map((e) {
+          final i = e.key;
+          final label = e.value;
+          final isDone = i < _currentStepIndex;
+          final isActive = i == _currentStepIndex;
+          return Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        height: 2,
+                        decoration: BoxDecoration(
+                          color: isDone || isActive ? accentColor : DS.outline,
+                          borderRadius: BorderRadius.circular(1),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        label,
+                        style: DS.labelCaps(
+                          size: 7,
+                          color: isActive
+                              ? accentColor
+                              : isDone
+                                  ? DS.textMuted
+                                  : DS.surface4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (i < steps.length - 1) const SizedBox(width: 4),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildCurrentStep(BuildContext context, Color accentColor) {
+    switch (_step) {
+      case OnboardingStep.details:
+        return _buildDetailsStep(context, accentColor);
       case OnboardingStep.selectTeam:
-        return _TeamSelectStep(
-          key: const ValueKey('team'),
-          selectedTeam: _tempSelectedTeam,
-          onTeamSelected: (t) => setState(() => _tempSelectedTeam = t),
-          onNext: _nextStep);
-      case OnboardingStep.selectCountry:
-        return _CountrySelectStep(
-          key: const ValueKey('country'),
-          selectedCountry: _selectedCountry,
-          searchQuery: _countrySearch,
-          searchController: _countrySearchController,
-          accent: accent,
-          onCountrySelected: (c) => setState(() => _selectedCountry = c),
-          onSearchChanged: (v) => setState(() => _countrySearch = v),
-          onNext: _nextStep,
-          onBack: _backStep);
-      case OnboardingStep.auth:
-        return _AuthStep(
-          key: ValueKey('auth_$_isLoginMode'),
-          isLoginMode: _isLoginMode,
-          formKey: _formKey,
-          emailController: _emailController,
-          passwordController: _passwordController,
-          nameController: _nameController,
-          obscurePassword: _obscurePassword,
-          selectedTeam: _tempSelectedTeam,
-          selectedCountry: _selectedCountry,
-          accent: accent,
-          isLoading: authState.isLoading,
-          errorMessage: authState.errorMessage,
-          onToggleObscure: () => setState(() => _obscurePassword = !_obscurePassword),
-          onToggleMode: () => setState(() => _isLoginMode = !_isLoginMode),
-          onBack: _backStep,
-          onSubmit: _submitAuth,
-          onTeamChanged: (t) => setState(() => _tempSelectedTeam = t),
-          onCountryTap: () => setState(() => _currentStep = OnboardingStep.selectCountry));
+        return _buildTeamStep(context, accentColor);
+      case OnboardingStep.selectDriver:
+        return _buildDriverStep(context, accentColor);
       case OnboardingStep.celebration:
-        return _CelebrationStep(
-          key: const ValueKey('celebration'),
-          driverName: _registeredName,
-          team: _tempSelectedTeam,
-          country: _selectedCountry,
-          onEnter: () => context.go('/'));
+        return _buildCelebrationStep(context, accentColor);
     }
   }
-}
 
-// ─── STEP 1 — TEAM SELECT ────────────────────────────────────────────────────
+  // ─── STEP 1: DETAILS ────────────────────────────────────────────────────────
 
-class _TeamSelectStep extends StatelessWidget {
-  final F1Team? selectedTeam;
-  final void Function(F1Team) onTeamSelected;
-  final VoidCallback onNext;
-
-  const _TeamSelectStep({
-    super.key,
-    required this.selectedTeam,
-    required this.onTeamSelected,
-    required this.onNext,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildDetailsStep(BuildContext context, Color accentColor) {
+    final authState = ref.watch(authProvider);
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+      key: const ValueKey('details'),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  color: DS.red,
-                  borderRadius: DS.aeroCornerSm),
-                child: Text('APEX', style: DS.driverCode(size: 12, color: DS.redText))),
-              const SizedBox(width: 6),
-              DSWidgets.redBadge('F1'),
-            ]),
-          const SizedBox(height: 20),
-          Text('CHOOSE YOUR', style: DS.labelCaps(size: 11, color: DS.textMuted)),
-          const SizedBox(height: 4),
-          Text('ALLEGIANCE', style: DS.display(size: 28)),
+          const SizedBox(height: 8),
+          Row(children: [
+            Container(width: 3, height: 20, color: accentColor),
+            const SizedBox(width: 10),
+            Text(
+              _isLoginMode ? 'BACK ON TRACK' : 'DRIVER CREDENTIALS',
+              style: DS.headline(size: 20),
+            ),
+          ]),
           const SizedBox(height: 4),
           Text(
-            'Select your constructor. This sets your Pitwall theme and feed priority.',
-            style: DS.body(size: 12)),
+            _isLoginMode
+                ? 'Enter your FIA registered credentials.'
+                : 'Your personal details for the Superlicense.',
+            style: DS.body(size: 12),
+          ),
+          const SizedBox(height: 24),
+
+          if (!_isLoginMode) ...[
+            DSWidgets.inputField(
+              label: 'DRIVER NAME',
+              hint: 'Your display name',
+              controller: _nameCtrl,
+              prefixIcon: Icons.person_outline,
+            ),
+            const SizedBox(height: 16),
+          ],
+          DSWidgets.inputField(
+            label: 'EMAIL ADDRESS',
+            hint: 'fia@registered.com',
+            controller: _emailCtrl,
+            prefixIcon: Icons.alternate_email,
+            keyboardType: TextInputType.emailAddress,
+          ),
+          const SizedBox(height: 16),
+          DSWidgets.inputField(
+            label: 'PASSWORD',
+            hint: '••••••••',
+            controller: _passwordCtrl,
+            isPassword: true,
+            obscureText: _obscurePassword,
+            onToggleObscure: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
+            prefixIcon: Icons.lock_outline,
+          ),
+
+          if (!_isLoginMode) ...[
+            const SizedBox(height: 16),
+            GestureDetector(
+              onTap: () => _showCountrySheet(context),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: DS.surface2,
+                  borderRadius: DS.aeroCorner,
+                  border: Border.all(color: DS.outline),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.language_outlined, size: 18, color: DS.textMuted),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _selectedCountry != null
+                          ? Row(children: [
+                              Text(_selectedCountry!.flag,
+                                  style: const TextStyle(fontSize: 18)),
+                              const SizedBox(width: 8),
+                              Text(_selectedCountry!.name,
+                                  style: DS.body(size: 13, color: DS.textPrimary)),
+                              const SizedBox(width: 6),
+                              Text(
+                                _fmtUtc(_selectedCountry!.utcOffset),
+                                style: DS.labelCaps(size: 8, color: DS.teal),
+                              ),
+                            ])
+                          : Text('SELECT YOUR COUNTRY',
+                              style: DS.labelCaps(size: 9, color: DS.textMuted)),
+                    ),
+                    Icon(Icons.chevron_right, size: 18, color: DS.textMuted),
+                  ],
+                ),
+              ),
+            ),
+          ],
+
+          if (authState.errorMessage != null) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: DS.red.withValues(alpha: 0.1),
+                borderRadius: DS.aeroCornerSm,
+                border: Border.all(color: DS.red.withValues(alpha: 0.4)),
+              ),
+              child: Row(children: [
+                Icon(Icons.error_outline, size: 14, color: DS.red),
+                const SizedBox(width: 8),
+                Expanded(
+                    child: Text(authState.errorMessage!,
+                        style: DS.labelCaps(size: 9, color: DS.red))),
+              ]),
+            ),
+          ],
+
+          const SizedBox(height: 28),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed:
+                  authState.isLoading ? null : () => _handleDetailsNext(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: accentColor,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: DS.aeroCorner),
+                elevation: 0,
+              ),
+              child: authState.isLoading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                          color: Colors.black, strokeWidth: 2))
+                  : Text(
+                      _isLoginMode ? 'AUTHENTICATE ▶' : 'NEXT: SELECT TEAM ▶',
+                      style: DS.labelCaps(size: 11, color: Colors.black),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _fmtUtc(double offset) {
+    final sign = offset >= 0 ? '+' : '';
+    final formatted =
+        offset % 1 == 0 ? offset.toInt().toString() : offset.toString();
+    return 'UTC$sign$formatted';
+  }
+
+  Future<void> _handleDetailsNext(BuildContext context) async {
+    if (_emailCtrl.text.trim().isEmpty || _passwordCtrl.text.isEmpty) return;
+    if (_isLoginMode) {
+      final ok = await ref
+          .read(authProvider.notifier)
+          .login(_emailCtrl.text.trim(), _passwordCtrl.text);
+      if (ok && mounted) context.go('/');
+    } else {
+      if (_nameCtrl.text.trim().isEmpty) return;
+      setState(() => _step = OnboardingStep.selectTeam);
+    }
+  }
+
+  Future<void> _showCountrySheet(BuildContext context) async {
+    final searchCtrl = TextEditingController();
+    List<CountryTz> filtered = kCountries;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      barrierColor: Colors.black.withValues(alpha: 0.75),
+      backgroundColor: DS.surface1,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (ctx) => StatefulBuilder(builder: (ctx, ss) {
+        return SizedBox(
+          height: MediaQuery.of(ctx).size.height * 0.75,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                child: Row(children: [
+                  Container(width: 3, height: 20, color: DS.teal),
+                  const SizedBox(width: 10),
+                  Text('SELECT COUNTRY', style: DS.headline(size: 15)),
+                  const Spacer(),
+                  GestureDetector(
+                      onTap: () => Navigator.pop(ctx),
+                      child: Icon(Icons.close, size: 18, color: DS.textMuted)),
+                ]),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: TextField(
+                  controller: searchCtrl,
+                  style: DS.telemetry(size: 13),
+                  onChanged: (v) => ss(() {
+                    filtered = kCountries
+                        .where((c) =>
+                            c.name.toLowerCase().contains(v.toLowerCase()))
+                        .toList();
+                  }),
+                  decoration: InputDecoration(
+                    hintText: 'Search country...',
+                    hintStyle: DS.labelCaps(size: 9, color: DS.textMuted),
+                    prefixIcon: Icon(Icons.search, size: 18, color: DS.textMuted),
+                    filled: true,
+                    fillColor: DS.surface2,
+                    border: OutlineInputBorder(
+                        borderRadius: DS.aeroCorner,
+                        borderSide: BorderSide(color: DS.outline)),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: DS.aeroCorner,
+                        borderSide: BorderSide(color: DS.outline)),
+                    focusedBorder: OutlineInputBorder(
+                        borderRadius: DS.aeroCorner,
+                        borderSide: BorderSide(color: DS.teal)),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: filtered.length,
+                  itemBuilder: (_, i) {
+                    final c = filtered[i];
+                    final isSelected = _selectedCountry?.name == c.name;
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        setState(() => _selectedCountry = c);
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? DS.teal.withValues(alpha: 0.1)
+                              : DS.surface2,
+                          borderRadius: DS.aeroCornerSm,
+                          border: Border.all(
+                              color: isSelected
+                                  ? DS.teal.withValues(alpha: 0.5)
+                                  : DS.outline),
+                        ),
+                        child: Row(children: [
+                          Text(c.flag, style: const TextStyle(fontSize: 20)),
+                          const SizedBox(width: 12),
+                          Expanded(
+                              child: Text(c.name,
+                                  style: DS.body(
+                                      size: 13,
+                                      color: isSelected
+                                          ? DS.teal
+                                          : DS.textPrimary))),
+                          Text(_fmtUtc(c.utcOffset),
+                              style: DS.labelCaps(size: 8, color: DS.textMuted)),
+                          if (isSelected) ...[
+                            const SizedBox(width: 8),
+                            Icon(Icons.check_circle, size: 16, color: DS.teal)
+                          ],
+                        ]),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      }),
+    );
+    searchCtrl.dispose();
+  }
+
+  // ─── STEP 2: SELECT TEAM ─────────────────────────────────────────────────────
+
+  Widget _buildTeamStep(BuildContext context, Color accentColor) {
+    return SingleChildScrollView(
+      key: const ValueKey('team'),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 8),
+          Row(children: [
+            Container(width: 3, height: 20, color: DS.red),
+            const SizedBox(width: 10),
+            Text('SELECT CONSTRUCTOR', style: DS.headline(size: 20)),
+          ]),
+          const SizedBox(height: 4),
+          Text('Choose your team allegiance.', style: DS.body(size: 12)),
           const SizedBox(height: 20),
-          // Team grid
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 1.9,
+              childAspectRatio: 1.6,
               crossAxisSpacing: 10,
-              mainAxisSpacing: 10),
+              mainAxisSpacing: 10,
+            ),
             itemCount: F1Team.values.length,
-            itemBuilder: (context, i) {
+            itemBuilder: (_, i) {
               final team = F1Team.values[i];
-              final isSelected = selectedTeam == team;
-              final tc = team.primaryColor;
-              // Get team abbreviation
-              final teamData = kTeams2026[team.name];
-              final chassis = teamData?.chassis ?? '';
-              final teamCode = _teamCode(team);
+              final teamData = getTeamData(team.name);
+              final isSelected = _selectedTeam == team;
               return GestureDetector(
-                onTap: () => onTeamSelected(team),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  decoration: BoxDecoration(
-                    color: isSelected ? tc.withValues(alpha: 0.1) : DS.surface1,
-                    borderRadius: DS.aeroCorner,
-                    border: Border.all(
-                      color: isSelected ? tc : DS.outline,
-                      width: isSelected ? 1.5 : 1)),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 3,
-                        decoration: BoxDecoration(
-                          color: tc,
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(8)))),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(teamCode,
-                                      style: DS.driverCode(size: 13, color: isSelected ? tc : DS.textPrimary)),
-                                  if (isSelected)
-                                    Icon(Icons.check_circle_rounded, color: tc, size: 14),
-                                ]),
-                              const SizedBox(height: 2),
-                              Text(team.name, style: DS.body(size: 10, color: DS.textVariant), maxLines: 1, overflow: TextOverflow.ellipsis),
-                              if (chassis.isNotEmpty)
-                                Text(chassis, style: DS.labelCaps(size: 8, color: DS.textMuted)),
-                            ]))),
-                    ])));
-            }),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: GestureDetector(
-              onTap: selectedTeam != null ? onNext : null,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                decoration: BoxDecoration(
-                  color: selectedTeam != null ? DS.red : DS.surface3,
-                  borderRadius: DS.aeroCorner),
-                alignment: Alignment.center,
-                child: Text(
-                  'CONFIRM ALLEGIANCE  →',
-                  style: DS.driverCode(
-                    size: 14,
-                    color: selectedTeam != null ? DS.redText : DS.textMuted))))),
-        ]));
-  }
-
-  String _teamCode(F1Team team) {
-    switch (team) {
-      case F1Team.ferrari: return 'SF';
-      case F1Team.mclaren: return 'MCL';
-      case F1Team.mercedes: return 'AMG';
-      case F1Team.redBull: return 'RBR';
-      case F1Team.alpine: return 'ALP';
-      case F1Team.astonMartin: return 'AMR';
-      case F1Team.williams: return 'WIL';
-      case F1Team.haas: return 'HAS';
-      case F1Team.audi: return 'ADI';
-      case F1Team.rb: return 'VCARB';
-      case F1Team.cadillac: return 'CAD';
-    }
-  }
-}
-
-// ─── STEP 2 — COUNTRY SELECT ─────────────────────────────────────────────────
-
-class _CountrySelectStep extends StatelessWidget {
-  final CountryTz? selectedCountry;
-  final String searchQuery;
-  final TextEditingController searchController;
-  final Color accent;
-  final void Function(CountryTz) onCountrySelected;
-  final void Function(String) onSearchChanged;
-  final VoidCallback onNext;
-  final VoidCallback onBack;
-
-  const _CountrySelectStep({
-    super.key,
-    required this.selectedCountry,
-    required this.searchQuery,
-    required this.searchController,
-    required this.accent,
-    required this.onCountrySelected,
-    required this.onSearchChanged,
-    required this.onNext,
-    required this.onBack,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final filtered = kCountries
-        .where((c) => c.name.toLowerCase().contains(searchQuery.toLowerCase()))
-        .toList();
-
-    return Column(
-      children: [
-        // Header bar
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
-          child: Row(
-            children: [
-              GestureDetector(
-                onTap: onBack,
-                child: Icon(Icons.chevron_left_rounded, color: accent, size: 26)),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('RACE CONTROL TIME SYNC',
-                        style: DS.labelCaps(size: 9, color: DS.textMuted)),
-                    Text('SELECT YOUR LOCATION', style: DS.headline(size: 16)),
-                  ])),
-            ])),
-        // Search
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: DS.surface2,
-              borderRadius: DS.aeroCorner,
-              border: Border.all(color: DS.outline)),
-            child: TextField(
-              controller: searchController,
-              style: DS.telemetry(size: 13),
-              onChanged: onSearchChanged,
-              decoration: InputDecoration(
-                hintText: 'SEARCH CIRCUIT NATION...',
-                hintStyle: DS.telemetry(size: 12, color: DS.textMuted),
-                prefixIcon: const Icon(Icons.search, color: DS.textMuted, size: 18),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12))))),
-        const SizedBox(height: 10),
-        // List
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: filtered.length,
-            itemBuilder: (context, i) {
-              final c = filtered[i];
-              final isSelected = selectedCountry?.name == c.name;
-              return GestureDetector(
-                onTap: () => onCountrySelected(c),
+                onTap: () => setState(() {
+                  _selectedTeam = team;
+                  _primaryDriver = null;
+                  _rivalDriver = null;
+                }),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 160),
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isSelected ? accent.withValues(alpha: 0.08) : DS.surface1,
+                    color: isSelected
+                        ? team.primaryColor.withValues(alpha: 0.15)
+                        : DS.surface2,
                     borderRadius: DS.aeroCorner,
                     border: Border.all(
-                      color: isSelected ? accent : DS.outline,
-                      width: isSelected ? 1.5 : 1)),
-                  child: Row(
-                    children: [
-                      Text(c.flag, style: const TextStyle(fontSize: 20)),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(c.name, style: DS.headlineMd(size: 13))),
-                      DSWidgets.statusChip(
-                        'UTC${c.utcOffset >= 0 ? '+' : ''}${c.utcOffset == c.utcOffset.truncateToDouble() ? c.utcOffset.toInt() : c.utcOffset} ${c.abbr}',
-                        color: isSelected ? accent : DS.teal,
-                        size: 8),
-                      if (isSelected) ...[
-                        const SizedBox(width: 6),
-                        Icon(Icons.check_rounded, color: accent, size: 16),
-                      ],
-                    ])));
-            })),
-        // Continue button
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-          child: SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: GestureDetector(
-              onTap: onNext,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: DS.red,
-                  borderRadius: DS.aeroCorner),
-                alignment: Alignment.center,
-                child: Text(
-                  selectedCountry != null
-                      ? 'SYNC ${selectedCountry!.name.toUpperCase()}  →'
-                      : 'SKIP — SET LATER  →',
-                  style: DS.driverCode(size: 13, color: DS.redText)))))),
-      ]);
-  }
-}
-
-// ─── STEP 3 — AUTH (LOGIN + REGISTER) ────────────────────────────────────────
-
-class _AuthStep extends StatelessWidget {
-  final bool isLoginMode;
-  final GlobalKey<FormState> formKey;
-  final TextEditingController emailController;
-  final TextEditingController passwordController;
-  final TextEditingController nameController;
-  final bool obscurePassword;
-  final F1Team? selectedTeam;
-  final CountryTz? selectedCountry;
-  final Color accent;
-  final bool isLoading;
-  final String? errorMessage;
-  final VoidCallback onToggleObscure;
-  final VoidCallback onToggleMode;
-  final VoidCallback onBack;
-  final VoidCallback onSubmit;
-  final void Function(F1Team) onTeamChanged;
-  final VoidCallback onCountryTap;
-
-  const _AuthStep({
-    super.key,
-    required this.isLoginMode,
-    required this.formKey,
-    required this.emailController,
-    required this.passwordController,
-    required this.nameController,
-    required this.obscurePassword,
-    required this.selectedTeam,
-    required this.selectedCountry,
-    required this.accent,
-    required this.isLoading,
-    required this.errorMessage,
-    required this.onToggleObscure,
-    required this.onToggleMode,
-    required this.onBack,
-    required this.onSubmit,
-    required this.onTeamChanged,
-    required this.onCountryTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return isLoginMode ? _buildLogin(context) : _buildRegister(context);
-  }
-
-  Widget _buildLogin(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Hero section ──────────────────────────────────────────────────
-          _LoginHero(),
-          // ── Form card ─────────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Form(
-              key: formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Form header
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: DS.surface1,
-                      borderRadius: DS.aeroCorner,
-                      border: Border.all(color: DS.outline)),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Left bar
-                        Container(
-                          height: 2,
-                          width: 32,
-                          color: DS.red,
-                          margin: const EdgeInsets.only(bottom: 10)),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('AUTHENTICATE DRIVER',
-                                style: DS.headline(size: 16)),
-                            DSWidgets.statusChip('SEC-LVL 1',
-                                color: DS.surface4),
-                          ]),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Enter paddock credentials to synchronize live pitwall telemetry.',
-                          style: DS.body(size: 12)),
-                        const SizedBox(height: 16),
-                        // Email
-                        DSWidgets.inputField(
-                          label: 'EMAIL IDENTIFIER // MONO ID',
-                          rightLabel: 'SYS_ID',
-                          controller: emailController,
-                          prefixIcon: Icons.mail_outline_rounded,
-                          hint: 'driver@scuderia.f1',
-                          keyboardType: TextInputType.emailAddress,
-                          underlineColor: DS.red,
-                          validator: (v) => v == null || v.isEmpty || !v.contains('@')
-                              ? 'Valid email required' : null),
-                        const SizedBox(height: 14),
-                        // Password
-                        DSWidgets.inputField(
-                          label: 'SECURITY TELEMETRY CODE // PASSKEY',
-                          rightLabel: 'ENC_256',
-                          controller: passwordController,
-                          isPassword: true,
-                          obscureText: obscurePassword,
-                          onToggleObscure: onToggleObscure,
-                          prefixIcon: Icons.lock_outline_rounded,
-                          hint: '••••••••••••',
-                          underlineColor: DS.orange,
-                          validator: (v) => v == null || v.length < 6
-                              ? 'Min 6 characters' : null),
-                        const SizedBox(height: 10),
-                        // Remember + forgot
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('REMEMBER DRIVER ID',
-                                style: DS.labelCaps(size: 9, color: DS.textMuted)),
-                            Text('LOST PASSKEY?',
-                                style: DS.labelCaps(size: 9, color: DS.orange)),
-                          ]),
-                        const SizedBox(height: 14),
-                        // Error message
-                        if (errorMessage != null) ...[
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: DS.red.withValues(alpha: 0.1),
-                              borderRadius: DS.aeroCornerSm,
-                              border: Border.all(
-                                  color: DS.red.withValues(alpha: 0.4))),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.error_outline_rounded,
-                                    color: DS.red, size: 14),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                    child: Text(errorMessage!,
-                                        style: DS.body(
-                                            size: 11, color: DS.red))),
-                              ])),
-                          const SizedBox(height: 10),
-                        ],
-                        // CTA button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: GestureDetector(
-                            onTap: isLoading ? null : onSubmit,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: DS.red,
-                                borderRadius: DS.aeroCorner),
-                              alignment: Alignment.center,
-                              child: isLoading
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: DS.redText))
-                                  : Text('SIGN IN TO PITWALL  →',
-                                      style: DS.driverCode(
-                                          size: 14, color: DS.redText))))),
-                        const SizedBox(height: 16),
-                        // Biometric divider
-                        Row(
-                          children: [
-                            Expanded(
-                                child: Divider(color: DS.outline, height: 1)),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 10),
-                              child: Text('OR BIOMETRIC AUTH',
-                                  style: DS.labelCaps(
-                                      size: 8, color: DS.textMuted))),
-                            Expanded(
-                                child: Divider(color: DS.outline, height: 1)),
-                          ]),
-                        const SizedBox(height: 14),
-                        // Fingerprint
-                        Center(
-                          child: Column(
-                            children: [
-                              Container(
-                                width: 56,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  color: DS.tealDark.withValues(alpha: 0.3),
-                                  borderRadius: const BorderRadius.all(
-                                      Radius.circular(12)),
-                                  border: Border.all(
-                                      color: DS.teal.withValues(alpha: 0.4))),
-                                child: const Icon(Icons.fingerprint_rounded,
-                                    color: DS.teal, size: 30)),
-                              const SizedBox(height: 6),
-                              Text('TOUCH FOR INSTANT PADDOCK ACCESS',
-                                  style: DS.labelCaps(
-                                      size: 8, color: DS.textMuted)),
-                              Text('BIOMETRIC_SENSOR // ACTIVE',
-                                  style: DS.labelCaps(
-                                      size: 8, color: DS.teal)),
-                            ])),
-                        const SizedBox(height: 20),
-                        // Register link
-                        Center(
-                          child: Column(
-                            children: [
-                              Text('Unregistered telemetry stream?',
-                                  style: DS.body(size: 12)),
-                              const SizedBox(height: 4),
-                              GestureDetector(
-                                onTap: onToggleMode,
-                                child: Text(
-                                  'REGISTER FIA SUPERLICENSE  ↗',
-                                  style: DS.driverCode(
-                                      size: 13, color: DS.orange))),
-                            ])),
-                      ])),
-                ]))),
-        ]));
-  }
-
-  Widget _buildRegister(BuildContext context) {
-    final String passwordVal = passwordController.text;
-    final int strength = passwordVal.isEmpty
-        ? 0
-        : passwordVal.length < 6
-            ? 1
-            : passwordVal.length < 10
-                ? 2
-                : passwordVal.length < 14
-                    ? 3
-                    : 4;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
-      child: Form(
-        key: formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Header ────────────────────────────────────────────────────
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: DS.surface1,
-                borderRadius: DS.aeroCorner,
-                border: Border.all(color: DS.outline)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      DSWidgets.statusChip('FIA DIGITAL CREDENTIAL  |  CLASS A-SPEC'),
-                      Text('#SL-2026', style: DS.telemetry(size: 11, color: DS.orange)),
-                    ]),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Container(
-                          width: 3, height: 32, color: DS.red,
-                          margin: const EdgeInsets.only(right: 10)),
-                      Text('APEX SUPERLICENSE', style: DS.display(size: 22)),
-                    ]),
-                  const SizedBox(height: 4),
-                  Text('STAGE 01 // DRIVER PROFILE REGISTRATION',
-                      style: DS.labelCaps(size: 9, color: DS.textMuted)),
-                ])),
-            const SizedBox(height: 14),
-            // ── Credentials form ──────────────────────────────────────────
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: DS.surface1,
-                borderRadius: DS.aeroCorner,
-                border: Border.all(color: DS.outline)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('PILOT BIOMETRIC IDENTIFIERS',
-                          style: DS.labelCaps(size: 9, color: DS.teal)),
-                      Text('FIELDS: REQUIRED',
-                          style: DS.labelCaps(size: 9, color: DS.textMuted)),
-                    ]),
-                  const SizedBox(height: 14),
-                  DSWidgets.inputField(
-                    label: 'DRIVER FULL NAME',
-                    rightLabel: 'REG. NOMENCLATURE',
-                    controller: nameController,
-                    prefixIcon: Icons.person_outline_rounded,
-                    hint: 'Alexander Vance',
-                    underlineColor: DS.teal,
-                    validator: (v) =>
-                        v == null || v.isEmpty ? 'Name required' : null),
-                  const SizedBox(height: 14),
-                  DSWidgets.inputField(
-                    label: 'PADDOCK COMM EMAIL',
-                    rightLabel: 'ENCRYPTED FEED',
-                    controller: emailController,
-                    prefixIcon: Icons.wifi_rounded,
-                    hint: 'driver@paddock.f1',
-                    keyboardType: TextInputType.emailAddress,
-                    underlineColor: DS.red,
-                    validator: (v) =>
-                        v == null || v.isEmpty || !v.contains('@')
-                            ? 'Valid email required' : null),
-                  const SizedBox(height: 14),
-                  // Password with strength bar
-                  DSWidgets.inputField(
-                    label: 'TELEMETRY ACCESS KEY',
-                    rightLabel: 'ENTROPY: ${_strengthLabel(strength)}',
-                    controller: passwordController,
-                    isPassword: true,
-                    obscureText: obscurePassword,
-                    onToggleObscure: onToggleObscure,
-                    prefixIcon: Icons.lock_outline_rounded,
-                    hint: '••••••••••••',
-                    underlineColor: DS.orange,
-                    validator: (v) =>
-                        v == null || v.length < 6 ? 'Min 6 characters' : null),
-                  const SizedBox(height: 6),
-                  // Strength bar
-                  Row(
-                    children: List.generate(4, (i) {
-                      Color segColor = i < strength ? DS.teal : DS.surface4;
-                      return Expanded(
-                        child: Container(
-                          height: 3,
-                          margin: const EdgeInsets.only(right: 3),
-                          decoration: BoxDecoration(
-                            color: segColor,
-                            borderRadius: BorderRadius.circular(2))));
-                    })),
-                  if (strength > 0)
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 3),
-                        child: Text(
-                          '${_strengthPct(strength)}% HARDENED',
-                          style: DS.labelCaps(size: 8, color: DS.teal)))),
-                ])),
-            const SizedBox(height: 14),
-            // ── Country sync ──────────────────────────────────────────────
-            GestureDetector(
-              onTap: onCountryTap,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: DS.surface1,
-                  borderRadius: DS.aeroCorner,
-                  border: Border.all(color: DS.outline)),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.access_time_rounded,
-                                color: DS.teal, size: 14),
-                            const SizedBox(width: 6),
-                            Text('RACE CONTROL TIME SYNC',
-                                style: DS.labelCaps(size: 9, color: DS.teal)),
-                          ]),
-                        Text('GPS DETECTED',
-                            style: DS.labelCaps(size: 9, color: DS.textMuted)),
-                      ]),
-                    const SizedBox(height: 10),
-                    if (selectedCountry != null) ...[
-                      Row(
-                        children: [
-                          Text(selectedCountry!.flag,
-                              style: const TextStyle(fontSize: 22)),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(selectedCountry!.name,
-                                    style: DS.headlineMd(size: 14)),
-                                DSWidgets.statusChip(
-                                    '+${selectedCountry!.utcOffset > 0 ? '' : ''}${selectedCountry!.utcOffset.toString()} ${selectedCountry!.abbr} // AUTO-SYNC CIRCUITS',
-                                    color: DS.teal,
-                                    size: 8),
-                              ])),
-                          Text('CHANGE  ›',
-                              style: DS.labelCaps(size: 9, color: DS.orange)),
-                        ]),
-                    ] else ...[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('No location selected',
-                              style: DS.body(size: 12, color: DS.textMuted)),
-                          Text('SELECT  ›',
-                              style: DS.labelCaps(size: 9, color: DS.orange)),
-                        ]),
-                    ],
-                  ]))),
-            const SizedBox(height: 14),
-            // ── Error message ─────────────────────────────────────────────
-            if (errorMessage != null) ...[
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: DS.red.withValues(alpha: 0.1),
-                  borderRadius: DS.aeroCornerSm,
-                  border:
-                      Border.all(color: DS.red.withValues(alpha: 0.4))),
-                child: Row(
-                  children: [
-                    const Icon(Icons.error_outline_rounded,
-                        color: DS.red, size: 14),
-                    const SizedBox(width: 8),
-                    Expanded(
-                        child:
-                            Text(errorMessage!, style: DS.body(size: 11, color: DS.red))),
-                  ])),
-              const SizedBox(height: 14),
-            ],
-            // ── FIA terms ─────────────────────────────────────────────────
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 18,
-                  height: 18,
-                  decoration: BoxDecoration(
-                    color: DS.tealDark.withValues(alpha: 0.3),
-                    borderRadius: const BorderRadius.all(Radius.circular(3)),
-                    border:
-                        Border.all(color: DS.teal.withValues(alpha: 0.6))),
-                  child: const Icon(Icons.check_rounded,
-                      color: DS.teal, size: 12)),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'I agree to the FIA Trackside Data Regulations and Live Telemetry Broadcast terms. CODE: FIA-APPX-2026-V4 // INCL. GPS, SENSOR LOGGING & TELEMETRY FEEDS',
-                    style: DS.body(size: 10))),
-              ]),
-            const SizedBox(height: 20),
-            // ── CTA button ────────────────────────────────────────────────
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: GestureDetector(
-                onTap: isLoading ? null : onSubmit,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: DS.red,
-                    borderRadius: DS.aeroCorner),
-                  alignment: Alignment.center,
-                  child: isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: DS.redText))
-                      : Text('ISSUE SUPERLICENSE & ENTER  →',
-                          style: DS.driverCode(size: 13, color: DS.redText))))),
-            const SizedBox(height: 14),
-            Center(
-              child: GestureDetector(
-                onTap: onToggleMode,
-                child: RichText(
-                  text: TextSpan(
-                    children: [
-                      TextSpan(
-                          text: 'Already racing on the grid?  ',
-                          style: DS.body(size: 12)),
-                      TextSpan(
-                          text: 'SIGN IN  →',
-                          style: DS.driverCode(size: 12, color: DS.orange)),
-                    ])))),
-          ])));
-  }
-
-  String _strengthLabel(int s) {
-    switch (s) {
-      case 1: return 'WEAK';
-      case 2: return 'NOMINAL';
-      case 3: return 'STRONG';
-      case 4: return 'OPTIMAL';
-      default: return 'PENDING';
-    }
-  }
-
-  String _strengthPct(int s) {
-    switch (s) {
-      case 1: return '28';
-      case 2: return '56';
-      case 3: return '78';
-      case 4: return '96';
-      default: return '0';
-    }
-  }
-}
-
-// ─── LOGIN HERO HEADER ────────────────────────────────────────────────────────
-
-class _LoginHero extends StatelessWidget {
-  const _LoginHero();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(color: DS.surface0),
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 20),
-      child: Stack(
-        children: [
-          // Dot-grid background
-          Positioned.fill(
-            child: CustomPaint(painter: _DotGridPainter())),
-          // Track curve SVG (simulated with CustomPainter)
-          Positioned.fill(
-            child: CustomPaint(painter: _TrackCurvePainter())),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Top status bar
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  DSWidgets.statusChip('● PIT ACCESS ENCRYPTED // TLS 1.3',
-                      color: DS.teal),
-                  Row(
-                    children: [
-                      Text('GATE: P-04  ',
-                          style: DS.telemetry(size: 9, color: DS.textMuted)),
-                      Text('LIVE',
-                          style: DS.telemetry(
-                              size: 9, color: DS.orange)
-                              .copyWith(fontWeight: FontWeight.w700)),
-                    ]),
-                ]),
-              const SizedBox(height: 20),
-              // FIA portal label
-              Row(
-                children: [
-                  Container(
-                      width: 2, height: 14, color: DS.red,
-                      margin: const EdgeInsets.only(right: 8)),
-                  Text('FIA TELEMETRY PORTAL // PRO PASS',
-                      style: DS.labelCaps(size: 9, color: DS.textVariant)),
-                ]),
-              const SizedBox(height: 6),
-              Text('BACK ON TRACK', style: DS.display(size: 28)),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  Text('DRIVER SIGN IN',
-                      style: DS.driverCode(size: 12, color: DS.red)),
-                  Text('  ///  ',
-                      style:
-                          DS.telemetry(size: 11, color: DS.textMuted)),
-                  Text('SESSION: FP2 SYNC',
-                      style: DS.telemetry(
-                          size: 10, color: DS.textVariant)),
-                ]),
-              const SizedBox(height: 16),
-              // Telemetry speed-strip + latency
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                          width: 16, height: 4,
-                          color: DS.red, margin: const EdgeInsets.only(right: 3)),
-                      Container(
-                          width: 10, height: 4,
-                          color: DS.orange,
-                          margin: const EdgeInsets.only(right: 3)),
-                      Container(width: 6, height: 4, color: DS.teal),
-                    ]),
-                  Text('SERVER LATENCY: 14MS // SECTOR 1-3 LINKED',
-                      style: DS.labelCaps(size: 7, color: DS.textMuted)),
-                ]),
-            ]),
-        ]));
-  }
-}
-
-class _DotGridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFE4E1E7).withValues(alpha: 0.04)
-      ..strokeWidth = 1;
-    const spacing = 8.0;
-    for (double x = 0; x < size.width; x += spacing) {
-      for (double y = 0; y < size.height; y += spacing) {
-        canvas.drawCircle(Offset(x, y), 0.8, paint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _TrackCurvePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final path = Path();
-    path.moveTo(size.width, size.height * 0.1);
-    path.cubicTo(
-      size.width * 0.65, size.height * 0.05,
-      size.width * 0.35, size.height * 0.3,
-      size.width * 0.42, size.height * 0.65);
-    path.cubicTo(
-      size.width * 0.5, size.height * 0.9,
-      size.width * 0.15, size.height * 0.9,
-      -10, size.height);
-
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..shader = LinearGradient(
-        begin: Alignment.topRight,
-        end: Alignment.bottomLeft,
-        colors: [DS.orange, DS.red, DS.teal]).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-
-    canvas.save();
-    canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
-    canvas.drawPath(path, paint..color = paint.color.withValues(alpha: 0.35));
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-// ─── STEP 4 — CELEBRATION ─────────────────────────────────────────────────────
-
-class _CelebrationStep extends StatefulWidget {
-  final String driverName;
-  final F1Team? team;
-  final CountryTz? country;
-  final VoidCallback onEnter;
-
-  const _CelebrationStep({
-    super.key,
-    required this.driverName,
-    required this.team,
-    required this.country,
-    required this.onEnter,
-  });
-
-  @override
-  State<_CelebrationStep> createState() => _CelebrationStepState();
-}
-
-class _CelebrationStepState extends State<_CelebrationStep>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _pulseCtrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1600))..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _pulseCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tc = widget.team?.primaryColor ?? DS.red;
-    final teamName = widget.team?.name ?? 'Formula 1';
-    final teamData = widget.team != null ? kTeams2026[teamName] : null;
-    final chassis = teamData?.chassis ?? '';
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Status ticker ──────────────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: DS.surface0,
-              borderRadius: DS.aeroCornerSm,
-              border: Border.all(color: DS.outline)),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    AnimatedBuilder(
-                      animation: _pulseCtrl,
-                      builder: (_, __) => Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: DS.teal
-                              .withValues(alpha: 0.4 + 0.6 * _pulseCtrl.value),
-                          shape: BoxShape.circle))),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        'CREDENTIAL VERIFIED // ENCRYPTED LINK ESTABLISHED',
-                        style: DS.labelCaps(size: 8, color: DS.teal),
-                        overflow: TextOverflow.ellipsis)),
-                    DSWidgets.statusChip('#SL-2026-A${Random().nextInt(900) + 100}', size: 7),
-                  ]),
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.wifi_tethering,
-                            color: DS.teal, size: 11),
-                        const SizedBox(width: 4),
-                        Text('LATENCY: ',
-                            style: DS.telemetry(size: 9, color: DS.textVariant)),
-                        Text('11ms',
-                            style: DS.telemetry(size: 9, color: DS.teal)
-                                .copyWith(fontWeight: FontWeight.w700)),
-                      ]),
-                    Text('NODE: PADDOCK_VIP // 52.67.108.4',
-                        style: DS.telemetry(size: 8, color: DS.textVariant)),
-                  ]),
-              ])),
-          const SizedBox(height: 14),
-          // ── Hero celebration card ──────────────────────────────────────
-          Container(
-            decoration: BoxDecoration(
-              color: DS.surface1,
-              borderRadius: DS.aeroCorner,
-              border: Border.all(color: DS.outline)),
-            child: Stack(
-              children: [
-                // AUTH 100% ribbon (top-right)
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: ClipRect(
-                    child: SizedBox(
-                      width: 64,
-                      height: 64,
-                      child: OverflowBox(
-                        maxWidth: 120,
-                        maxHeight: 120,
-                        child: Transform.rotate(
-                          angle: pi / 4,
-                          child: Container(
-                            width: 120,
-                            padding: const EdgeInsets.symmetric(vertical: 3),
-                            color: DS.red,
-                            child: Text(
-                              'AUTH 100%',
-                              textAlign: TextAlign.center,
-                              style: DS.labelCaps(size: 7, color: DS.redText)))))))),
-                Padding(
-                  padding: const EdgeInsets.all(16),
+                      color: isSelected ? team.primaryColor : DS.outline,
+                      width: isSelected ? 2 : 1,
+                    ),
+                  ),
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Shield icon with glow
-                      AnimatedBuilder(
-                        animation: _pulseCtrl,
-                        builder: (_, __) {
-                          return Container(
-                            width: 72,
-                            height: 72,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: DS.surface0,
-                              border: Border.all(
-                                  color: DS.teal
-                                      .withValues(alpha: 0.3 + 0.4 * _pulseCtrl.value))),
-                            child: const Icon(Icons.security_rounded,
-                                color: DS.red, size: 36));
-                        }),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          DSWidgets.redBadge('STAGE COMPLETE'),
-                          const SizedBox(width: 8),
-                          DSWidgets.statusChip(
-                              'CLASS A-SPEC // TRACKSIDE ACCESS',
-                              color: DS.teal, size: 8),
-                        ]),
-                      const SizedBox(height: 10),
-                      Text('SUPERLICENSE ISSUED',
-                          style: DS.headline(size: 20),
-                          textAlign: TextAlign.center),
+                      if (teamData != null)
+                        SvgPicture.asset(teamData.logoColorAsset,
+                            height: 32,
+                            colorFilter: isSelected
+                                ? null
+                                : const ColorFilter.mode(
+                                    Color(0xFFAF8781), BlendMode.srcIn))
+                      else
+                        Icon(Icons.shield,
+                            size: 32,
+                            color: isSelected ? team.primaryColor : DS.textMuted),
                       const SizedBox(height: 6),
-                      RichText(
-                        textAlign: TextAlign.center,
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                                text: 'Welcome to the Pitwall, ',
-                                style: DS.body(size: 13)),
-                            TextSpan(
-                                text: 'Driver ${widget.driverName}',
-                                style: DS.body(size: 13,
-                                    color: DS.textPrimary)
-                                    .copyWith(fontWeight: FontWeight.w600)),
-                            TextSpan(
-                                text:
-                                    '. Your credential is authenticated on the global telemetry mesh.',
-                                style: DS.body(size: 13)),
-                          ])),
-                    ])),
-              ])),
-          const SizedBox(height: 14),
-          // ── Digital credential card ────────────────────────────────────
-          DSWidgets.leftAccentCard(
-            accent: tc,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('FIA FEDERATION INTERNATIONALE',
-                              style: DS.labelCaps(size: 8, color: DS.textMuted)),
-                          Text('APEX F1 DIGITAL CREDENTIAL',
-                              style: DS.headlineMd(size: 13)),
-                        ])),
-                    DSWidgets.statusChip('ACTIVE S26', color: DS.teal),
-                  ]),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 24,
-                      backgroundColor: tc.withValues(alpha: 0.2),
-                      child: Text(
-                        widget.driverName.isNotEmpty
-                            ? widget.driverName.substring(0, 1).toUpperCase()
-                            : 'D',
-                        style: DS.driverCode(size: 20, color: tc))),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('DRIVER ASSIGNMENT',
-                              style: DS.labelCaps(size: 8, color: DS.textMuted)),
-                          Text(widget.driverName.toUpperCase(),
-                              style: DS.driverCode(size: 16)),
-                          Row(
-                            children: [
-                              if (widget.country != null)
-                                Text('${widget.country!.flag}  ',
-                                    style: const TextStyle(fontSize: 12)),
-                              Text(teamName,
-                                  style: DS.body(size: 11, color: tc)),
-                            ]),
-                          if (chassis.isNotEmpty)
-                            Text(chassis,
-                                style: DS.labelCaps(size: 8, color: DS.textMuted)),
-                        ])),
-                  ]),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
+                      Text(team.name.toUpperCase(),
+                          style: DS.labelCaps(
+                              size: 7.5,
+                              color: isSelected
+                                  ? team.primaryColor
+                                  : DS.textMuted),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+          Row(children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => setState(() => _step = OnboardingStep.details),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: DS.outline),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape:
+                      RoundedRectangleBorder(borderRadius: DS.aeroCorner),
+                ),
+                child:
+                    Text('← BACK', style: DS.labelCaps(size: 10, color: DS.textMuted)),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton(
+                onPressed: _selectedTeam == null
+                    ? null
+                    : () => setState(() => _step = OnboardingStep.selectDriver),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _selectedTeam?.primaryColor ?? DS.red,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape:
+                      RoundedRectangleBorder(borderRadius: DS.aeroCorner),
+                  elevation: 0,
+                ),
+                child: Text('NEXT: PICK DRIVERS ▶',
+                    style: DS.labelCaps(size: 10, color: Colors.black)),
+              ),
+            ),
+          ]),
+        ],
+      ),
+    );
+  }
+
+  // ─── STEP 3: SELECT DRIVERS ──────────────────────────────────────────────────
+
+  Widget _buildDriverStep(BuildContext context, Color accentColor) {
+    final teamDrivers =
+        kDrivers2026List.where((d) => d.team == _selectedTeam!.name).toList();
+    final allOthers = kDrivers2026List
+        .where((d) => d.name != _primaryDriver?.name)
+        .toList();
+    final visibleRivals =
+        _showAllRivals ? allOthers : allOthers.take(6).toList();
+    final authState = ref.watch(authProvider);
+
+    return SingleChildScrollView(
+      key: const ValueKey('drivers'),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 8),
+          Row(children: [
+            Container(width: 3, height: 20, color: accentColor),
+            const SizedBox(width: 10),
+            Text('SELECT DRIVERS', style: DS.headline(size: 20)),
+          ]),
+          const SizedBox(height: 4),
+          Text('Pick your team driver and a rival to track.',
+              style: DS.body(size: 12)),
+          const SizedBox(height: 20),
+
+          // Section A: team drivers
+          Row(children: [
+            Container(width: 2, height: 14, color: accentColor),
+            const SizedBox(width: 8),
+            Text('YOUR TEAM DRIVER',
+                style: DS.labelCaps(size: 9, color: accentColor)),
+          ]),
+          const SizedBox(height: 10),
+          Row(
+            children: teamDrivers.map((driver) {
+              final isSelected = _primaryDriver?.name == driver.name;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() {
+                    _primaryDriver = driver;
+                    if (_rivalDriver?.name == driver.name) _rivalDriver = null;
+                  }),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    margin: const EdgeInsets.only(right: 10),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 14, horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? accentColor.withValues(alpha: 0.12)
+                          : DS.surface2,
+                      borderRadius: DS.aeroCorner,
+                      border: Border.all(
+                          color: isSelected ? accentColor : DS.outline,
+                          width: isSelected ? 2 : 1),
+                    ),
+                    child: Column(
                       children: [
-                        const Icon(Icons.grid_3x3_rounded,
-                            color: DS.textMuted, size: 12),
-                        const SizedBox(width: 6),
+                        Container(
+                          width: 68,
+                          height: 68,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: isSelected ? accentColor : DS.outline,
+                                width: 2),
+                            color: DS.surface3,
+                          ),
+                          child: ClipOval(
+                            child: Image.asset(driver.portraitAsset,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Icon(Icons.person,
+                                    color: DS.textMuted)),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(driver.code,
+                            style: DS.driverCode(
+                                size: 14,
+                                color: isSelected ? accentColor : DS.textPrimary)),
+                        Text(driver.name.split(' ').last,
+                            style: DS.body(size: 10, color: DS.textMuted),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis),
+                        if (isSelected) ...[
+                          const SizedBox(height: 4),
+                          Container(
+                              width: 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                  color: accentColor, shape: BoxShape.circle)),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+
+          const SizedBox(height: 20),
+          Divider(color: DS.outline, thickness: 1),
+          const SizedBox(height: 12),
+
+          // Section B: rival driver
+          Row(children: [
+            Container(width: 2, height: 14, color: DS.orange),
+            const SizedBox(width: 8),
+            Text('TRACK RIVAL',
+                style: DS.labelCaps(size: 9, color: DS.orange)),
+            const SizedBox(width: 6),
+            Text('(any team)', style: DS.body(size: 10)),
+          ]),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              ...visibleRivals.map((driver) {
+                final isSelected = _rivalDriver?.name == driver.name;
+                final tc =
+                    getTeamData(driver.team)?.primaryColor ?? DS.textMuted;
+                return GestureDetector(
+                  onTap: () => setState(() => _rivalDriver = driver),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? tc.withValues(alpha: 0.12)
+                          : DS.surface2,
+                      borderRadius: DS.aeroCornerSm,
+                      border: Border.all(
+                          color: isSelected ? tc : DS.outline,
+                          width: isSelected ? 2 : 1),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                              shape: BoxShape.circle, color: DS.surface3),
+                          child: ClipOval(
+                            child: Image.asset(driver.portraitAsset,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Icon(
+                                    Icons.person,
+                                    size: 18,
+                                    color: DS.textMuted)),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('SECURITY PROTOCOL',
-                                style: DS.labelCaps(size: 7, color: DS.textMuted)),
-                            Text('256-BIT CRYPTO TOKEN',
-                                style: DS.labelCaps(size: 7, color: DS.textVariant)),
-                          ]),
-                      ]),
-                    Row(
-                      children: [
-                        const Icon(Icons.verified_user_rounded,
-                            color: DS.teal, size: 12),
-                        const SizedBox(width: 4),
-                        Text('CHIP ACTIVE',
-                            style: DS.labelCaps(size: 8, color: DS.teal)),
-                      ]),
-                  ]),
-              ])),
-          const SizedBox(height: 14),
-          // ── Privileges grid ───────────────────────────────────────────
-          Text('SYSTEM PRIVILEGES ALLOCATED',
-              style: DS.labelCaps(size: 9, color: DS.textMuted)),
-          const SizedBox(height: 8),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            childAspectRatio: 2.0,
-            children: [
-              _PrivilegeTile(
-                icon: Icons.bar_chart_rounded,
-                label: 'LIVE PITWALL TELEMETRY',
-                status: 'UNRESTRICTED',
-                dotColor: DS.green),
-              _PrivilegeTile(
-                icon: Icons.radio_rounded,
-                label: 'TEAM RADIO STREAM',
-                status: 'UNFILTERED COMMS',
-                dotColor: DS.orange),
-              _PrivilegeTile(
-                icon: Icons.bar_chart_sharp,
-                label: 'PREDICTOR LEAGUE',
-                status: '100 PTS SEED',
-                dotColor: DS.green),
-              _PrivilegeTile(
-                icon: Icons.psychology_rounded,
-                label: 'AI STRATEGIST (GEMINI)',
-                status: 'ARMED & SYNCED',
-                dotColor: DS.red),
-            ]),
+                            Text(driver.code,
+                                style: DS.labelCaps(
+                                    size: 10,
+                                    color:
+                                        isSelected ? tc : DS.textPrimary)),
+                            Text(
+                                driver.team
+                                    .split(' ')
+                                    .first
+                                    .toUpperCase(),
+                                style: DS.labelCaps(
+                                    size: 7, color: DS.textMuted)),
+                          ],
+                        ),
+                        if (isSelected) ...[
+                          const SizedBox(width: 6),
+                          Icon(Icons.check_circle, size: 14, color: tc),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              }),
+              if (!_showAllRivals)
+                GestureDetector(
+                  onTap: () => setState(() => _showAllRivals = true),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: DS.surface2,
+                      borderRadius: DS.aeroCornerSm,
+                      border: Border.all(color: DS.outline),
+                    ),
+                    child: Text('ALL DRIVERS +',
+                        style: DS.labelCaps(size: 9, color: DS.textMuted)),
+                  ),
+                ),
+            ],
+          ),
+
+          if (authState.errorMessage != null) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: DS.red.withValues(alpha: 0.1),
+                borderRadius: DS.aeroCornerSm,
+                border: Border.all(color: DS.red.withValues(alpha: 0.4)),
+              ),
+              child: Text(authState.errorMessage!,
+                  style: DS.labelCaps(size: 9, color: DS.red)),
+            ),
+          ],
+
+          const SizedBox(height: 24),
+          Row(children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () =>
+                    setState(() => _step = OnboardingStep.selectTeam),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: DS.outline),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape:
+                      RoundedRectangleBorder(borderRadius: DS.aeroCorner),
+                ),
+                child: Text('← BACK',
+                    style: DS.labelCaps(size: 10, color: DS.textMuted)),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton(
+                onPressed: (_primaryDriver == null ||
+                        _rivalDriver == null ||
+                        authState.isLoading)
+                    ? null
+                    : () => _handleRegister(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: accentColor,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape:
+                      RoundedRectangleBorder(borderRadius: DS.aeroCorner),
+                  elevation: 0,
+                ),
+                child: authState.isLoading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                            color: Colors.black, strokeWidth: 2))
+                    : Text('ISSUE SUPERLICENSE ▶',
+                        style: DS.labelCaps(size: 10, color: Colors.black)),
+              ),
+            ),
+          ]),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleRegister(BuildContext context) async {
+    final ok = await ref.read(authProvider.notifier).register(
+          _emailCtrl.text.trim(),
+          _passwordCtrl.text,
+          _nameCtrl.text.trim(),
+          _selectedTeam!.name,
+          _primaryDriver!.name,
+          country: _selectedCountry?.name,
+          rivalDriver: _rivalDriver?.name,
+        );
+    if (ok && mounted) {
+      setState(() {
+        _registeredName = _nameCtrl.text.trim();
+        _step = OnboardingStep.celebration;
+      });
+    }
+  }
+
+  // ─── STEP 4: CELEBRATION ─────────────────────────────────────────────────────
+
+  Widget _buildCelebrationStep(BuildContext context, Color accentColor) {
+    final teamData =
+        _selectedTeam != null ? getTeamData(_selectedTeam!.name) : null;
+    return SingleChildScrollView(
+      key: const ValueKey('celebration'),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
           const SizedBox(height: 20),
-          // ── Enter CTA ────────────────────────────────────────────────
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                  colors: [DS.orange, DS.red, DS.teal],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight),
+              shape: BoxShape.circle,
+            ),
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration:
+                  BoxDecoration(shape: BoxShape.circle, color: DS.surface2),
+              child: _primaryDriver != null
+                  ? ClipOval(
+                      child: Image.asset(_primaryDriver!.portraitAsset,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              Icon(Icons.person, size: 40, color: DS.textMuted)))
+                  : Icon(Icons.person, size: 40, color: DS.textMuted),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text('SUPERLICENSE ISSUED',
+              style: DS.display(size: 22, color: DS.teal)),
+          const SizedBox(height: 4),
+          Text('AUTH 100%', style: DS.labelCaps(size: 10, color: DS.orange)),
+          const SizedBox(height: 20),
+          DSWidgets.leftAccentCard(
+            accent: accentColor,
+            bgColor: DS.surface1,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('DRIVER',
+                          style: DS.labelCaps(size: 8, color: DS.textMuted)),
+                      if (_selectedCountry != null)
+                        Text(_selectedCountry!.flag,
+                            style: const TextStyle(fontSize: 16)),
+                    ]),
+                const SizedBox(height: 4),
+                Text(_registeredName.toUpperCase(),
+                    style: DS.headline(size: 18)),
+                const SizedBox(height: 8),
+                Row(children: [
+                  if (teamData != null) ...[
+                    SvgPicture.asset(teamData.logoColorAsset,
+                        height: 20,
+                        colorFilter:
+                            ColorFilter.mode(accentColor, BlendMode.srcIn)),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(_selectedTeam?.name.toUpperCase() ?? '',
+                      style: DS.labelCaps(size: 9, color: accentColor)),
+                ]),
+                if (_primaryDriver != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                      '${_primaryDriver!.code} · ${_rivalDriver?.code ?? '--'}',
+                      style: DS.telemetry(size: 11, color: DS.textMuted)),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 28),
           SizedBox(
             width: double.infinity,
-            height: 52,
-            child: GestureDetector(
-              onTap: widget.onEnter,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: DS.red,
-                  borderRadius: DS.aeroCorner),
-                alignment: Alignment.center,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.login_rounded,
-                        color: DS.redText, size: 18),
-                    const SizedBox(width: 10),
-                    Text('ENTER THE PITWALL',
-                        style: DS.driverCode(size: 14, color: DS.redText)),
-                    Text('  SESSION READY  →',
-                        style: DS.telemetry(size: 12, color: DS.redText)),
-                  ])))),
-          const SizedBox(height: 10),
-          // Ghost buttons
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  height: 42,
-                  decoration: BoxDecoration(
-                    borderRadius: DS.aeroCornerSm,
-                    border: Border.all(color: DS.outline)),
-                  alignment: Alignment.center,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.account_balance_wallet_outlined,
-                          color: DS.textMuted, size: 14),
-                      const SizedBox(width: 6),
-                      Text('SAVE TO WALLET',
-                          style: DS.labelCaps(size: 8, color: DS.textMuted)),
-                    ]))),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Container(
-                  height: 42,
-                  decoration: BoxDecoration(
-                    borderRadius: DS.aeroCornerSm,
-                    border: Border.all(color: DS.outline)),
-                  alignment: Alignment.center,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.share_outlined,
-                          color: DS.textMuted, size: 14),
-                      const SizedBox(width: 6),
-                      Text('SHARE CREDENTIAL',
-                          style: DS.labelCaps(size: 8, color: DS.textMuted)),
-                    ]))),
-            ]),
-          const SizedBox(height: 10),
-          // Bottom ticker
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            color: DS.surface0,
-            child: Row(
-              children: [
-                Container(
-                    width: 6, height: 6,
-                    decoration: const BoxDecoration(
-                        color: DS.green, shape: BoxShape.circle),
-                    margin: const EdgeInsets.only(right: 8)),
-                Expanded(
-                  child: Text(
-                    'LAS VEGAS CIRCUIT // NEXT SESSION GREEN LIGHT IN 11D 14H 22M',
-                    style: DS.labelCaps(size: 8, color: DS.teal),
-                    overflow: TextOverflow.ellipsis)),
-              ])),
-        ]));
-  }
-}
-
-class _PrivilegeTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String status;
-  final Color dotColor;
-
-  const _PrivilegeTile({
-    required this.icon,
-    required this.label,
-    required this.status,
-    required this.dotColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: DS.surface2,
-        borderRadius: DS.aeroCornerSm,
-        border: Border.all(color: DS.outline)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: DS.textMuted, size: 14),
-              const Spacer(),
-              Container(
-                  width: 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                      color: dotColor, shape: BoxShape.circle)),
-            ]),
-          const Spacer(),
-          Text(label,
-              style: DS.labelCaps(size: 7, color: DS.textMuted),
-              maxLines: 1, overflow: TextOverflow.ellipsis),
-          Text(status,
-              style: DS.headlineMd(size: 11),
-              maxLines: 1, overflow: TextOverflow.ellipsis),
-        ]));
+            child: ElevatedButton(
+              onPressed: () => context.go('/'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: accentColor,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape:
+                    RoundedRectangleBorder(borderRadius: DS.aeroCorner),
+                elevation: 0,
+              ),
+              child: Text('ENTER THE PITWALL ▶',
+                  style: DS.labelCaps(size: 11, color: Colors.black)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
