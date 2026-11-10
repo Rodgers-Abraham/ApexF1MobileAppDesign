@@ -109,22 +109,26 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Connecting vertical line through icon column
-                          Padding(
-                            padding: const EdgeInsets.only(top: 20, left: 23),
-                            child: Container(
-                              width: 1,
-                              color: DS.outline)),
-                          Expanded(
-                            child: Column(
-                              children: items.map((item) {
-                                return _buildDrawerMenuItem(context, item);
-                              }).toList())),
-                        ])),
+                    Column(
+                      children: items.asMap().entries.map((entry) {
+                        final i = entry.key;
+                        final item = entry.value;
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 2,
+                              height: 56,
+                              child: Container(
+                                color: (i == items.length - 1)
+                                    ? Colors.transparent
+                                    : DS.outline,
+                              ),
+                            ),
+                            Expanded(child: _buildDrawerMenuItem(context, item)),
+                          ],
+                        );
+                      }).toList()),
                     const Spacer(),
 
                     // Sign out at bottom
