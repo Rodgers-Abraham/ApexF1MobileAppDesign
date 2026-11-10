@@ -384,14 +384,11 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'ROUND 01 · MELBOURNE',
-                            style: TextStyle(
-                              fontFamily: 'Formula1Wide',
-                              fontSize: 8.5,
-                              color: Color(0xFF8F909A),
-                              fontWeight: FontWeight.bold,
-                            ),
+                          Text(
+                            nextRace != null
+                                ? 'ROUND ${nextRace.round.padLeft(2, '0')} · ${nextRace.name.toUpperCase()}'
+                                : 'UPCOMING GRAND PRIX',
+                            style: DS.labelCaps(size: 8.5, color: DS.textMuted),
                           ),
                           const SizedBox(height: 2),
                           Text(

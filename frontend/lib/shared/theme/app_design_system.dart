@@ -52,23 +52,23 @@ class DS {
 
   // ── Typography ─────────────────────────────────────────────────────────────
   static TextStyle display({double size = 28, Color? color}) =>
-      GoogleFonts.spaceGrotesk(
+      GoogleFonts.jetBrainsMono(
         fontSize: size,
         fontWeight: FontWeight.w700,
-        letterSpacing: size * -0.03,
+        letterSpacing: size * -0.02,
         color: color ?? textPrimary,
       );
 
   static TextStyle headline({double size = 18, Color? color}) =>
-      GoogleFonts.spaceGrotesk(
+      GoogleFonts.jetBrainsMono(
         fontSize: size,
         fontWeight: FontWeight.w700,
-        letterSpacing: size * -0.01,
+        letterSpacing: size * 0.01,
         color: color ?? textPrimary,
       );
 
   static TextStyle headlineMd({double size = 15, Color? color}) =>
-      GoogleFonts.spaceGrotesk(
+      GoogleFonts.jetBrainsMono(
         fontSize: size,
         fontWeight: FontWeight.w600,
         letterSpacing: size * 0.01,
@@ -76,7 +76,7 @@ class DS {
       );
 
   static TextStyle driverCode({double size = 14, Color? color}) =>
-      GoogleFonts.spaceGrotesk(
+      GoogleFonts.jetBrainsMono(
         fontSize: size,
         fontWeight: FontWeight.w700,
         letterSpacing: size * 0.06,
@@ -108,7 +108,7 @@ class DS {
       );
 
   static TextStyle body({double size = 13, Color? color}) =>
-      GoogleFonts.lexend(
+      GoogleFonts.jetBrainsMono(
         fontSize: size,
         fontWeight: FontWeight.w400,
         letterSpacing: size * 0.01,
@@ -116,7 +116,7 @@ class DS {
       );
 
   static TextStyle bodySm({double size = 11, Color? color}) =>
-      GoogleFonts.lexend(
+      GoogleFonts.jetBrainsMono(
         fontSize: size,
         fontWeight: FontWeight.w400,
         letterSpacing: size * 0.01,

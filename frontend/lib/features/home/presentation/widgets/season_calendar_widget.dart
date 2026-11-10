@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/session_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
+import '../../../../shared/widgets/skeleton_widget.dart';
 import '../../data/calendar_provider.dart';
 
 class SeasonCalendarWidget extends ConsumerWidget {
@@ -13,10 +14,7 @@ class SeasonCalendarWidget extends ConsumerWidget {
     final calendarAsync = ref.watch(calendarProvider);
 
     return calendarAsync.when(
-      loading: () => const SizedBox(
-        height: 200,
-        child: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () => const SkeletonStandingsList(count: 5),
       error: (_, __) => const SizedBox(
         height: 100,
         child: Center(child: Text('Calendar unavailable', style: TextStyle(color: Colors.grey))),
@@ -216,12 +214,7 @@ class RaceDetailsModalContent extends ConsumerWidget {
                 Text('RACE RESULTS & HIGHLIGHTS', style: AppFonts.header(fontSize: 11, color: Colors.grey[500]!, letterSpacing: 1)),
                 const SizedBox(height: 12),
                 raceDetailsAsync.when(
-                  loading: () => Container(
-                    height: 160,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(color: const Color(0xFF18181C), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withOpacity(0.06))),
-                    child: const CircularProgressIndicator(),
-                  ),
+                  loading: () => const SkeletonBox(height: 160, borderRadius: 16),
                   error: (err, stack) => Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(color: const Color(0xFF18181C), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withOpacity(0.06))),
@@ -250,7 +243,7 @@ class RaceDetailsModalContent extends ConsumerWidget {
               Text('ALL-TIME CIRCUIT HISTORY (1950 – 2026)', style: AppFonts.header(fontSize: 11, color: Colors.grey[500]!, letterSpacing: 1)),
               const SizedBox(height: 12),
               historyAsync.when(
-                loading: () => const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator())),
+                loading: () => const SkeletonStandingsList(count: 3),
                 error: (err, stack) => const Text('History record loaded from offline database', style: TextStyle(color: Colors.grey, fontSize: 11)),
                 data: (history) {
                   final firstHeld = history['first_held']?.toString() ?? '1950';

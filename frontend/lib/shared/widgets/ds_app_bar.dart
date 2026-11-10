@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../theme/app_design_system.dart';
 
 /// Shared Stitch-design app bar used across all main screens.
@@ -64,7 +65,10 @@ class DSAppBar extends StatelessWidget implements PreferredSizeWidget {
           const SizedBox(width: 6),
         ],
         ...?extraActions,
-        const _AvatarChip(),
+        GestureDetector(
+          onTap: () => GoRouter.of(context).go('/settings'),
+          child: const _AvatarChip(),
+        ),
         const SizedBox(width: 10),
       ],
     );

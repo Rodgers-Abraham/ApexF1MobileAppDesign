@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/providers/telemetry_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../shared/theme/app_design_system.dart';
@@ -93,7 +94,10 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
                 const SizedBox(width: 8),
                 Text('RACE RECAPS', style: DS.driverCode(size: 11)),
                 const Spacer(),
-                Text('2026 SEASON', style: DS.labelCaps(size: 8)),
+                GestureDetector(
+                  onTap: () => context.go('/history'),
+                  child: Text('VIEW ARCHIVE', style: DS.labelCaps(size: 8, color: DS.teal)),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -117,6 +121,7 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
               children: [
                 Expanded(
                   child: GestureDetector(
+                    onTap: () => context.go('/live'),
                     child: Container(
                       height: 44,
                       decoration: BoxDecoration(color: DS.red, borderRadius: DS.aeroCorner),
@@ -134,21 +139,24 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Container(
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: DS.surface1,
-                      borderRadius: DS.aeroCorner,
-                      border: Border.all(color: DS.outline),
-                    ),
-                    alignment: Alignment.center,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.build_outlined, size: 14, color: Color(0xFF29DEC9)),
-                        const SizedBox(width: 6),
-                        Text('PIT STRATEGY MATRIX', style: DS.labelCaps(size: 9, color: DS.teal)),
-                      ],
+                  child: GestureDetector(
+                    onTap: () => context.go('/live'),
+                    child: Container(
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: DS.surface1,
+                        borderRadius: DS.aeroCorner,
+                        border: Border.all(color: DS.outline),
+                      ),
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.build_outlined, size: 14, color: Color(0xFF29DEC9)),
+                          const SizedBox(width: 6),
+                          Text('PIT STRATEGY MATRIX', style: DS.labelCaps(size: 9, color: DS.teal)),
+                        ],
+                      ),
                     ),
                   ),
                 ),

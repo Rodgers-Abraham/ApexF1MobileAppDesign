@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../shared/theme/theme_provider.dart';
+import '../../../../shared/theme/app_design_system.dart';
 
 class RaceControlWidget extends StatefulWidget {
   final Color accent;
@@ -54,26 +54,21 @@ class _RaceControlWidgetState extends State<RaceControlWidget> {
             Expanded(
               child: Text(
                 'RACE CONTROL',
-                style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 0.8),
+                style: DS.driverCode(size: 11),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             const SizedBox(width: 8),
-            Text('LIVE FEED', style: AppFonts.number(fontSize: 9, color: Colors.grey[500]!, fontWeight: FontWeight.bold)),
+            Text('LIVE FEED', style: DS.labelCaps(size: 9, color: DS.textMuted)),
           ],
         ),
         const SizedBox(height: 10),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            color: const Color(0xFF141419),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(3),
-              topRight: Radius.circular(12),
-              bottomLeft: Radius.circular(3),
-              bottomRight: Radius.circular(12),
-            ),
+            color: DS.surface1,
+            borderRadius: DS.aeroCorner,
             border: Border.all(color: flagColor.withValues(alpha: 0.3)),
           ),
           child: Row(
@@ -90,9 +85,9 @@ class _RaceControlWidgetState extends State<RaceControlWidget> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(statusTitle, style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 11, fontWeight: FontWeight.w900, color: flagColor)),
+                    Text(statusTitle, style: DS.headline(size: 11, color: flagColor)),
                     const SizedBox(height: 2),
-                    Text(statusSubtitle, style: AppFonts.number(fontSize: 9, color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text(statusSubtitle, style: DS.labelCaps(size: 9, color: DS.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
                   ],
                 ),
               ),
@@ -113,10 +108,10 @@ class _RaceControlWidgetState extends State<RaceControlWidget> {
                   decoration: BoxDecoration(
                     color: isSelected ? Colors.white.withValues(alpha: 0.1) : Colors.transparent,
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: isSelected ? Colors.white : const Color(0xFF202028), width: isSelected ? 1.2 : 1.0),
+                    border: Border.all(color: isSelected ? Colors.white : DS.outline, width: isSelected ? 1.2 : 1.0),
                   ),
                   child: Center(
-                    child: Text(f, style: AppFonts.number(fontSize: 8.5, fontWeight: FontWeight.bold, color: isSelected ? Colors.white : const Color(0xFF8F909A))),
+                    child: Text(f, style: DS.labelCaps(size: 8.5, color: isSelected ? Colors.white : DS.textMuted)),
                   ),
                 ),
               ),

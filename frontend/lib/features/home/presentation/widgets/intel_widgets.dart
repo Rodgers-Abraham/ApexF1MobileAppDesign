@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/providers/telemetry_provider.dart';
+import '../../../../shared/widgets/skeleton_widget.dart';
 
 class CompactStandingsWidget extends ConsumerWidget {
   final Color accent;
@@ -223,7 +224,7 @@ class PaddockIntelWidget extends ConsumerWidget {
     return Container(
       decoration: BoxDecoration(color: const Color(0xFF111111), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withOpacity(0.04))),
       child: newsAsync.when(
-        loading: () => const Padding(padding: EdgeInsets.all(24.0), child: Center(child: CircularProgressIndicator())),
+        loading: () => const SkeletonCardRow(count: 2, cardWidth: 280, cardHeight: 180),
         error: (err, stack) => Padding(
           padding: const EdgeInsets.all(16.0),
           child: Text('Live paddock news stream temporarily unavailable', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
@@ -324,12 +325,7 @@ class TrackConditionsWidget extends ConsumerWidget {
     final conditionsAsync = ref.watch(trackConditionsProvider);
 
     return conditionsAsync.when(
-      loading: () => Container(
-        height: 120,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(color: const Color(0xFF111111), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withOpacity(0.04))),
-        child: const CircularProgressIndicator(),
-      ),
+      loading: () => const SkeletonBox(height: 120, borderRadius: 16),
       error: (err, stack) => Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(color: const Color(0xFF111111), borderRadius: BorderRadius.circular(16)),
@@ -406,7 +402,7 @@ class TireStrategyWidget extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: const Color(0xFF111111), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withOpacity(0.04))),
       child: tireAsync.when(
-        loading: () => const Padding(padding: EdgeInsets.all(16.0), child: Center(child: CircularProgressIndicator())),
+        loading: () => const SkeletonCardRow(count: 2, cardWidth: 240, cardHeight: 140),
         error: (err, stack) => Text('Tire stint strategy data unavailable', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
         data: (data) {
           final items = data.strategies;

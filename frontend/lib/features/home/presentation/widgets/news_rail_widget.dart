@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/providers/telemetry_provider.dart';
-import '../../../../shared/theme/theme_provider.dart';
+import '../../../../shared/theme/app_design_system.dart';
 import '../../../../shared/widgets/skeleton_widget.dart';
 
 class NewsRailWidget extends ConsumerWidget {
@@ -28,7 +28,7 @@ class NewsRailWidget extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Text('LATEST ARTICLES', style: AppFonts.number(fontSize: 9, color: Colors.grey[500]!, fontWeight: FontWeight.bold)),
+            Text('LATEST ARTICLES', style: DS.labelCaps(size: 9, color: DS.textMuted)),
           ],
         ),
         const SizedBox(height: 10),
@@ -42,7 +42,7 @@ class NewsRailWidget extends ConsumerWidget {
               return Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(color: const Color(0xFF141419), borderRadius: BorderRadius.circular(10)),
-                child: Text('No recent paddock articles available.', style: AppFonts.regular(fontSize: 11, color: Colors.grey)),
+                child: Text('No recent paddock articles available.', style: DS.body(size: 11, color: DS.textMuted)),
               );
             }
 
@@ -50,6 +50,8 @@ class NewsRailWidget extends ConsumerWidget {
               height: 235,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
+                clipBehavior: Clip.none,
+                padding: EdgeInsets.only(right: MediaQuery.of(context).size.width * 0.32),
                 itemCount: articles.length,
                 separatorBuilder: (context, index) => const SizedBox(width: 12),
                 itemBuilder: (context, index) {
@@ -146,7 +148,7 @@ class NewsRailWidget extends ConsumerWidget {
                                           '${item.timeAgo.isNotEmpty ? item.timeAgo : "RECENT"} · ${item.source.toUpperCase()}',
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: AppFonts.number(fontSize: 8, color: const Color(0xFF8F909A), fontWeight: FontWeight.bold),
+                                          style: DS.labelCaps(size: 8, color: DS.textMuted),
                                         ),
                                       ),
                                       const SizedBox(width: 6),

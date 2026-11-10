@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../shared/constants/f1_data.dart';
+import '../../../../shared/widgets/skeleton_widget.dart';
 import '../../data/recaps_provider.dart';
 import '../../data/calendar_provider.dart';
 
@@ -29,7 +30,7 @@ class RaceRecapsWidget extends ConsumerWidget {
         ),
         const SizedBox(height: 10),
         recapsAsync.when(
-          loading: () => const SizedBox(height: 160, child: Center(child: CircularProgressIndicator(color: Colors.red))),
+          loading: () => const SkeletonCardRow(count: 3, cardWidth: 220, cardHeight: 160),
           error: (_, __) => Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(color: const Color(0xFF141419), borderRadius: BorderRadius.circular(10)),
@@ -47,6 +48,8 @@ class RaceRecapsWidget extends ConsumerWidget {
               height: 195,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
+                clipBehavior: Clip.none,
+                padding: EdgeInsets.only(right: MediaQuery.of(context).size.width * 0.32),
                 itemCount: recaps.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 10),
                 itemBuilder: (context, index) => _RecapCard(recap: recaps[index], accent: accent),

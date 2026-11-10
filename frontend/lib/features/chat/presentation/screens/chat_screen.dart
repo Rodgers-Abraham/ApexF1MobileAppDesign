@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../shared/theme/app_design_system.dart';
 import '../../../../shared/widgets/ds_app_bar.dart';
+import '../../../../shared/widgets/skeleton_widget.dart';
 import '../../../../core/utils/api_config.dart';
 
 class ChatMessage {
@@ -201,22 +202,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 }
 
                 if (chatState.isLoading && index == chatState.messages.length) {
-                  return Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _AiAvatar(),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _AiAvatar(),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(color: DS.surface2, borderRadius: DS.aeroCorner, border: Border.all(color: DS.outline)),
-                            child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: DS.teal)),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SkeletonBox(height: 10, borderRadius: 3),
+                                const SizedBox(height: 8),
+                                const SkeletonBox(height: 10, borderRadius: 3),
+                                const SizedBox(height: 6),
+                                SkeletonBox(width: MediaQuery.of(context).size.width * 0.5, height: 10, borderRadius: 3),
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   );
                 }

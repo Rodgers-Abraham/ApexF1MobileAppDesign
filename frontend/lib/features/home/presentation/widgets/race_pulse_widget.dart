@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/providers/telemetry_provider.dart';
-import '../../../../shared/theme/theme_provider.dart';
+import '../../../../shared/theme/app_design_system.dart';
+import '../../../../shared/widgets/skeleton_widget.dart';
 
 class RacePulseWidget extends ConsumerWidget {
   final Color accent;
@@ -39,7 +40,7 @@ class RacePulseWidget extends ConsumerWidget {
             const SizedBox(width: 8),
             Text(
               leader != null ? 'LIVE DATA' : 'AWAITING DATA',
-              style: AppFonts.number(fontSize: 9, color: Colors.grey[500]!, fontWeight: FontWeight.bold),
+              style: DS.labelCaps(size: 9, color: DS.textMuted),
             ),
           ],
         ),
@@ -62,10 +63,7 @@ class RacePulseWidget extends ConsumerWidget {
                 border: Border.all(color: const Color(0xFF202028)),
               ),
               child: telemetryAsync.when(
-                loading: () => const SizedBox(
-                  height: 40,
-                  child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                ),
+                loading: () => const SkeletonBox(height: 40, borderRadius: 8),
                 error: (_, __) => const Text('Live telemetry unavailable', style: TextStyle(color: Colors.grey, fontSize: 12)),
                 data: (_) => Row(
                   children: [
@@ -84,7 +82,7 @@ class RacePulseWidget extends ConsumerWidget {
                                   leader?.name.split(' ').last.toUpperCase() ?? '---',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: AppFonts.driverName(fontSize: 13, fontWeight: FontWeight.w900, color: Colors.white),
+                                  style: DS.headlineMd(size: 13, color: Colors.white),
                                 ),
                               ),
                             ],
@@ -94,7 +92,7 @@ class RacePulseWidget extends ConsumerWidget {
                             leader != null ? '${leader.team.toUpperCase()} · ${leader.tyre} ${leader.tyreLife}' : '---',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: AppFonts.number(fontSize: 8.5, color: const Color(0xFF8F909A)),
+                            style: DS.labelCaps(size: 8.5, color: DS.textMuted),
                           ),
                         ],
                       ),
@@ -107,14 +105,14 @@ class RacePulseWidget extends ConsumerWidget {
                           const SizedBox(height: 3),
                           Text(
                             fastestLap?.bestLap ?? '---',
-                            style: AppFonts.number(fontSize: 13, fontWeight: FontWeight.w900, color: const Color(0xFFB388FF)),
+                            style: DS.telemetry(size: 13, color: const Color(0xFFB388FF)),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             fastestLap != null ? '${fastestLap.name.split(' ').last.toUpperCase()} · ${fastestLap.team}' : '---',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: AppFonts.number(fontSize: 8.5, color: const Color(0xFF8F909A)),
+                            style: DS.labelCaps(size: 8.5, color: DS.textMuted),
                           ),
                         ],
                       ),

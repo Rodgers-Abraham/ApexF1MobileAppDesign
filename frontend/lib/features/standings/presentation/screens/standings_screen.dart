@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/providers/telemetry_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../shared/theme/app_design_system.dart';
@@ -22,7 +23,18 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      if (_tabController.index == 2 && _tabController.indexIsChanging) {
+        // Navigate to history and reset tab index
+        Future.microtask(() {
+          if (mounted) {
+            _tabController.index = 0;
+            context.go('/history');
+          }
+        });
+      }
+    });
   }
 
   @override
@@ -91,6 +103,7 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                 tabs: const [
                   Tab(text: 'DRIVERS'),
                   Tab(text: 'CONSTRUCTORS'),
+                  Tab(text: 'ARCHIVE'),
                 ],
               ),
             ),
@@ -120,6 +133,19 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
             ),
             data: (constructors) => _buildConstructorsView(accentColor, themeState.selectedTeam.name, constructors),
           ),
+          // Archive tab — navigates to /history (handled by TabController listener)
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.archive_outlined, size: 48, color: DS.textMuted),
+                const SizedBox(height: 12),
+                Text('OPENING F1 ARCHIVE', style: DS.labelCaps(size: 11, color: DS.teal)),
+                const SizedBox(height: 4),
+                Text('2010 — 2026', style: DS.body(size: 13, color: DS.textMuted)),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -128,7 +154,7 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
   Widget _buildDriversView(Color accentColor, List<DriverStandingJolpica> drivers) {
     if (drivers.isEmpty) {
       return Center(
-        child: Text('No driver standings available', style: AppFonts.regular(color: Colors.grey)),
+        child: Text('No driver standings available', style: DS.body(size: 13, color: DS.textMuted)),
       );
     }
 
@@ -245,11 +271,7 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                 ),
                 child: Text(
                   '0$place',
-                  style: AppFonts.number(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    color: placeColor,
-                  ),
+                  style: DS.telemetry(size: 11, color: placeColor),
                 ),
               ),
               if (teamData != null && teamData.logoWhiteAsset.isNotEmpty)
@@ -279,14 +301,14 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                     errorBuilder: (context, error, stackTrace) => Center(
                       child: Text(
                         driverData.code,
-                        style: AppFonts.number(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold),
+                        style: DS.telemetry(size: 12, color: Colors.white),
                       ),
                     ),
                   )
                 : Center(
                     child: Text(
                       d.name.split(' ').map((n) => n.isNotEmpty ? n[0] : '').take(2).join(),
-                      style: AppFonts.number(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold),
+                      style: DS.telemetry(size: 12, color: Colors.white),
                     ),
                   ),
           ),
@@ -298,27 +320,19 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                 driverData?.code ?? (d.name.split(' ').last.toUpperCase().length >= 3
                     ? d.name.split(' ').last.toUpperCase().substring(0, 3)
                     : d.name.split(' ').last.toUpperCase()),
-                style: AppFonts.driverName(
-                  fontSize: isFirst ? 14 : 12,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                ),
+                style: DS.headlineMd(size: isFirst ? 14 : 12, color: Colors.white),
               ),
               const SizedBox(height: 1),
               Text(
                 d.name.split(' ').last,
-                style: AppFonts.regular(fontSize: 10, color: Colors.grey[400]!),
+                style: DS.body(size: 10, color: DS.textMuted),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
               Text(
                 '${d.pts} PTS',
-                style: AppFonts.number(
-                  fontSize: isFirst ? 13 : 11,
-                  fontWeight: FontWeight.w900,
-                  color: isFirst ? placeColor : Colors.white,
-                ),
+                style: DS.telemetry(size: isFirst ? 13 : 11, color: isFirst ? placeColor : Colors.white),
               ),
               if (d.wins != '0')
                 Text(
@@ -366,11 +380,7 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
             width: 26,
             child: Text(
               d.pos,
-              style: AppFonts.number(
-                color: Colors.grey[400]!,
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
-              ),
+              style: DS.telemetry(size: 13, color: Colors.grey[400]!),
             ),
           ),
           const SizedBox(width: 6),
@@ -404,17 +414,13 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                   children: [
                     Text(
                       driverData?.code ?? '',
-                      style: AppFonts.driverName(
-                        fontSize: 12,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: DS.headlineMd(size: 12, color: Colors.white),
                     ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         d.name,
-                        style: AppFonts.regular(fontSize: 10.5, color: Colors.grey[400]!),
+                        style: DS.body(size: 10.5, color: DS.textMuted),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -459,11 +465,7 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
           // Points
           Text(
             '${d.pts} PTS',
-            style: AppFonts.number(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-              fontSize: 12.5,
-            ),
+            style: DS.telemetry(size: 12.5, color: Colors.white),
           ),
         ],
       ),
@@ -516,11 +518,7 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                 width: 26,
                 child: Text(
                   c.pos.padLeft(2, '0'),
-                  style: AppFonts.number(
-                    color: isUserFavorite ? accentColor : Colors.grey[500]!,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 13,
-                  ),
+                  style: DS.telemetry(size: 13, color: isUserFavorite ? accentColor : Colors.grey[500]!),
                 ),
               ),
               const SizedBox(width: 8),
@@ -554,11 +552,7 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                         Flexible(
                           child: Text(
                             teamData?.name.toUpperCase() ?? c.name.toUpperCase(),
-                            style: AppFonts.driverName(
-                              fontWeight: isUserFavorite ? FontWeight.w900 : FontWeight.bold,
-                              color: Colors.white,
-                              fontSize: 13,
-                            ),
+                            style: DS.headlineMd(size: 13, color: Colors.white),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -587,7 +581,7 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                     const SizedBox(height: 2),
                     Text(
                       teamData?.chassisPu ?? '2026 CONSTRUCTOR',
-                      style: AppFonts.regular(color: Colors.grey[400]!, fontSize: 9.5),
+                      style: DS.body(size: 9.5, color: DS.textMuted),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -612,11 +606,7 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                 children: [
                   Text(
                     c.pts,
-                    style: AppFonts.number(
-                      color: isUserFavorite ? accentColor : Colors.white,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 14,
-                    ),
+                    style: DS.telemetry(size: 14, color: isUserFavorite ? accentColor : Colors.white),
                   ),
                   Text(
                     'PTS',

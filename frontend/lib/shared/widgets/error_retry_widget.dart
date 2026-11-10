@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/theme_provider.dart';
+import '../theme/app_design_system.dart';
 
 /// Reusable error state with a retry button.
 class ErrorRetryWidget extends StatelessWidget {
@@ -24,14 +24,14 @@ class ErrorRetryWidget extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: Colors.grey.shade700, size: 28),
+            Icon(icon, color: DS.textMuted, size: 28),
             const SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Text(
                 message,
                 textAlign: TextAlign.center,
-                style: AppFonts.regular(fontSize: 11, color: Colors.grey.shade500),
+                style: DS.body(size: 11, color: DS.textMuted),
               ),
             ),
             if (onRetry != null) ...[
@@ -41,16 +41,16 @@ class ErrorRetryWidget extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E1E28),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Colors.white12),
+                    color: DS.surface2,
+                    borderRadius: DS.aeroCornerSm,
+                    border: Border.all(color: DS.outline),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.refresh_rounded, size: 13, color: Colors.white54),
+                      Icon(Icons.refresh_rounded, size: 13, color: DS.textMuted),
                       const SizedBox(width: 5),
-                      Text('RETRY', style: AppFonts.wide(fontSize: 9, color: Colors.white54, fontWeight: FontWeight.w900)),
+                      Text('RETRY', style: DS.labelCaps(size: 9, color: DS.textMuted)),
                     ],
                   ),
                 ),
@@ -75,22 +75,22 @@ class InlineErrorBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A0808),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.red.shade900.withValues(alpha: 0.5)),
+        color: DS.red.withValues(alpha: 0.08),
+        borderRadius: DS.aeroCornerSm,
+        border: Border.all(color: DS.red.withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline_rounded, size: 14, color: Colors.red.shade400),
+          Icon(Icons.error_outline_rounded, size: 14, color: DS.red),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(message, style: TextStyle(fontFamily: 'Formula1', fontSize: 10, color: Colors.red.shade300)),
+            child: Text(message, style: DS.body(size: 10, color: DS.red)),
           ),
           if (onRetry != null) ...[
             const SizedBox(width: 8),
             GestureDetector(
               onTap: onRetry,
-              child: Text('RETRY', style: AppFonts.wide(fontSize: 8, color: Colors.red.shade400, fontWeight: FontWeight.w900)),
+              child: Text('RETRY', style: DS.labelCaps(size: 8, color: DS.red)),
             ),
           ],
         ],
@@ -107,16 +107,16 @@ class BackendOfflineBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: const Color(0xFF1A0A00),
+      color: DS.orange.withValues(alpha: 0.08),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       child: Row(
         children: [
-          const Icon(Icons.cloud_off_rounded, size: 12, color: Color(0xFFFF9800)),
+          Icon(Icons.cloud_off_rounded, size: 12, color: DS.orange),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
               'Backend offline — some features unavailable. Showing cached data.',
-              style: AppFonts.regular(fontSize: 9.5, color: const Color(0xFFFF9800)),
+              style: DS.labelCaps(size: 9, color: DS.orange),
             ),
           ),
         ],

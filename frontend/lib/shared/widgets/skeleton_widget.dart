@@ -188,3 +188,116 @@ class SkeletonCardRow extends StatelessWidget {
     );
   }
 }
+
+/// Skeleton for a timing tower row (position + driver code + gap).
+class SkeletonTimingRow extends StatelessWidget {
+  const SkeletonTimingRow({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1B1B1F),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(8),
+          bottomRight: Radius.circular(8),
+        ),
+        border: Border.all(color: const Color(0xFF272732)),
+      ),
+      child: const Row(
+        children: [
+          SkeletonBox(width: 24, height: 24, borderRadius: 4),
+          SizedBox(width: 10),
+          SkeletonBox(width: 36, height: 14, borderRadius: 4),
+          SizedBox(width: 8),
+          SkeletonBox(width: 48, height: 10, borderRadius: 4),
+          Spacer(),
+          SkeletonBox(width: 60, height: 14, borderRadius: 4),
+          SizedBox(width: 8),
+          SkeletonBox(width: 40, height: 12, borderRadius: 4),
+        ],
+      ),
+    );
+  }
+}
+
+/// Skeleton for a chat/AI response bubble.
+class SkeletonChatBubble extends StatelessWidget {
+  const SkeletonChatBubble({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SkeletonBox(width: 28, height: 28, borderRadius: 6),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1F1F23),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(8),
+                  bottomRight: Radius.circular(8),
+                ),
+                border: Border.all(color: const Color(0xFF272732)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SkeletonBox(height: 10, borderRadius: 3),
+                  const SizedBox(height: 8),
+                  const SkeletonBox(height: 10, borderRadius: 3),
+                  const SizedBox(height: 6),
+                  SkeletonBox(
+                    width: MediaQuery.of(context).size.width * 0.5,
+                    height: 10,
+                    borderRadius: 3,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Skeleton for a driver portrait chip (used in the settings driver picker).
+class SkeletonDriverChip extends StatelessWidget {
+  const SkeletonDriverChip({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(right: 10),
+      child: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SkeletonBox(width: 56, height: 56, borderRadius: 28),
+          SizedBox(height: 6),
+          SkeletonBox(width: 40, height: 10, borderRadius: 3),
+        ],
+      ),
+    );
+  }
+}
+
+/// Skeleton for a team logo pill (used in the settings team picker).
+class SkeletonTeamPill extends StatelessWidget {
+  const SkeletonTeamPill({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      child: const SkeletonBox(width: 72, height: 52, borderRadius: 8),
+    );
+  }
+}

@@ -4,6 +4,7 @@ import '../../../../core/providers/session_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../shared/theme/app_design_system.dart';
 import '../../../../shared/widgets/ds_app_bar.dart';
+import '../../../../shared/widgets/skeleton_widget.dart';
 import '../../../home/presentation/screens/pitwall_screen.dart' show getCircuitAssetPath;
 
 // Providers for historical F1 data
@@ -124,7 +125,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             const SizedBox(height: 8),
 
             seasonsAsync.when(
-              loading: () => const SizedBox(height: 40, child: Center(child: CircularProgressIndicator(color: Color(0xFFE10600)))),
+              loading: () => const SkeletonStandingsList(count: 2),
               error: (_, __) => _DSYearFilterBar(
                 selectedYear: _selectedYear,
                 years: const [2026, 2025, 2024, 2023, 2022, 2021, 2020],
@@ -161,10 +162,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
             // Season Races Results List
             seasonRacesAsync.when(
-              loading: () => const Padding(
-                padding: EdgeInsets.all(32),
-                child: Center(child: CircularProgressIndicator()),
-              ),
+              loading: () => const SkeletonStandingsList(count: 5),
               error: (err, stack) => Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text('Error loading season results: $err', style: const TextStyle(color: Colors.red)),
@@ -198,7 +196,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                       decoration: BoxDecoration(
                         color: const Color(0xFF141418),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.white.withOpacity(0.05)),
+                        border: Border.all(color: Colors.white.withValues(alpha:0.05)),
                       ),
                       child: Row(
                         children: [
@@ -206,13 +204,13 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                             width: 38,
                             height: 38,
                             decoration: BoxDecoration(
-                              color: accentColor.withOpacity(0.12),
+                              color: accentColor.withValues(alpha:0.12),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Center(
                               child: Text(
                                 'R$roundNum',
-                                style: AppFonts.number(fontSize: 11, fontWeight: FontWeight.bold, color: accentColor),
+                                style: DS.telemetry(size: 11, color: accentColor),
                               ),
                             ),
                           ),
@@ -223,12 +221,12 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                               children: [
                                 Text(
                                   raceName,
-                                  style: AppFonts.driverName(fontSize: 13, color: Colors.white, fontWeight: FontWeight.bold),
+                                  style: DS.headlineMd(size: 13, color: Colors.white),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   '$circuitName ${locality.isNotEmpty ? "• $locality" : ""} ${date.isNotEmpty ? "($date)" : ""}',
-                                  style: AppFonts.regular(fontSize: 11, color: Colors.grey[400]!),
+                                  style: DS.body(size: 11, color: Colors.grey[400]!),
                                 ),
                               ],
                             ),
@@ -242,13 +240,13 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                                   const SizedBox(width: 4),
                                   Text(
                                     winnerName,
-                                    style: AppFonts.driverName(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold),
+                                    style: DS.headlineMd(size: 12, color: Colors.white),
                                   ),
                                 ],
                               ),
                               Text(
                                 winnerConstructor,
-                                style: AppFonts.regular(fontSize: 10, color: Colors.grey[500]!),
+                                style: DS.body(size: 10, color: Colors.grey[500]!),
                               ),
                             ],
                           ),
@@ -318,7 +316,7 @@ class _SmartSearchCard extends ConsumerWidget {
     final searchAsync = ref.watch(historySearchProvider(query));
 
     return searchAsync.when(
-      loading: () => const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator())),
+      loading: () => const SkeletonStandingsList(count: 5),
       error: (err, stack) => const SizedBox(),
       data: (result) {
         final type = result['type']?.toString() ?? 'circuit';
@@ -337,7 +335,7 @@ class _SmartSearchCard extends ConsumerWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF141418),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: accentColor.withOpacity(0.4), width: 1.5),
+              border: Border.all(color: accentColor.withValues(alpha:0.4), width: 1.5),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,18 +346,18 @@ class _SmartSearchCard extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Text(
                       name.toUpperCase(),
-                      style: AppFonts.header(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: DS.headline(size: 14, color: Colors.white),
                     ),
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.2),
+                        color: Colors.amber.withValues(alpha:0.2),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         'DRIVER LEGEND',
-                        style: TextStyle(color: Colors.amber[300], fontSize: 10, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: Colors.amber[300], fontSize: 10),
                       ),
                     ),
                   ],
@@ -371,32 +369,32 @@ class _SmartSearchCard extends ConsumerWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Championship Titles', style: AppFonts.regular(fontSize: 10, color: Colors.grey)),
-                        Text(titles, style: AppFonts.number(fontSize: 13, fontWeight: FontWeight.bold, color: accentColor)),
+                        Text('Championship Titles', style: DS.body(size: 10, color: Colors.grey)),
+                        Text(titles, style: DS.telemetry(size: 13, color: accentColor)),
                       ],
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text('Race Wins', style: AppFonts.regular(fontSize: 10, color: Colors.grey)),
-                        Text('$wins Wins', style: AppFonts.number(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.amber)),
+                        Text('Race Wins', style: DS.body(size: 10, color: Colors.grey)),
+                        Text('$wins Wins', style: DS.telemetry(size: 13, color: Colors.amber)),
                       ],
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text('Pole Positions', style: AppFonts.regular(fontSize: 10, color: Colors.grey)),
-                        Text('$poles Poles', style: AppFonts.number(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+                        Text('Pole Positions', style: DS.body(size: 10, color: Colors.grey)),
+                        Text('$poles Poles', style: DS.telemetry(size: 13, color: Colors.white)),
                       ],
                     ),
                   ],
                 ),
                 const Divider(color: Colors.white10, height: 20),
-                Text('TEAMS DRIVEN FOR', style: AppFonts.regular(fontSize: 10, color: Colors.grey)),
-                Text(teams, style: AppFonts.driverName(fontSize: 12, color: Colors.white70)),
+                Text('TEAMS DRIVEN FOR', style: DS.body(size: 10, color: Colors.grey)),
+                Text(teams, style: DS.headlineMd(size: 12, color: Colors.white70)),
                 if (moment.isNotEmpty) ...[
                   const SizedBox(height: 8),
-                  Text('ICONIC CAREER MOMENT', style: AppFonts.regular(fontSize: 10, color: Colors.grey)),
+                  Text('ICONIC CAREER MOMENT', style: DS.body(size: 10, color: Colors.grey)),
                   Text('"$moment"', style: const TextStyle(fontSize: 12, color: Colors.white, fontStyle: FontStyle.italic)),
                 ],
               ],
@@ -415,7 +413,7 @@ class _SmartSearchCard extends ConsumerWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF141418),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: accentColor.withOpacity(0.4), width: 1.5),
+              border: Border.all(color: accentColor.withValues(alpha:0.4), width: 1.5),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -426,18 +424,18 @@ class _SmartSearchCard extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Text(
                       name.toUpperCase(),
-                      style: AppFonts.header(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: DS.headline(size: 14, color: Colors.white),
                     ),
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: accentColor.withOpacity(0.2),
+                        color: accentColor.withValues(alpha:0.2),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         'CONSTRUCTOR',
-                        style: TextStyle(color: accentColor, fontSize: 10, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: accentColor, fontSize: 10),
                       ),
                     ),
                   ],
@@ -449,22 +447,22 @@ class _SmartSearchCard extends ConsumerWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Constructor Titles', style: AppFonts.regular(fontSize: 10, color: Colors.grey)),
-                        Text(titles, style: AppFonts.number(fontSize: 12, fontWeight: FontWeight.bold, color: accentColor)),
+                        Text('Constructor Titles', style: DS.body(size: 10, color: Colors.grey)),
+                        Text(titles, style: DS.telemetry(size: 12, color: accentColor)),
                       ],
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text('Total Victories', style: AppFonts.regular(fontSize: 10, color: Colors.grey)),
-                        Text('$wins Wins', style: AppFonts.number(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber)),
+                        Text('Total Victories', style: DS.body(size: 10, color: Colors.grey)),
+                        Text('$wins Wins', style: DS.telemetry(size: 12, color: Colors.amber)),
                       ],
                     ),
                   ],
                 ),
                 const Divider(color: Colors.white10, height: 20),
-                Text('LEGENDARY DRIVERS', style: AppFonts.regular(fontSize: 10, color: Colors.grey)),
-                Text(drivers, style: AppFonts.driverName(fontSize: 12, color: Colors.white70)),
+                Text('LEGENDARY DRIVERS', style: DS.body(size: 10, color: Colors.grey)),
+                Text(drivers, style: DS.headlineMd(size: 12, color: Colors.white70)),
               ],
             ),
           );
@@ -483,7 +481,7 @@ class _SmartSearchCard extends ConsumerWidget {
           decoration: BoxDecoration(
             color: const Color(0xFF141418),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: accentColor.withOpacity(0.3), width: 1.5),
+            border: Border.all(color: accentColor.withValues(alpha:0.3), width: 1.5),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -494,7 +492,7 @@ class _SmartSearchCard extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Text(
                     'CIRCUIT ARCHIVE: ${raceName.toUpperCase()}',
-                    style: AppFonts.header(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: DS.headline(size: 13, color: Colors.white),
                   ),
                 ],
               ),
@@ -513,7 +511,7 @@ class _SmartSearchCard extends ConsumerWidget {
                   child: Image.asset(
                     getCircuitAssetPath(raceName),
                     fit: BoxFit.contain,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha:0.9),
                     colorBlendMode: BlendMode.srcIn,
                     errorBuilder: (context, error, stackTrace) => Icon(Icons.map_rounded, color: accentColor, size: 36),
                   ),
@@ -527,15 +525,15 @@ class _SmartSearchCard extends ConsumerWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('First Held', style: AppFonts.regular(fontSize: 10, color: Colors.grey)),
-                      Text('$firstHeld Season', style: AppFonts.number(fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text('First Held', style: DS.body(size: 10, color: Colors.grey)),
+                      Text('$firstHeld Season', style: DS.telemetry(size: 12)),
                     ],
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('Total Grand Prix', style: AppFonts.regular(fontSize: 10, color: Colors.grey)),
-                      Text('$totalRaces Races', style: AppFonts.number(fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text('Total Grand Prix', style: DS.body(size: 10, color: Colors.grey)),
+                      Text('$totalRaces Races', style: DS.telemetry(size: 12)),
                     ],
                   ),
                 ],
@@ -549,8 +547,8 @@ class _SmartSearchCard extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Most Wins Driver', style: AppFonts.regular(fontSize: 10, color: Colors.grey)),
-                        Text(topDriver, style: AppFonts.driverName(fontSize: 12, color: Colors.amber)),
+                        Text('Most Wins Driver', style: DS.body(size: 10, color: Colors.grey)),
+                        Text(topDriver, style: DS.headlineMd(size: 12, color: Colors.amber)),
                       ],
                     ),
                   ),
@@ -558,8 +556,8 @@ class _SmartSearchCard extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text('Most Wins Constructor', style: AppFonts.regular(fontSize: 10, color: Colors.grey)),
-                        Text(topTeam, style: AppFonts.driverName(fontSize: 12, color: Colors.redAccent)),
+                        Text('Most Wins Constructor', style: DS.body(size: 10, color: Colors.grey)),
+                        Text(topTeam, style: DS.headlineMd(size: 12, color: Colors.redAccent)),
                       ],
                     ),
                   ),
@@ -568,7 +566,7 @@ class _SmartSearchCard extends ConsumerWidget {
 
               if (recentList.isNotEmpty) ...[
                 const Divider(color: Colors.white10, height: 20),
-                Text('RECENT WINNERS', style: AppFonts.header(fontSize: 10, color: Colors.grey[400]!)),
+                Text('RECENT WINNERS', style: DS.headline(size: 10, color: Colors.grey[400]!)),
                 const SizedBox(height: 8),
                 Column(
                   children: recentList.take(4).map((item) {
@@ -580,10 +578,10 @@ class _SmartSearchCard extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Row(
                         children: [
-                          Text(yr, style: AppFonts.number(color: accentColor, fontSize: 11, fontWeight: FontWeight.bold)),
+                          Text(yr, style: DS.telemetry(color: accentColor, size: 11)),
                           const SizedBox(width: 10),
-                          Expanded(child: Text(drv, style: AppFonts.driverName(fontSize: 12, color: Colors.white))),
-                          Text(team, style: AppFonts.regular(fontSize: 11, color: Colors.grey[400]!)),
+                          Expanded(child: Text(drv, style: DS.headlineMd(size: 12, color: Colors.white))),
+                          Text(team, style: DS.body(size: 11, color: Colors.grey[400]!)),
                         ],
                       ),
                     );
