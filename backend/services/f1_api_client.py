@@ -965,11 +965,17 @@ class F1ApiClient:
         return result
 
     def _fetch_all_laps_paginated(self, year: int, round_num: int) -> tuple:
-        """Fetch all lap timing data with pagination. Returns (race_meta, all_laps_list)."""
+        """
+        Fetch all lap timing data. Returns (race_meta, all_laps_list).
+
+        Jolpica counts individual timing entries (driver×lap), not laps.
+        A 70-lap race with 20 drivers = 1400 entries. Using limit=2000 gets
+        everything in a SINGLE request, avoiding rate-limit cascades.
+        """
         all_laps = []
         race_meta = {}
         offset = 0
-        per_page = 100  # 100 laps per page covers every F1 race
+        per_page = 2000  # One shot: covers 100 laps × 20 drivers comfortably
 
         while True:
             data = self._jolpica_get(
@@ -1077,6 +1083,32 @@ class F1ApiClient:
             # Prepend grid as lap 0
             result_laps = [{"lap": 0, "phase": "GRID", "positions": grid_entries}] + all_laps
 
+            # Final classification from race results — always correct regardless of
+            # how many laps we managed to fetch from the timing data.
+            final_classification = []
+            for r in results_raw["MRData"]["RaceTable"]["Races"][0].get("Results", []):
+                d, c = r.get("Driver", {}), r.get("Constructor", {})
+                did = d.get("driverId", "")
+                info = driver_info.get(did, {
+                    "name": f"{d.get('givenName','')} {d.get('familyName','')}".strip(),
+                    "code": d.get("code", did[:3].upper()),
+                    "team": _normalize_team(c.get("name", "")),
+                })
+                fl = r.get("FastestLap", {})
+                final_classification.append({
+                    "pos": r.get("position", ""),
+                    "driver_id": did,
+                    "name": info["name"],
+                    "code": info["code"],
+                    "team": info["team"],
+                    "gap": r.get("Time", {}).get("time", r.get("status", "")),
+                    "interval": "",
+                    "lap_time": fl.get("Time", {}).get("time", ""),
+                    "is_fastest_lap": fl.get("rank") == "1",
+                    "status": r.get("status", "Finished"),
+                    "total_laps_completed": r.get("laps", ""),
+                })
+
             race_name = race_meta.get("raceName", "")
             circuit = race_meta.get("Circuit", {}).get("circuitName", "")
 
@@ -1088,6 +1120,7 @@ class F1ApiClient:
                 "round": round_num,
                 "total_laps": total_laps,
                 "laps": result_laps,
+                "final_classification": final_classification,
             }
         except (KeyError, IndexError, ValueError) as e:
             print(f"Race replay parse error: {e}")

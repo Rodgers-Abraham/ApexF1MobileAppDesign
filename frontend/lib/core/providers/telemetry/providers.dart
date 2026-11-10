@@ -154,6 +154,7 @@ class RaceReplayState {
   final List<LiveTelemetry> telemetry;
   final RaceFlagStatus flagStatus;
   final List<ReplayLapEntry> allLaps; // full session loaded at once
+  final List<LiveTelemetry> finalClassification; // authoritative finish order from race results
   final String? focusedDriverName; // driver being highlighted
 
   const RaceReplayState({
@@ -168,6 +169,7 @@ class RaceReplayState {
     this.telemetry = const [],
     this.flagStatus = RaceFlagStatus.defaultStatus,
     this.allLaps = const [],
+    this.finalClassification = const [],
     this.focusedDriverName,
   });
 
@@ -183,6 +185,7 @@ class RaceReplayState {
     List<LiveTelemetry>? telemetry,
     RaceFlagStatus? flagStatus,
     List<ReplayLapEntry>? allLaps,
+    List<LiveTelemetry>? finalClassification,
     String? focusedDriverName,
     bool clearFocusedDriver = false,
   }) {
@@ -198,6 +201,7 @@ class RaceReplayState {
       telemetry: telemetry ?? this.telemetry,
       flagStatus: flagStatus ?? this.flagStatus,
       allLaps: allLaps ?? this.allLaps,
+      finalClassification: finalClassification ?? this.finalClassification,
       focusedDriverName: clearFocusedDriver ? null : (focusedDriverName ?? this.focusedDriverName),
     );
   }
@@ -210,32 +214,39 @@ class RaceReplayState {
 
   bool get isAtEnd => totalLaps > 0 && currentLap >= totalLaps;
 
-  /// Compute a summary for the focused driver at the current lap.
+  /// Compute a summary for the focused driver. Uses final_classification for
+  /// correct finish position regardless of how many laps were loaded.
   DriverReplaySummary? get focusedDriverSummary {
     if (focusedDriverName == null || allLaps.isEmpty) return null;
     final hint = focusedDriverName!.toLowerCase();
 
-    // Find driver in current (or last) lap
-    final currentEntry = allLaps.firstWhere(
-      (l) => l.lap == currentLap,
-      orElse: () => allLaps.last,
-    );
+    bool _matches(String name) =>
+        name.toLowerCase().contains(hint) || hint.contains(name.toLowerCase());
 
-    // Find fastest lap across all laps
-    String fastest = '';
+    // Final position: prefer final_classification (from race results)
+    LiveTelemetry? finalEntry = finalClassification.where((d) => _matches(d.name)).firstOrNull;
+
+    // Fallback: use last available lap timing
+    if (finalEntry == null) {
+      final lastEntry = allLaps.lastWhere((l) => l.lap > 0 && l.positions.isNotEmpty, orElse: () => allLaps.last);
+      finalEntry = lastEntry.positions.where((d) => _matches(d.name)).firstOrNull;
+    }
+    if (finalEntry == null) return null;
+
+    // Fastest lap: scan all timing laps
+    String fastest = finalEntry.lastLap; // Jolpica puts FL in lap_time for the results entry
     int fastestLapNum = 0;
     double fastestSecs = double.infinity;
     for (final lap in allLaps) {
-      if (lap.lap == 0) continue; // skip grid
-      final driver = lap.positions.where((d) =>
-          d.name.toLowerCase().contains(hint) || hint.contains(d.name.toLowerCase())).firstOrNull;
+      if (lap.lap == 0) continue;
+      final driver = lap.positions.where((d) => _matches(d.name)).firstOrNull;
       if (driver == null) continue;
       final t = driver.lastLap;
       if (t.isNotEmpty && t.contains(':')) {
         try {
           final parts = t.split(':');
           final secs = double.parse(parts[0]) * 60 + double.parse(parts[1]);
-          if (secs < fastestSecs) {
+          if (secs > 10 && secs < fastestSecs) {
             fastestSecs = secs;
             fastest = t;
             fastestLapNum = lap.lap;
@@ -244,16 +255,11 @@ class RaceReplayState {
       }
     }
 
-    final driverData = currentEntry.positions.firstWhere(
-      (d) => d.name.toLowerCase().contains(hint) || hint.contains(d.name.toLowerCase()),
-      orElse: () => currentEntry.positions.isEmpty ? currentEntry.positions.first : currentEntry.positions.last,
-    );
-
     return DriverReplaySummary(
-      driverName: driverData.name,
-      driverCode: driverData.team.isNotEmpty ? driverData.team.substring(0, 2) : '??',
-      team: driverData.team,
-      finalPosition: int.tryParse(driverData.pos) ?? 0,
+      driverName: finalEntry.name,
+      driverCode: finalEntry.team,
+      team: finalEntry.team,
+      finalPosition: int.tryParse(finalEntry.pos) ?? 0,
       fastestLap: fastest,
       fastestLapNum: fastestLapNum,
     );
@@ -304,6 +310,10 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
         return ReplayLapEntry(lap: lapNum, phase: phase, positions: positions);
       }).toList();
 
+      // Parse final classification (race results — always correct)
+      final rawFinal = (data['final_classification'] as List?) ?? [];
+      final finalClassif = rawFinal.map((p) => _posToTelemetry(p as Map<String, dynamic>)).toList();
+
       if (mounted) {
         state = state.copyWith(
           meetingName: data['race_name']?.toString() ?? meetingName,
@@ -312,6 +322,7 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
           totalLaps: totalLaps,
           currentLap: 1,
           allLaps: entries,
+          finalClassification: finalClassif,
           isLoading: false,
           telemetry: entries.isNotEmpty ? entries.first.positions : [],
         );
