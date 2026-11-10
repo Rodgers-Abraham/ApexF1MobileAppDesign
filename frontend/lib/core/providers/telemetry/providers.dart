@@ -153,15 +153,18 @@ class RaceReplayState {
   final String? loadError;
   final List<LiveTelemetry> telemetry;
   final RaceFlagStatus flagStatus;
-  final List<ReplayLapEntry> allLaps; // full session loaded at once
-  final List<LiveTelemetry> finalClassification; // authoritative finish order from race results
-  final String? focusedDriverName; // driver being highlighted
+  final List<ReplayLapEntry> allLaps;
+  final List<LiveTelemetry> finalClassification;
+  final String? focusedDriverName;
+  final int speedMultiplier; // 1 | 2 | 4
+  final List<int> incidentLaps; // laps with 3+ position changes
+  final bool showingGrid; // show starting grid before playback
 
   const RaceReplayState({
     this.meetingName = '',
     this.circuitName = '',
     this.sessionType = 'race',
-    this.currentLap = 1,
+    this.currentLap = 0,
     this.totalLaps = 0,
     this.isPlaying = false,
     this.isLoading = false,
@@ -171,6 +174,9 @@ class RaceReplayState {
     this.allLaps = const [],
     this.finalClassification = const [],
     this.focusedDriverName,
+    this.speedMultiplier = 1,
+    this.incidentLaps = const [],
+    this.showingGrid = false,
   });
 
   RaceReplayState copyWith({
@@ -188,6 +194,9 @@ class RaceReplayState {
     List<LiveTelemetry>? finalClassification,
     String? focusedDriverName,
     bool clearFocusedDriver = false,
+    int? speedMultiplier,
+    List<int>? incidentLaps,
+    bool? showingGrid,
   }) {
     return RaceReplayState(
       meetingName: meetingName ?? this.meetingName,
@@ -202,7 +211,10 @@ class RaceReplayState {
       flagStatus: flagStatus ?? this.flagStatus,
       allLaps: allLaps ?? this.allLaps,
       finalClassification: finalClassification ?? this.finalClassification,
-      focusedDriverName: clearFocusedDriver ? null : (focusedDriverName ?? this.focusedDriverName));
+      focusedDriverName: clearFocusedDriver ? null : (focusedDriverName ?? this.focusedDriverName),
+      speedMultiplier: speedMultiplier ?? this.speedMultiplier,
+      incidentLaps: incidentLaps ?? this.incidentLaps,
+      showingGrid: showingGrid ?? this.showingGrid);
   }
 
   String get lapLabel {
@@ -312,20 +324,21 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
       final finalClassif = rawFinal.map((p) => _posToTelemetry(p as Map<String, dynamic>)).toList();
 
       if (mounted) {
-        // Start from lap 1 specifically, not necessarily the first entry in the list
-        final lap1Entry = entries.isNotEmpty
-            ? entries.firstWhere((e) => e.lap == 1, orElse: () => entries.first)
-            : null;
+        // Show grid (lap 0) first; compute incident laps for ⚡ skip button
+        final gridEntry = entries.firstWhere((e) => e.lap == 0, orElse: () => entries.first);
+        final incidents = _computeIncidentLaps(entries);
         state = state.copyWith(
           meetingName: data['race_name']?.toString() ?? meetingName,
           circuitName: data['circuit']?.toString() ?? '',
           sessionType: data['session_type']?.toString() ?? sessionType,
           totalLaps: totalLaps,
-          currentLap: 1,
+          currentLap: 0,
           allLaps: entries,
           finalClassification: finalClassif,
           isLoading: false,
-          telemetry: lap1Entry?.positions ?? []);
+          showingGrid: true,
+          incidentLaps: incidents,
+          telemetry: gridEntry.positions);
       }
     } catch (e) {
       debugPrint('Session replay error: $e');
@@ -382,13 +395,16 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
   }
 
   void setLap(int lap) {
-    final clamped = lap.clamp(1, state.totalLaps > 0 ? state.totalLaps : 1);
+    final clamped = lap.clamp(0, state.totalLaps > 0 ? state.totalLaps : 0);
     if (state.allLaps.isEmpty) return;
     final entry = state.allLaps.firstWhere(
       (l) => l.lap == clamped,
       orElse: () => state.allLaps.reduce((a, b) =>
           (a.lap - clamped).abs() < (b.lap - clamped).abs() ? a : b));
-    state = state.copyWith(currentLap: clamped, telemetry: entry.positions);
+    state = state.copyWith(
+      currentLap: clamped,
+      telemetry: entry.positions,
+      showingGrid: clamped == 0);
   }
 
   void nextLap() {
@@ -400,15 +416,23 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
   }
 
   void prevLap() {
-    if (state.currentLap > 1) setLap(state.currentLap - 1);
+    if (state.currentLap > 0) setLap(state.currentLap - 1);
   }
 
   void togglePlay() => state.isPlaying ? pause() : play();
 
+  /// Start playback from lap 1, leaving the grid view
+  void startReplay() {
+    state = state.copyWith(showingGrid: false);
+    setLap(1);
+    play();
+  }
+
   void play() {
     _playTimer?.cancel();
-    state = state.copyWith(isPlaying: true);
-    _playTimer = Timer.periodic(const Duration(milliseconds: 800), (_) {
+    state = state.copyWith(isPlaying: true, showingGrid: false);
+    final interval = Duration(milliseconds: 800 ~/ state.speedMultiplier);
+    _playTimer = Timer.periodic(interval, (_) {
       if (state.currentLap < state.totalLaps) {
         nextLap();
       } else {
@@ -420,6 +444,59 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
   void pause() {
     _playTimer?.cancel();
     state = state.copyWith(isPlaying: false);
+  }
+
+  /// Cycle speed: 1x → 2x → 4x → 1x. Restarts timer if playing.
+  void cycleSpeed() {
+    final next = state.speedMultiplier == 1 ? 2 : state.speedMultiplier == 2 ? 4 : 1;
+    state = state.copyWith(speedMultiplier: next);
+    if (state.isPlaying) {
+      _playTimer?.cancel();
+      final interval = Duration(milliseconds: 800 ~/ next);
+      _playTimer = Timer.periodic(interval, (_) {
+        if (state.currentLap < state.totalLaps) {
+          nextLap();
+        } else {
+          pause();
+        }
+      });
+    }
+  }
+
+  /// Jump to the next incident lap (3+ position change) after current lap.
+  void nextIncident() {
+    if (state.incidentLaps.isEmpty) return;
+    final next = state.incidentLaps.firstWhere(
+      (l) => l > state.currentLap,
+      orElse: () => state.incidentLaps.first);
+    pause();
+    setLap(next);
+  }
+
+  /// Detect laps where any driver gained/lost 3+ positions at once.
+  List<int> _computeIncidentLaps(List<ReplayLapEntry> laps) {
+    final incidents = <int>[];
+    final prevPos = <String, int>{};
+    for (final lap in laps) {
+      if (lap.lap == 0) {
+        for (final p in lap.positions) {
+          final posInt = int.tryParse(p.pos) ?? 0;
+          if (posInt > 0) prevPos[p.name] = posInt;
+        }
+        continue;
+      }
+      var isIncident = false;
+      for (final p in lap.positions) {
+        final prev = prevPos[p.name];
+        final curr = int.tryParse(p.pos) ?? 0;
+        if (prev != null && curr > 0 && (curr - prev).abs() >= 3) {
+          isIncident = true;
+        }
+        if (curr > 0) prevPos[p.name] = curr;
+      }
+      if (isIncident) incidents.add(lap.lap);
+    }
+    return incidents;
   }
 
   void setFocusedDriver(String? driverName) {

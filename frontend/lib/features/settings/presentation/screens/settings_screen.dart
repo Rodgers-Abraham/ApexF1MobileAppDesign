@@ -35,8 +35,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    final authState = ref.read(authProvider);
-    _nameController = TextEditingController(text: authState.name ?? '');
+    _nameController = TextEditingController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _nameController.text = ref.read(authProvider).name ?? '';
+      }
+    });
   }
 
   @override
