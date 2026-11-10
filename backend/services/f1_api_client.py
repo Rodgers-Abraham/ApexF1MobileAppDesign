@@ -907,6 +907,69 @@ class F1ApiClient:
                     return True
         return False
 
+    # ------------------------------------------------------------------
+    # OPENF1 ENRICHMENT — race control events (2023-2024)
+    # ------------------------------------------------------------------
+
+    OPENF1_BASE = "https://api.openf1.org/v1"
+
+    def _get_openf1_session_key(self, year: int, round_num: int) -> int | None:
+        """Look up OpenF1 session_key for a race by year + round number. Returns None if unsupported."""
+        if year < 2023 or year > 2024:
+            return None
+        try:
+            resp = requests.get(f"{self.OPENF1_BASE}/meetings?year={year}", timeout=10)
+            meetings = resp.json()
+            if not isinstance(meetings, list):
+                return None
+            race_meetings = sorted(
+                [m for m in meetings
+                 if "pre-season" not in m.get("meeting_name", "").lower()
+                 and "test" not in m.get("meeting_name", "").lower()],
+                key=lambda m: m.get("date_start", "")
+            )
+            if round_num < 1 or round_num > len(race_meetings):
+                return None
+            meeting_key = race_meetings[round_num - 1]["meeting_key"]
+            resp2 = requests.get(
+                f"{self.OPENF1_BASE}/sessions?meeting_key={meeting_key}&session_name=Race",
+                timeout=10
+            )
+            sessions = resp2.json()
+            if isinstance(sessions, list) and sessions:
+                return sessions[0]["session_key"]
+        except Exception as e:
+            print(f"OpenF1 session key lookup error: {e}")
+        return None
+
+    def _get_race_control_events(self, session_key: int) -> list:
+        """Fetch SC/VSC/red flag events from OpenF1 for a race session."""
+        try:
+            resp = requests.get(
+                f"{self.OPENF1_BASE}/race_control?session_key={session_key}",
+                timeout=15
+            )
+            raw = resp.json()
+            if not isinstance(raw, list):
+                return []
+            result = []
+            for e in raw:
+                lap = e.get("lap_number")
+                if lap is None:
+                    continue
+                result.append({
+                    "lap": int(lap),
+                    "category": e.get("category", ""),
+                    "flag": e.get("flag"),
+                    "message": e.get("message", ""),
+                    "scope": e.get("scope") or "",
+                    "driver_number": e.get("driver_number"),
+                })
+            return result
+        except Exception as e:
+            print(f"OpenF1 race control fetch error: {e}")
+        return []
+
     def get_session_replay(self, year: int, round_num: int, session_type: str = "race", race_name: str = ""):
         # 1. Try Jolpica race list to get the authoritative round number.
         #    If the race list confirms the round, trust it and skip post-fetch check.
@@ -1117,6 +1180,15 @@ class F1ApiClient:
             race_name = race_meta.get("raceName", "")
             circuit = race_meta.get("Circuit", {}).get("circuitName", "")
 
+            # Try to enrich with OpenF1 race control events (2023-2024 only)
+            race_control_events = []
+            try:
+                sk = self._get_openf1_session_key(year, round_num)
+                if sk:
+                    race_control_events = self._get_race_control_events(sk)
+            except Exception as e:
+                print(f"OpenF1 enrichment skipped: {e}")
+
             return {
                 "session_type": "race",
                 "race_name": race_name,
@@ -1126,6 +1198,7 @@ class F1ApiClient:
                 "total_laps": total_laps,
                 "laps": result_laps,
                 "final_classification": final_classification,
+                "race_control_events": race_control_events,
             }
         except (KeyError, IndexError, ValueError) as e:
             print(f"Race replay parse error: {e}")

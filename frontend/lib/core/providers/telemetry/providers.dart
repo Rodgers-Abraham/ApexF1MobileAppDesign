@@ -159,6 +159,8 @@ class RaceReplayState {
   final int speedMultiplier; // 1 | 2 | 4
   final List<int> incidentLaps; // laps with 3+ position changes
   final bool showingGrid; // show starting grid before playback
+  final List<RaceControlEvent> raceControlEvents;
+  final Map<int, List<RaceControlEvent>> lapEventMap;
 
   const RaceReplayState({
     this.meetingName = '',
@@ -177,6 +179,8 @@ class RaceReplayState {
     this.speedMultiplier = 1,
     this.incidentLaps = const [],
     this.showingGrid = false,
+    this.raceControlEvents = const [],
+    this.lapEventMap = const {},
   });
 
   RaceReplayState copyWith({
@@ -197,6 +201,8 @@ class RaceReplayState {
     int? speedMultiplier,
     List<int>? incidentLaps,
     bool? showingGrid,
+    List<RaceControlEvent>? raceControlEvents,
+    Map<int, List<RaceControlEvent>>? lapEventMap,
   }) {
     return RaceReplayState(
       meetingName: meetingName ?? this.meetingName,
@@ -214,7 +220,9 @@ class RaceReplayState {
       focusedDriverName: clearFocusedDriver ? null : (focusedDriverName ?? this.focusedDriverName),
       speedMultiplier: speedMultiplier ?? this.speedMultiplier,
       incidentLaps: incidentLaps ?? this.incidentLaps,
-      showingGrid: showingGrid ?? this.showingGrid);
+      showingGrid: showingGrid ?? this.showingGrid,
+      raceControlEvents: raceControlEvents ?? this.raceControlEvents,
+      lapEventMap: lapEventMap ?? this.lapEventMap);
   }
 
   String get lapLabel {
@@ -224,6 +232,18 @@ class RaceReplayState {
   }
 
   bool get isAtEnd => totalLaps > 0 && currentLap >= totalLaps;
+
+  /// Events for the current lap from OpenF1 (empty for pre-2023 races)
+  List<RaceControlEvent> get currentLapEvents =>
+      lapEventMap[currentLap] ?? const [];
+
+  /// Whether the current lap has a notable flag event
+  bool get currentLapHasFlag => currentLapEvents.any((e) => e.isNotable);
+
+  /// All laps that have notable events (SC/VSC/red flag) for scrubber markers
+  List<int> get flagEventLaps => lapEventMap.keys
+      .where((lap) => lapEventMap[lap]!.any((e) => e.isNotable))
+      .toList();
 
   /// Compute a summary for the focused driver. Uses final_classification for
   /// correct finish position regardless of how many laps were loaded.
@@ -323,6 +343,19 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
       final rawFinal = (data['final_classification'] as List?) ?? [];
       final finalClassif = rawFinal.map((p) => _posToTelemetry(p as Map<String, dynamic>)).toList();
 
+      // Parse race control events from OpenF1 (empty for pre-2023/non-race)
+      final rawEvents = (data['race_control_events'] as List?) ?? [];
+      final rcEvents = rawEvents
+          .map((e) => RaceControlEvent.fromJson(e as Map<String, dynamic>))
+          .toList();
+      final lapEvtMap = <int, List<RaceControlEvent>>{};
+      for (final e in rcEvents) {
+        lapEvtMap.putIfAbsent(e.lap, () => []).add(e);
+      }
+      final flagLaps = lapEvtMap.keys
+          .where((l) => lapEvtMap[l]!.any((e) => e.isNotable))
+          .toSet();
+
       if (mounted) {
         // Show grid (lap 0) first; compute incident laps for ⚡ skip button
         final gridEntry = entries.firstWhere((e) => e.lap == 0, orElse: () => entries.first);
@@ -337,7 +370,9 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
           finalClassification: finalClassif,
           isLoading: false,
           showingGrid: true,
-          incidentLaps: incidents,
+          incidentLaps: ({...incidents, ...flagLaps}.toList()..sort()),
+          raceControlEvents: rcEvents,
+          lapEventMap: lapEvtMap,
           telemetry: gridEntry.positions);
       }
     } catch (e) {

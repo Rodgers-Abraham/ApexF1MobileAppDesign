@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class DriverStandingJolpica {
   final String pos;
   final String name;
@@ -402,5 +404,74 @@ class TireStrategyData {
       sessionKey: (json['session_key'] as num?)?.toInt() ?? 0,
       totalStints: (json['total_stints'] as num?)?.toInt() ?? 0,
       strategies: list.map((i) => CompoundStrategyItem.fromJson(i as Map<String, dynamic>)).toList());
+  }
+}
+
+/// A race control event from OpenF1 (SC, VSC, red flag, DRS, etc.)
+class RaceControlEvent {
+  final int lap;
+  final String category;
+  final String? flag;
+  final String message;
+  final String scope;
+
+  const RaceControlEvent({
+    required this.lap,
+    required this.category,
+    this.flag,
+    required this.message,
+    required this.scope,
+  });
+
+  factory RaceControlEvent.fromJson(Map<String, dynamic> j) =>
+      RaceControlEvent(
+        lap: (j['lap'] as num?)?.toInt() ?? 0,
+        category: j['category']?.toString() ?? '',
+        flag: j['flag']?.toString(),
+        message: j['message']?.toString() ?? '',
+        scope: j['scope']?.toString() ?? '',
+      );
+
+  bool get isSafetyCar =>
+      category == 'SafetyCar' && message.contains('DEPLOYED') && !message.contains('VIRTUAL');
+  bool get isVsc =>
+      message.contains('VIRTUAL SAFETY CAR') && message.contains('DEPLOYED');
+  bool get isVscEnding => message.contains('VIRTUAL SAFETY CAR ENDING');
+  bool get isScEnding =>
+      category == 'SafetyCar' && message.contains('IN THIS LAP');
+  bool get isRedFlag => flag == 'RED';
+  bool get isGreenFlag =>
+      flag == 'GREEN' || (category == 'Flag' && flag == 'CLEAR');
+  bool get isDrsEnabled => category == 'Drs' && message.contains('ENABLED');
+  bool get isCarEvent => category == 'CarEvent';
+
+  bool get isNotable =>
+      isSafetyCar || isVsc || isRedFlag || isScEnding || isVscEnding;
+
+  Color get eventColor {
+    if (isRedFlag) return const Color(0xFFE10600);
+    if (isSafetyCar || isScEnding) return const Color(0xFFFFD000);
+    if (isVsc || isVscEnding) return const Color(0xFF00D2BE);
+    if (isGreenFlag) return const Color(0xFF00E064);
+    return const Color(0xFF8F909A);
+  }
+
+  String get displayLabel {
+    if (isRedFlag) return 'RED FLAG';
+    if (isSafetyCar) return 'SAFETY CAR';
+    if (isScEnding) return 'SC IN THIS LAP';
+    if (isVscEnding) return 'VSC ENDING';
+    if (isVsc) return 'VIRTUAL SC';
+    if (isDrsEnabled) return 'DRS ENABLED';
+    final m = message;
+    return m.length > 28 ? '${m.substring(0, 28)}…' : m;
+  }
+
+  IconData get icon {
+    if (isRedFlag) return Icons.flag_rounded;
+    if (isSafetyCar || isScEnding) return Icons.directions_car_rounded;
+    if (isVsc || isVscEnding) return Icons.speed_rounded;
+    if (isDrsEnabled) return Icons.open_in_full_rounded;
+    return Icons.warning_amber_rounded;
   }
 }
