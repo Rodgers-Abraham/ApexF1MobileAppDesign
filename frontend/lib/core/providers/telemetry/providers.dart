@@ -315,6 +315,10 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
       final finalClassif = rawFinal.map((p) => _posToTelemetry(p as Map<String, dynamic>)).toList();
 
       if (mounted) {
+        // Start from lap 1 specifically, not necessarily the first entry in the list
+        final lap1Entry = entries.isNotEmpty
+            ? entries.firstWhere((e) => e.lap == 1, orElse: () => entries.first)
+            : null;
         state = state.copyWith(
           meetingName: data['race_name']?.toString() ?? meetingName,
           circuitName: data['circuit']?.toString() ?? '',
@@ -324,7 +328,7 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
           allLaps: entries,
           finalClassification: finalClassif,
           isLoading: false,
-          telemetry: entries.isNotEmpty ? entries.first.positions : [],
+          telemetry: lap1Entry?.positions ?? [],
         );
       }
     } catch (e) {
@@ -385,9 +389,11 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
 
   void setLap(int lap) {
     final clamped = lap.clamp(1, state.totalLaps > 0 ? state.totalLaps : 1);
+    if (state.allLaps.isEmpty) return;
     final entry = state.allLaps.firstWhere(
       (l) => l.lap == clamped,
-      orElse: () => state.allLaps.isNotEmpty ? state.allLaps.first : ReplayLapEntry(lap: 1, phase: '', positions: []),
+      orElse: () => state.allLaps.reduce((a, b) =>
+          (a.lap - clamped).abs() < (b.lap - clamped).abs() ? a : b),
     );
     state = state.copyWith(currentLap: clamped, telemetry: entry.positions);
   }

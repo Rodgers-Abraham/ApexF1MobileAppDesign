@@ -7,6 +7,7 @@ import '../../../../core/providers/telemetry_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../shared/theme/app_design_system.dart';
 import '../../../../shared/widgets/ds_app_bar.dart';
+import '../../../../shared/widgets/skeleton_widget.dart';
 import '../../../../shared/constants/f1_data.dart';
 import '../../../home/presentation/screens/pitwall_screen.dart';
 import '../widgets/timing_row_widget.dart';
@@ -247,9 +248,11 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                           ),
                         ),
                         const SizedBox(width: 5),
-                        const Text(
-                          'R18 · USA',
-                          style: TextStyle(
+                        Text(
+                          effectiveMeetingName.isNotEmpty
+                              ? effectiveMeetingName.split(' ').take(2).join(' ').toUpperCase()
+                              : (isLive ? 'LIVE' : 'REPLAY'),
+                          style: const TextStyle(
                             fontFamily: 'Formula1',
                             fontSize: 9.5,
                             color: Colors.white70,
@@ -292,8 +295,8 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                                   ? ((sessionStatus?.sessionName.toLowerCase().contains('practice') == true ||
                                           sessionStatus?.sessionName.toLowerCase().contains('qualifying') == true ||
                                           sessionStatus?.sessionName.toLowerCase().contains('fp') == true)
-                                      ? (sessionStatus?.sessionName.toUpperCase() ?? 'PRACTICE 2')
-                                      : 'LAP 34')
+                                      ? (sessionStatus?.sessionName.toUpperCase() ?? 'LIVE')
+                                      : 'RACE')
                                   : replayState.lapLabel,
                               style: const TextStyle(
                                 fontFamily: 'Formula1',
@@ -308,8 +311,8 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                                   ? ((sessionStatus?.sessionName.toLowerCase().contains('practice') == true ||
                                           sessionStatus?.sessionName.toLowerCase().contains('qualifying') == true ||
                                           sessionStatus?.sessionName.toLowerCase().contains('fp') == true)
-                                      ? '· COTA'
-                                      : '/ 58')
+                                      ? '· LIVE'
+                                      : '')
                                   : '/ ${replayState.totalLaps}',
                               style: TextStyle(
                                 fontFamily: 'Formula1',
@@ -328,7 +331,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                                         sessionStatus?.sessionName.toLowerCase().contains('qualifying') == true ||
                                         sessionStatus?.sessionName.toLowerCase().contains('fp') == true)
                                     ? 'LIVE SESSION'
-                                    : '58.6%')
+                                    : 'IN PROGRESS')
                                 : '${((replayState.currentLap / (replayState.totalLaps > 0 ? replayState.totalLaps : 1)) * 100).toStringAsFixed(1)}%',
                             style: TextStyle(
                               fontFamily: 'Formula1Wide',
@@ -354,7 +357,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                                       sessionStatus?.sessionName.toLowerCase().contains('qualifying') == true ||
                                       sessionStatus?.sessionName.toLowerCase().contains('fp') == true)
                                   ? 0.70
-                                  : 0.586)
+                                  : 0.50)
                               : (replayState.currentLap / (replayState.totalLaps > 0 ? replayState.totalLaps : 1)).clamp(0.01, 1.0),
                           child: Container(
                             decoration: BoxDecoration(
@@ -461,7 +464,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                               const SizedBox(
                                 width: 11,
                                 height: 11,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.cyanAccent),
+                                child: SkeletonBox(width: 11, height: 11, borderRadius: 2),
                               ),
                             ],
                           ],
@@ -537,7 +540,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                         const Icon(Icons.history_rounded, color: Colors.cyanAccent, size: 32),
                         const SizedBox(height: 10),
                         if (replayState.isLoading)
-                          const CircularProgressIndicator(color: Colors.cyanAccent)
+                          const SkeletonBox(height: 60)
                         else ...[
                           Text(
                             replayState.loadError ?? 'TAP TO SELECT A SESSION REPLAY',
@@ -743,11 +746,8 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   // ---------------------------------------------------------
   Widget _buildTimingTower(List<LiveTelemetry> telemetryList, bool isLoading) {
     if (isLoading && telemetryList.isEmpty) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(40),
-          child: CircularProgressIndicator(),
-        ),
+      return Column(
+        children: List.generate(10, (_) => const SkeletonTimingRow()),
       );
     }
     if (telemetryList.isEmpty) {
@@ -1256,11 +1256,11 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
     Color accentColor,
   ) {
     return radioAsync.when(
-      loading: () => const Center(
-        child: Padding(
-          padding: EdgeInsets.all(40),
-          child: CircularProgressIndicator(),
-        ),
+      loading: () => Column(
+        children: List.generate(5, (_) => const Padding(
+          padding: EdgeInsets.only(bottom: 8),
+          child: SkeletonBox(height: 72, borderRadius: 8),
+        )),
       ),
       error: (err, stack) => _buildFallbackRadioList(accentColor),
       data: (radios) {
@@ -1423,11 +1423,8 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
         ),
         const SizedBox(height: 12),
         telemetryAsync.when(
-          loading: () => const Center(
-            child: Padding(
-              padding: EdgeInsets.all(40),
-              child: CircularProgressIndicator(),
-            ),
+          loading: () => Column(
+            children: List.generate(10, (_) => const SkeletonTimingRow()),
           ),
           error: (_, __) => _buildTyreEmptyState(),
           data: (telemetry) {
