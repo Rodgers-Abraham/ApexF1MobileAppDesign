@@ -129,21 +129,22 @@ class DSWidgets {
         color: bgColor ?? DS.surface2,
         borderRadius: radius ?? DS.aeroCorner,
         border: Border.all(color: DS.outline, width: 1)),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            width: 3,
-            decoration: BoxDecoration(
-              color: accent,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                bottomLeft: Radius.zero))),
-          Expanded(
-            child: Padding(
-              padding: padding ?? const EdgeInsets.all(14),
-              child: child)),
-        ]));
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              width: 3,
+              decoration: BoxDecoration(
+                color: accent,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(8),
+                  bottomLeft: Radius.zero))),
+            Expanded(
+              child: Padding(
+                padding: padding ?? const EdgeInsets.all(14),
+                child: child)),
+          ])));
   }
 
   /// Small all-caps JetBrains Mono label.

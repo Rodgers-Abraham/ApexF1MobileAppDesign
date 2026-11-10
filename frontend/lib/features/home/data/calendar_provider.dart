@@ -27,6 +27,7 @@ class RaceEvent {
   final int turns;
   final int drsZones;
   final List<RaceSession> sessions;
+  final bool hasSprint;
 
   const RaceEvent({
     required this.name,
@@ -38,6 +39,7 @@ class RaceEvent {
     this.turns = 16,
     this.drsZones = 2,
     this.sessions = const [],
+    this.hasSprint = false,
   });
 
   /// Approximate qualifying datetime (session data or fallback: race day - 1 at 14:00)
@@ -74,7 +76,10 @@ class RaceEvent {
       drsZones: (json['drs_zones'] as num?)?.toInt() ?? 2,
       sessions: rawSessions
           .map((s) => RaceSession.fromJson(s as Map<String, dynamic>))
-          .toList());
+          .toList(),
+      hasSprint: json['has_sprint'] == true ||
+          rawSessions.any((s) =>
+              (s['name']?.toString() ?? '').toLowerCase().contains('sprint')));
   }
 }
 

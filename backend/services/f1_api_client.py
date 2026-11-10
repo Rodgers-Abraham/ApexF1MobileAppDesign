@@ -37,25 +37,25 @@ FALLBACK_2026_CALENDAR = [
     {"name": "Saudi Arabian Grand Prix", "circuit": "Jeddah Corniche Circuit", "country_code": "SAU", "date": "2026-03-08", "round": "2", "length_km": 6.174, "turns": 27, "drs_zones": 3},
     {"name": "Australian Grand Prix", "circuit": "Albert Park Circuit", "country_code": "AUS", "date": "2026-03-22", "round": "3", "length_km": 5.278, "turns": 16, "drs_zones": 3},
     {"name": "Japanese Grand Prix", "circuit": "Suzuka Circuit", "country_code": "JPN", "date": "2026-04-05", "round": "4", "length_km": 5.807, "turns": 18, "drs_zones": 2},
-    {"name": "Chinese Grand Prix", "circuit": "Shanghai International Circuit", "country_code": "CHN", "date": "2026-04-19", "round": "5", "length_km": 5.451, "turns": 16, "drs_zones": 2},
-    {"name": "Miami Grand Prix", "circuit": "Miami International Autodrome", "country_code": "USA", "date": "2026-05-03", "round": "6", "length_km": 5.412, "turns": 19, "drs_zones": 3},
+    {"name": "Chinese Grand Prix", "circuit": "Shanghai International Circuit", "country_code": "CHN", "date": "2026-04-19", "round": "5", "length_km": 5.451, "turns": 16, "drs_zones": 2, "has_sprint": True},
+    {"name": "Miami Grand Prix", "circuit": "Miami International Autodrome", "country_code": "USA", "date": "2026-05-03", "round": "6", "length_km": 5.412, "turns": 19, "drs_zones": 3, "has_sprint": True},
     {"name": "Emilia Romagna Grand Prix", "circuit": "Autodromo Enzo e Dino Ferrari", "country_code": "ITA", "date": "2026-05-17", "round": "7", "length_km": 4.909, "turns": 19, "drs_zones": 1},
     {"name": "Monaco Grand Prix", "circuit": "Circuit de Monaco", "country_code": "MCO", "date": "2026-05-24", "round": "8", "length_km": 3.337, "turns": 19, "drs_zones": 1},
     {"name": "Spanish Grand Prix", "circuit": "Circuit de Barcelona-Catalunya", "country_code": "ESP", "date": "2026-06-07", "round": "9", "length_km": 4.675, "turns": 16, "drs_zones": 2},
     {"name": "Canadian Grand Prix", "circuit": "Circuit Gilles Villeneuve", "country_code": "CAN", "date": "2026-06-14", "round": "10", "length_km": 4.361, "turns": 14, "drs_zones": 2},
     {"name": "Austrian Grand Prix", "circuit": "Red Bull Ring", "country_code": "AUT", "date": "2026-06-28", "round": "11", "length_km": 4.318, "turns": 10, "drs_zones": 3},
     {"name": "British Grand Prix", "circuit": "Silverstone Circuit", "country_code": "GBR", "date": "2026-07-05", "round": "12", "length_km": 5.891, "turns": 18, "drs_zones": 2},
-    {"name": "Belgian Grand Prix", "circuit": "Circuit de Spa-Francorchamps", "country_code": "BEL", "date": "2026-07-26", "round": "13", "length_km": 7.004, "turns": 19, "drs_zones": 2},
+    {"name": "Belgian Grand Prix", "circuit": "Circuit de Spa-Francorchamps", "country_code": "BEL", "date": "2026-07-26", "round": "13", "length_km": 7.004, "turns": 19, "drs_zones": 2, "has_sprint": True},
     {"name": "Hungarian Grand Prix", "circuit": "Hungaroring", "country_code": "HUN", "date": "2026-08-02", "round": "14", "length_km": 4.381, "turns": 14, "drs_zones": 2},
     {"name": "Dutch Grand Prix", "circuit": "Circuit Zandvoort", "country_code": "NLD", "date": "2026-08-30", "round": "15", "length_km": 4.259, "turns": 14, "drs_zones": 2},
     {"name": "Italian Grand Prix", "circuit": "Autodromo Nazionale di Monza", "country_code": "ITA", "date": "2026-09-06", "round": "16", "length_km": 5.793, "turns": 11, "drs_zones": 2},
     {"name": "Azerbaijan Grand Prix", "circuit": "Baku City Circuit", "country_code": "AZE", "date": "2026-09-20", "round": "17", "length_km": 6.003, "turns": 20, "drs_zones": 2},
     {"name": "Singapore Grand Prix", "circuit": "Marina Bay Street Circuit", "country_code": "SGP", "date": "2026-10-04", "round": "18", "length_km": 4.940, "turns": 23, "drs_zones": 3},
-    {"name": "United States Grand Prix", "circuit": "Circuit of The Americas", "country_code": "USA", "date": "2026-10-18", "round": "19", "length_km": 5.513, "turns": 20, "drs_zones": 2},
+    {"name": "United States Grand Prix", "circuit": "Circuit of The Americas", "country_code": "USA", "date": "2026-10-18", "round": "19", "length_km": 5.513, "turns": 20, "drs_zones": 2, "has_sprint": True},
     {"name": "Mexico City Grand Prix", "circuit": "Autodromo Hermanos Rodriguez", "country_code": "MEX", "date": "2026-10-25", "round": "20", "length_km": 4.304, "turns": 17, "drs_zones": 3},
-    {"name": "São Paulo Grand Prix", "circuit": "Autodromo Jose Carlos Pace", "country_code": "BRA", "date": "2026-11-08", "round": "21", "length_km": 4.309, "turns": 15, "drs_zones": 2},
+    {"name": "São Paulo Grand Prix", "circuit": "Autodromo Jose Carlos Pace", "country_code": "BRA", "date": "2026-11-08", "round": "21", "length_km": 4.309, "turns": 15, "drs_zones": 2, "has_sprint": True},
     {"name": "Las Vegas Grand Prix", "circuit": "Las Vegas Strip Circuit", "country_code": "USA", "date": "2026-11-21", "round": "22", "length_km": 6.201, "turns": 17, "drs_zones": 2},
-    {"name": "Qatar Grand Prix", "circuit": "Lusail International Circuit", "country_code": "QAT", "date": "2026-11-29", "round": "23", "length_km": 5.380, "turns": 16, "drs_zones": 2},
+    {"name": "Qatar Grand Prix", "circuit": "Lusail International Circuit", "country_code": "QAT", "date": "2026-11-29", "round": "23", "length_km": 5.380, "turns": 16, "drs_zones": 2, "has_sprint": True},
     {"name": "Abu Dhabi Grand Prix", "circuit": "Yas Marina Circuit", "country_code": "UAE", "date": "2026-12-06", "round": "24", "length_km": 5.281, "turns": 16, "drs_zones": 2},
 ]
 
@@ -1078,7 +1078,12 @@ class F1ApiClient:
 
                 all_laps.append({"lap": lap_num, "phase": "", "positions": positions})
 
-            total_laps = max(l["lap"] for l in all_laps) if all_laps else 0
+            # Use winner's lap count from results (always correct, even if timing data is partial)
+            race_winner_laps = max(
+                (int(r.get("laps", 0)) for r in results_raw["MRData"]["RaceTable"]["Races"][0].get("Results", [])),
+                default=0
+            )
+            total_laps = race_winner_laps if race_winner_laps > 0 else (max(l["lap"] for l in all_laps) if all_laps else 0)
 
             # Prepend grid as lap 0
             result_laps = [{"lap": 0, "phase": "GRID", "positions": grid_entries}] + all_laps

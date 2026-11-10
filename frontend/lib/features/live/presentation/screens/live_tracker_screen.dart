@@ -1618,11 +1618,15 @@ class _ReplaySessionPicker extends StatefulWidget {
 class _ReplaySessionPickerState extends State<_ReplaySessionPicker> {
   RaceEvent? _pickedRace;
 
-  static const _sessions = [
+  static const _allSessions = [
     {'type': 'race', 'label': 'RACE DAY', 'icon': Icons.emoji_events_rounded},
     {'type': 'qualifying', 'label': 'QUALIFYING', 'icon': Icons.timer_rounded},
     {'type': 'sprint', 'label': 'SPRINT', 'icon': Icons.bolt_rounded},
   ];
+
+  List<Map<String, dynamic>> get _sessions => _pickedRace == null
+      ? _allSessions.where((s) => s['type'] != 'sprint').toList()
+      : _allSessions.where((s) => s['type'] != 'sprint' || (_pickedRace!.hasSprint)).toList();
 
   @override
   Widget build(BuildContext context) {
