@@ -46,19 +46,15 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
         subtitle: 'PITWALL TELEMETRY',
         isLive: isLive,
         liveLabel: isLive ? 'LIVE' : null,
-        latencyMs: '12',
-      ),
+        latencyMs: '12'),
       body: Column(
         children: [
           DSTickerStrip(
             text: 'TRACK STATUS: ${isLive ? "GREEN FLAG" : "CIRCUIT ACTIVE"} // TRK 44.2°C // AIR 28.1°C // WIND 14 KM/H HEADWIND // NEXT: ${nextRace?.name ?? "UPCOMING GP"}',
-            dotColor: isLive ? DS.green : DS.teal,
-          ),
+            dotColor: isLive ? DS.green : DS.teal),
           if (!backendReachable) const BackendOfflineBanner(),
           Expanded(child: _buildScrollBody(context, accentColor)),
-        ],
-      ),
-    );
+        ]));
   }
 
   Widget _buildScrollBody(BuildContext context, Color accentColor) {
@@ -82,8 +78,7 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
                 Text('PADDOCK TELEMETRY DISPATCH', style: DS.driverCode(size: 11)),
                 const Spacer(),
                 Text('LATEST', style: DS.labelCaps(size: 8)),
-              ],
-            ),
+              ]),
             const SizedBox(height: 10),
             NewsRailWidget(accent: accentColor),
             const SizedBox(height: 16),
@@ -96,10 +91,8 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
                 const Spacer(),
                 GestureDetector(
                   onTap: () => context.go('/history'),
-                  child: Text('VIEW ARCHIVE', style: DS.labelCaps(size: 8, color: DS.teal)),
-                ),
-              ],
-            ),
+                  child: Text('VIEW ARCHIVE', style: DS.labelCaps(size: 8, color: DS.teal))),
+              ]),
             const SizedBox(height: 10),
             RaceRecapsWidget(accent: accentColor),
             const SizedBox(height: 16),
@@ -111,8 +104,7 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
                 Text('SEASON CALENDAR PROGRESS', style: DS.driverCode(size: 11)),
                 const Spacer(),
                 Text('24 ROUNDS', style: DS.labelCaps(size: 8)),
-              ],
-            ),
+              ]),
             const SizedBox(height: 10),
             SeasonCalendarWidget(accent: accentColor),
             const SizedBox(height: 20),
@@ -132,11 +124,7 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
                           const Icon(Icons.speed, size: 14, color: Colors.white),
                           const SizedBox(width: 6),
                           Text('LIVE SECTOR SPLITS', style: DS.labelCaps(size: 9, color: Colors.white)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                        ])))),
                 const SizedBox(width: 10),
                 Expanded(
                   child: GestureDetector(
@@ -146,8 +134,7 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
                       decoration: BoxDecoration(
                         color: DS.surface1,
                         borderRadius: DS.aeroCorner,
-                        border: Border.all(color: DS.outline),
-                      ),
+                        border: Border.all(color: DS.outline)),
                       alignment: Alignment.center,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -155,24 +142,15 @@ class _PitWallScreenState extends ConsumerState<PitWallScreen> {
                           const Icon(Icons.build_outlined, size: 14, color: Color(0xFF29DEC9)),
                           const SizedBox(width: 6),
                           Text('PIT STRATEGY MATRIX', style: DS.labelCaps(size: 9, color: DS.teal)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+                        ])))),
+              ]),
             const SizedBox(height: 20),
             // Footer
             Center(
               child: Text(
                 'APEX F1 v2.1.0 · Powered by Sportradar · FIA Data',
-                style: DS.labelCaps(size: 8, color: DS.textMuted),
-              ),
-            ),
+                style: DS.labelCaps(size: 8, color: DS.textMuted))),
             const SizedBox(height: 60),
-          ],
-        ),
-    );
+          ]));
   }
 }

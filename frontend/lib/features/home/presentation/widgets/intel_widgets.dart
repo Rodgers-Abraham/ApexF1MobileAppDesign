@@ -36,12 +36,8 @@ class CompactStandingsWidget extends ConsumerWidget {
                     final idx = e.key;
                     const colors = [Color(0xFFFFC107), Color(0xFFC0C0C0), Color(0xFFCD7F32), Colors.white, Colors.white];
                     return StandingRow(pos: d.pos, name: d.name, team: d.team, points: d.pts, color: idx < 3 ? colors[idx] : Colors.white, isTop3: idx < 3);
-                  }).toList(),
-                ),
-              ),
-            ],
-          ),
-        ),
+                  }).toList())),
+            ])),
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(16),
@@ -63,14 +59,9 @@ class CompactStandingsWidget extends ConsumerWidget {
                     final idx = e.key;
                     const colors = [Color(0xFFFFC107), Color(0xFFC0C0C0), Color(0xFFCD7F32), Colors.white, Colors.white];
                     return StandingRow(pos: c.pos, name: c.name, team: '', points: c.pts, color: idx < 3 ? colors[idx] : Colors.white, isTop3: idx < 3, showTeam: false);
-                  }).toList(),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+                  }).toList())),
+            ])),
+      ]);
   }
 }
 
@@ -93,8 +84,7 @@ class StandingRow extends StatelessWidget {
           Container(
             width: 24, height: 24,
             decoration: BoxDecoration(color: isTop3 ? color.withOpacity(0.15) : Colors.transparent, borderRadius: BorderRadius.circular(4)),
-            child: Center(child: Text(pos, style: TextStyle(fontFamily: 'Outfit', fontSize: 12, fontWeight: FontWeight.w900, color: color.withOpacity(isTop3 ? 0.6 : 0.9)))),
-          ),
+            child: Center(child: Text(pos, style: TextStyle(fontFamily: 'Outfit', fontSize: 12, fontWeight: FontWeight.w900, color: color.withOpacity(isTop3 ? 0.6 : 0.9))))),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -102,13 +92,9 @@ class StandingRow extends StatelessWidget {
               children: [
                 Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
                 if (showTeam) Text(team, style: TextStyle(fontSize: 10, color: Colors.grey[600])),
-              ],
-            ),
-          ),
+              ])),
           Text('${points}pts', style: TextStyle(fontFamily: 'Outfit', fontSize: 12, fontWeight: FontWeight.w900, color: color)),
-        ],
-      ),
-    );
+        ]));
   }
 }
 
@@ -145,8 +131,7 @@ class CompactLiveTimingWidget extends ConsumerWidget {
                       children: [
                         SizedBox(
                           width: 18,
-                          child: Text(t.pos, style: TextStyle(fontFamily: 'Outfit', fontSize: 12, fontWeight: FontWeight.bold, color: isDnf ? Colors.redAccent : Colors.white)),
-                        ),
+                          child: Text(t.pos, style: TextStyle(fontFamily: 'Outfit', fontSize: 12, fontWeight: FontWeight.bold, color: isDnf ? Colors.redAccent : Colors.white))),
                         if (!isDnf)
                           if (t.positionsGained > 0)
                             Text('▲${t.positionsGained}', style: const TextStyle(color: Color(0xFF00E676), fontSize: 8.5, fontWeight: FontWeight.bold))
@@ -154,9 +139,7 @@ class CompactLiveTimingWidget extends ConsumerWidget {
                             Text('▼${t.positionsGained.abs()}', style: const TextStyle(color: Color(0xFFFF5252), fontSize: 8.5, fontWeight: FontWeight.bold))
                           else
                             const Text('-', style: TextStyle(color: Colors.grey, fontSize: 9)),
-                      ],
-                    ),
-                  ),
+                      ])),
                   Container(width: 3, height: 18, margin: const EdgeInsets.only(right: 8), decoration: BoxDecoration(color: teamColor, borderRadius: BorderRadius.circular(1.5))),
                   Expanded(
                     child: Row(
@@ -167,12 +150,9 @@ class CompactLiveTimingWidget extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                             decoration: BoxDecoration(color: Colors.red.withOpacity(0.2), borderRadius: BorderRadius.circular(3)),
-                            child: const Text('DNF', style: TextStyle(color: Colors.redAccent, fontSize: 8, fontWeight: FontWeight.bold)),
-                          ),
+                            child: const Text('DNF', style: TextStyle(color: Colors.redAccent, fontSize: 8, fontWeight: FontWeight.bold))),
                         ],
-                      ],
-                    ),
-                  ),
+                      ])),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     mainAxisSize: MainAxisSize.min,
@@ -180,17 +160,11 @@ class CompactLiveTimingWidget extends ConsumerWidget {
                       Text(t.gap, style: TextStyle(fontSize: 11, color: t.gap == 'LEADER' ? Colors.green : (isDnf ? Colors.grey : Colors.grey[400]), fontWeight: FontWeight.w600)),
                       if (t.gap != 'LEADER' && t.interval.isNotEmpty && !isDnf)
                         Text('+${t.interval}', style: TextStyle(fontSize: 8.5, color: Colors.grey[600])),
-                    ],
-                  ),
+                    ]),
                   const SizedBox(width: 12),
                   TyreBadge(tyre: t.tyre),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-      ),
-    );
+                ]));
+          }).toList())));
   }
 }
 
@@ -208,8 +182,7 @@ class TyreBadge extends StatelessWidget {
     return Container(
       width: 20, height: 20,
       decoration: BoxDecoration(color: c.withOpacity(0.15), shape: BoxShape.circle, border: Border.all(color: c, width: 1.5)),
-      child: Center(child: Text(tyre, style: TextStyle(color: c, fontSize: 9, fontWeight: FontWeight.bold))),
-    );
+      child: Center(child: Text(tyre, style: TextStyle(color: c, fontSize: 9, fontWeight: FontWeight.bold))));
   }
 }
 
@@ -227,8 +200,7 @@ class PaddockIntelWidget extends ConsumerWidget {
         loading: () => const SkeletonCardRow(count: 2, cardWidth: 280, cardHeight: 180),
         error: (err, stack) => Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Text('Live paddock news stream temporarily unavailable', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
-        ),
+          child: Text('Live paddock news stream temporarily unavailable', style: TextStyle(color: Colors.grey[500], fontSize: 12))),
         data: (articles) {
           final displayArticles = articles.take(5).toList();
           if (displayArticles.isEmpty) {
@@ -273,10 +245,7 @@ class PaddockIntelWidget extends ConsumerWidget {
                               errorBuilder: (context, error, stackTrace) => Container(
                                 width: 68, height: 68,
                                 decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(10)),
-                                child: Icon(Icons.article_rounded, color: accent, size: 24),
-                              ),
-                            ),
-                          ),
+                                child: Icon(Icons.article_rounded, color: accent, size: 24)))),
                           const SizedBox(width: 12),
                         ] else ...[
                           Container(width: 3, height: 40, decoration: BoxDecoration(color: accent.withOpacity(0.6), borderRadius: BorderRadius.circular(2))),
@@ -293,26 +262,15 @@ class PaddockIntelWidget extends ConsumerWidget {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(color: accent.withOpacity(0.12), borderRadius: BorderRadius.circular(4), border: Border.all(color: accent.withOpacity(0.25))),
-                                    child: Text(item.source.toUpperCase(), style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: accent, letterSpacing: 0.5)),
-                                  ),
+                                    child: Text(item.source.toUpperCase(), style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: accent, letterSpacing: 0.5))),
                                   const SizedBox(width: 8),
                                   Expanded(child: Text(item.publishedAt.isNotEmpty ? item.publishedAt : 'Live Feed', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10, color: Colors.grey[600]))),
                                   Icon(Icons.open_in_new_rounded, size: 12, color: Colors.grey[600]),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          );
-        },
-      ),
-    );
+                                ]),
+                            ])),
+                      ]))));
+            }).toList());
+        }));
   }
 }
 
@@ -329,8 +287,7 @@ class TrackConditionsWidget extends ConsumerWidget {
       error: (err, stack) => Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(color: const Color(0xFF111111), borderRadius: BorderRadius.circular(16)),
-        child: Text('Track telemetry sensor stream unavailable', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
-      ),
+        child: Text('Track telemetry sensor stream unavailable', style: TextStyle(color: Colors.grey[500], fontSize: 12))),
       data: (cond) {
         final conditionItems = [
           {'icon': Icons.thermostat, 'label': 'Track Temp', 'value': cond.trackTemperature},
@@ -355,11 +312,8 @@ class TrackConditionsWidget extends ConsumerWidget {
                         const SizedBox(height: 6),
                         Text(c['value'] as String, style: const TextStyle(fontFamily: 'Outfit', fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
                         Text(c['label'] as String, style: TextStyle(fontSize: 10, color: Colors.grey[600])),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
+                      ]));
+                }).toList()),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -370,14 +324,9 @@ class TrackConditionsWidget extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Expanded(child: Text(cond.summary, style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w600))),
                     Icon(cond.rainfall ? Icons.umbrella : Icons.wb_sunny_outlined, size: 16, color: isDry ? Colors.amber : Colors.cyan),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+                  ])),
+            ]));
+      });
   }
 }
 
@@ -429,22 +378,14 @@ class TireStrategyWidget extends ConsumerWidget {
                         child: FractionallySizedBox(
                           alignment: Alignment.centerLeft,
                           widthFactor: widthFrac,
-                          child: Container(decoration: BoxDecoration(color: color.withOpacity(0.85), borderRadius: BorderRadius.circular(4))),
-                        ),
-                      ),
-                    ),
+                          child: Container(decoration: BoxDecoration(color: color.withOpacity(0.85), borderRadius: BorderRadius.circular(4)))))),
                     const SizedBox(width: 10),
                     Text('${s.laps} L max', style: const TextStyle(fontFamily: 'Outfit', fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
                     const SizedBox(width: 6),
                     Text('(${s.stintsCount} stints)', style: TextStyle(fontSize: 10, color: Colors.grey[600])),
-                  ],
-                ),
-              );
-            }).toList(),
-          );
-        },
-      ),
-    );
+                  ]));
+            }).toList());
+        }));
   }
 }
 
@@ -475,10 +416,8 @@ class _LoadingDotsState extends State<LoadingDots> with SingleTickerProviderStat
           return Container(
             margin: const EdgeInsets.symmetric(horizontal: 3),
             width: 6, height: 6,
-            decoration: BoxDecoration(color: Colors.grey.withOpacity(0.3 + value * 0.7), shape: BoxShape.circle),
-          );
+            decoration: BoxDecoration(color: Colors.grey.withOpacity(0.3 + value * 0.7), shape: BoxShape.circle));
         });
-      }).toList()),
-    );
+      }).toList()));
   }
 }

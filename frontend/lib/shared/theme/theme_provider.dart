@@ -181,16 +181,17 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
           ),
         ),
       ),
+      textTheme: GoogleFonts.jetBrainsMonoTextTheme(ThemeData.dark().textTheme),
       appBarTheme: AppBarTheme(
         backgroundColor: const Color(0xFF09090B),
         elevation: 0,
         centerTitle: false,
         iconTheme: const IconThemeData(color: Colors.white),
-        titleTextStyle: GoogleFonts.orbitron(
+        titleTextStyle: GoogleFonts.jetBrainsMono(
           color: Colors.white,
-          fontSize: 18,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 1.5,
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.0,
         ),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
@@ -209,19 +210,12 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: GoogleFonts.orbitron(
-            fontSize: 14,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.0,
+          textStyle: GoogleFonts.jetBrainsMono(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
           ),
         ),
-      ),
-      textTheme: TextTheme(
-        displayLarge: GoogleFonts.orbitron(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
-        titleLarge: GoogleFonts.orbitron(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-        titleMedium: GoogleFonts.orbitron(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
-        bodyLarge: GoogleFonts.outfit(fontSize: 16, color: const Color(0xFFE1E1E1)),
-        bodyMedium: GoogleFonts.outfit(fontSize: 14, color: Colors.grey),
       ),
     );
   }

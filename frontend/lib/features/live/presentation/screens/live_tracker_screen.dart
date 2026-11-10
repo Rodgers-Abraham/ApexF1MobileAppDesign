@@ -42,8 +42,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
     super.initState();
     _waveAnimController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
+      duration: const Duration(milliseconds: 900))..repeat(reverse: true);
 
     _playerCompleteSubscription = _audioPlayer.onPlayerComplete.listen((_) {
       if (mounted) {
@@ -149,8 +148,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
         liveLabel: isLive
             ? '${sessionStatus?.sessionName.toUpperCase() ?? 'LIVE'} TRACK'
             : 'REPLAY',
-        latencyMs: '12',
-      ),
+        latencyMs: '12'),
       body: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 24),
           child: Column(
@@ -169,27 +167,19 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                           isLive
                               ? effectiveMeetingName.toUpperCase()
                               : '2026 REPLAY · ${effectiveMeetingName.toUpperCase()}',
-                          style: TextStyle(
-                            fontFamily: 'Formula1Wide',
-                            fontSize: 10,
+                          style: TextStyle( fontSize: 10,
                             letterSpacing: 1.5,
                             color: isLive ? Colors.grey[400] : Colors.cyanAccent,
-                            fontWeight: FontWeight.bold,
-                          ),
+                            fontWeight: FontWeight.bold),
                           maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                          overflow: TextOverflow.ellipsis),
                         const SizedBox(height: 3),
                         const Text(
                           'LIVE TIMING',
-                          style: TextStyle(
-                            fontFamily: 'Formula1',
-                            fontSize: 22,
+                          style: TextStyle( fontSize: 22,
                             fontWeight: FontWeight.w900,
                             color: Colors.white,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
+                            letterSpacing: 0.5)),
                         if (!isLive) ...[
                           const SizedBox(height: 6),
                           GestureDetector(
@@ -199,8 +189,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                               decoration: BoxDecoration(
                                 color: const Color(0xFF16161E),
                                 borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.35), width: 1),
-                              ),
+                                border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.35), width: 1)),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -209,33 +198,22 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                                   Flexible(
                                     child: Text(
                                       'SELECT RACE REPLAY',
-                                      style: const TextStyle(
-                                        fontFamily: 'Formula1',
-                                        fontSize: 9,
+                                      style: const TextStyle( fontSize: 9,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.cyanAccent,
-                                      ),
+                                        color: Colors.cyanAccent),
                                       maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
+                                      overflow: TextOverflow.ellipsis)),
                                   const SizedBox(width: 4),
                                   const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: Colors.cyanAccent),
-                                ],
-                              ),
-                            ),
-                          ),
+                                ]))),
                         ],
-                      ],
-                    ),
-                  ),
+                      ])),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                     decoration: BoxDecoration(
                       color: const Color(0xFF19191F),
                       borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: const Color(0xFF282832)),
-                    ),
+                      border: Border.all(color: const Color(0xFF282832))),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -244,26 +222,17 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                           height: 5,
                           decoration: const BoxDecoration(
                             color: Color(0xFF00E676),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
+                            shape: BoxShape.circle)),
                         const SizedBox(width: 5),
                         Text(
                           effectiveMeetingName.isNotEmpty
                               ? effectiveMeetingName.split(' ').take(2).join(' ').toUpperCase()
                               : (isLive ? 'LIVE' : 'REPLAY'),
-                          style: const TextStyle(
-                            fontFamily: 'Formula1',
-                            fontSize: 9.5,
+                          style: const TextStyle( fontSize: 9.5,
                             color: Colors.white70,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                            fontWeight: FontWeight.bold)),
+                      ])),
+                ]),
               const SizedBox(height: 12),
 
               // Lap Progress Header Box & Interactive Replay Controls
@@ -275,12 +244,9 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                     topLeft: Radius.circular(3),
                     topRight: Radius.circular(10),
                     bottomLeft: Radius.circular(3),
-                    bottomRight: Radius.circular(10),
-                  ),
+                    bottomRight: Radius.circular(10)),
                   border: Border.all(
-                    color: isLive ? const Color(0xFF202028) : Colors.cyanAccent.withValues(alpha: 0.3),
-                  ),
-                ),
+                    color: isLive ? const Color(0xFF202028) : Colors.cyanAccent.withValues(alpha: 0.3))),
                 child: Column(
                   children: [
                     Row(
@@ -298,13 +264,9 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                                       ? (sessionStatus?.sessionName.toUpperCase() ?? 'LIVE')
                                       : 'RACE')
                                   : replayState.lapLabel,
-                              style: const TextStyle(
-                                fontFamily: 'Formula1',
-                                fontSize: 16,
+                              style: const TextStyle( fontSize: 16,
                                 fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                              ),
-                            ),
+                                color: Colors.white)),
                             const SizedBox(width: 4),
                             Text(
                               isLive
@@ -314,15 +276,10 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                                       ? '· LIVE'
                                       : '')
                                   : '/ ${replayState.totalLaps}',
-                              style: TextStyle(
-                                fontFamily: 'Formula1',
-                                fontSize: 12,
+                              style: TextStyle( fontSize: 12,
                                 color: Colors.grey[500],
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
+                                fontWeight: FontWeight.bold)),
+                          ]),
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
@@ -333,16 +290,10 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                                     ? 'LIVE SESSION'
                                     : 'IN PROGRESS')
                                 : '${((replayState.currentLap / (replayState.totalLaps > 0 ? replayState.totalLaps : 1)) * 100).toStringAsFixed(1)}%',
-                            style: TextStyle(
-                              fontFamily: 'Formula1Wide',
-                              fontSize: 11,
+                            style: TextStyle( fontSize: 11,
                               fontWeight: FontWeight.w900,
-                              color: isLive ? accentColor : Colors.cyanAccent,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                              color: isLive ? accentColor : Colors.cyanAccent))),
+                      ]),
                     const SizedBox(height: 8),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(3),
@@ -364,13 +315,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                               gradient: LinearGradient(
                                 colors: isLive
                                     ? [accentColor.withValues(alpha: 0.6), accentColor]
-                                    : [Colors.cyanAccent.withValues(alpha: 0.6), Colors.cyanAccent],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                                    : [Colors.cyanAccent.withValues(alpha: 0.6), Colors.cyanAccent])))))),
                     if (!isLive) ...[
                       const SizedBox(height: 10),
                       // Interactive Replay Scrubber & Playback Controls (Overflow immune)
@@ -388,18 +333,15 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                                   tooltip: 'Jump to Lap 1',
                                   padding: const EdgeInsets.all(4),
                                   constraints: const BoxConstraints(),
-                                  onPressed: () => ref.read(raceReplayProvider.notifier).setLap(1),
-                                ),
+                                  onPressed: () => ref.read(raceReplayProvider.notifier).setLap(1)),
                                 const SizedBox(width: 4),
                                 IconButton(
                                   icon: const Icon(Icons.chevron_left_rounded, color: Colors.cyanAccent, size: 20),
                                   tooltip: 'Previous Lap',
                                   padding: const EdgeInsets.all(4),
                                   constraints: const BoxConstraints(),
-                                  onPressed: () => ref.read(raceReplayProvider.notifier).prevLap(),
-                                ),
-                              ],
-                            ),
+                                  onPressed: () => ref.read(raceReplayProvider.notifier).prevLap()),
+                              ]),
                             const SizedBox(width: 8),
                             // Play / Pause Button
                             GestureDetector(
@@ -413,31 +355,21 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                                   borderRadius: BorderRadius.circular(6),
                                   border: Border.all(
                                     color: replayState.isPlaying ? const Color(0xFFFF9100) : Colors.cyanAccent,
-                                    width: 1.2,
-                                  ),
-                                ),
+                                    width: 1.2)),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
                                       replayState.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                                       size: 13,
-                                      color: replayState.isPlaying ? const Color(0xFFFF9100) : Colors.cyanAccent,
-                                    ),
+                                      color: replayState.isPlaying ? const Color(0xFFFF9100) : Colors.cyanAccent),
                                     const SizedBox(width: 4),
                                     Text(
                                       replayState.isPlaying ? 'PAUSE' : 'PLAY REPLAY',
-                                      style: TextStyle(
-                                        fontFamily: 'Formula1Wide',
-                                        fontSize: 8,
+                                      style: TextStyle( fontSize: 8,
                                         fontWeight: FontWeight.w900,
-                                        color: replayState.isPlaying ? const Color(0xFFFF9100) : Colors.cyanAccent,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
+                                        color: replayState.isPlaying ? const Color(0xFFFF9100) : Colors.cyanAccent)),
+                                  ]))),
                             const SizedBox(width: 8),
                             Row(
                               mainAxisSize: MainAxisSize.min,
@@ -447,29 +379,23 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                                   tooltip: 'Next Lap',
                                   padding: const EdgeInsets.all(4),
                                   constraints: const BoxConstraints(),
-                                  onPressed: () => ref.read(raceReplayProvider.notifier).nextLap(),
-                                ),
+                                  onPressed: () => ref.read(raceReplayProvider.notifier).nextLap()),
                                 const SizedBox(width: 4),
                                 IconButton(
                                   icon: const Icon(Icons.last_page_rounded, color: Colors.cyanAccent, size: 18),
                                   tooltip: 'Jump to Finish',
                                   padding: const EdgeInsets.all(4),
                                   constraints: const BoxConstraints(),
-                                  onPressed: () => ref.read(raceReplayProvider.notifier).setLap(replayState.totalLaps),
-                                ),
-                              ],
-                            ),
+                                  onPressed: () => ref.read(raceReplayProvider.notifier).setLap(replayState.totalLaps)),
+                              ]),
                             if (replayState.isLoading) ...[
                               const SizedBox(width: 6),
                               const SizedBox(
                                 width: 11,
                                 height: 11,
-                                child: SkeletonBox(width: 11, height: 11, borderRadius: 2),
-                              ),
+                                child: SkeletonBox(width: 11, height: 11, borderRadius: 2)),
                             ],
-                          ],
-                        ),
-                      ),
+                          ])),
                       // Lap Slider
                       SliderTheme(
                         data: SliderTheme.of(context).copyWith(
@@ -479,8 +405,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                           activeTrackColor: Colors.cyanAccent,
                           inactiveTrackColor: const Color(0xFF252530),
                           thumbColor: Colors.cyanAccent,
-                          overlayColor: Colors.cyanAccent.withValues(alpha: 0.2),
-                        ),
+                          overlayColor: Colors.cyanAccent.withValues(alpha: 0.2)),
                         child: Slider(
                           value: replayState.totalLaps > 0
                               ? replayState.currentLap.toDouble().clamp(1.0, replayState.totalLaps.toDouble())
@@ -491,13 +416,9 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                           label: 'Lap ${replayState.currentLap}',
                           onChanged: (val) {
                             ref.read(raceReplayProvider.notifier).setLap(val.round());
-                          },
-                        ),
-                      ),
+                          })),
                     ],
-                  ],
-                ),
-              ),
+                  ])),
               const SizedBox(height: 10),
 
               // Live Flag / Race Control Banner
@@ -510,17 +431,14 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                 decoration: BoxDecoration(
                   color: const Color(0xFF0F0F13),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: const Color(0xFF202028)),
-                ),
+                  border: Border.all(color: const Color(0xFF202028))),
                 child: Row(
                   children: [
                     _buildSegmentButton(LiveMode.timing, 'TIMING'),
                     _buildSegmentButton(LiveMode.map, 'MAP'),
                     _buildSegmentButton(LiveMode.radio, 'RADIO'),
                     _buildSegmentButton(LiveMode.tyres, 'TYRES'),
-                  ],
-                ),
-              ),
+                  ])),
               const SizedBox(height: 14),
 
               // Replay — empty / error state
@@ -533,8 +451,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                     decoration: BoxDecoration(
                       color: const Color(0xFF141419),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3)),
-                    ),
+                      border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3))),
                     child: Column(
                       children: [
                         const Icon(Icons.history_rounded, color: Colors.cyanAccent, size: 32),
@@ -545,26 +462,18 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                           Text(
                             replayState.loadError ?? 'TAP TO SELECT A SESSION REPLAY',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontFamily: 'Formula1Wide',
-                              fontSize: 10,
+                            style: TextStyle( fontSize: 10,
                               fontWeight: FontWeight.w900,
-                              color: replayState.loadError != null ? Colors.redAccent : Colors.cyanAccent,
-                            ),
-                          ),
+                              color: replayState.loadError != null ? Colors.redAccent : Colors.cyanAccent)),
                           if (replayState.loadError == null) ...[
                             const SizedBox(height: 6),
                             const Text(
                               'Choose a past race and session to replay\ntiming data lap by lap',
                               textAlign: TextAlign.center,
-                              style: TextStyle(fontFamily: 'Formula1', fontSize: 10, color: Colors.grey),
-                            ),
+                              style: TextStyle( fontSize: 10, color: Colors.grey)),
                           ],
                         ],
-                      ],
-                    ),
-                  ),
-                ),
+                      ]))),
               ],
 
               // Replay: driver focus picker + end-of-race summary card
@@ -584,10 +493,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               ] else if (_selectedMode == LiveMode.tyres) ...[
                 _buildTyreStrategyPanel(telemetryAsync, accentColor),
               ],
-            ],
-          ),
-        ),
-    );
+            ])));
   }
 
   Widget _buildDriverFocusPicker(RaceReplayState replayState, Color accent) {
@@ -618,8 +524,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               decoration: BoxDecoration(
                 color: isFocused ? teamColor.withValues(alpha: 0.2) : const Color(0xFF141419),
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: isFocused ? teamColor : Colors.white12, width: isFocused ? 1.5 : 1),
-              ),
+                border: Border.all(color: isFocused ? teamColor : Colors.white12, width: isFocused ? 1.5 : 1)),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -627,20 +532,11 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                   if (isFocused) const SizedBox(width: 3),
                   Text(
                     code,
-                    style: TextStyle(
-                      fontFamily: 'Formula1Wide',
-                      fontSize: 9.5,
+                    style: TextStyle( fontSize: 9.5,
                       fontWeight: FontWeight.w900,
-                      color: isFocused ? teamColor : Colors.white70,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
+                      color: isFocused ? teamColor : Colors.white70)),
+                ])));
+        }));
   }
 
   Widget _buildDriverSummaryCard(DriverReplaySummary summary, Color accent) {
@@ -656,8 +552,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
         color: const Color(0xFF141419),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: teamColor.withValues(alpha: 0.5), width: 1.5),
-        boxShadow: [BoxShadow(color: teamColor.withValues(alpha: 0.08), blurRadius: 16)],
-      ),
+        boxShadow: [BoxShadow(color: teamColor.withValues(alpha: 0.08), blurRadius: 16)]),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -666,15 +561,13 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               const Icon(Icons.flag_rounded, size: 12, color: Colors.white54),
               const SizedBox(width: 6),
               Text('RACE RESULT — ${summary.driverName.toUpperCase()}',
-                  style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 9, fontWeight: FontWeight.w900, color: Colors.white54, letterSpacing: 0.8)),
+                  style: const TextStyle( fontSize: 9, fontWeight: FontWeight.w900, color: Colors.white54, letterSpacing: 0.8)),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(color: posColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(4), border: Border.all(color: posColor.withValues(alpha: 0.5))),
-                child: Text('P$pos', style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 13, fontWeight: FontWeight.w900, color: posColor)),
-              ),
-            ],
-          ),
+                child: Text('P$pos', style: TextStyle( fontSize: 13, fontWeight: FontWeight.w900, color: posColor))),
+            ]),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -683,11 +576,8 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               _statTile('LAP', summary.fastestLapNum > 0 ? 'L${summary.fastestLapNum}' : '—', Colors.white54),
               const SizedBox(width: 12),
               _statTile('TEAM', summary.team, teamColor),
-            ],
-          ),
-        ],
-      ),
-    );
+            ]),
+        ]));
   }
 
   Widget _statTile(String label, String value, Color color) {
@@ -695,13 +585,11 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 7.5, color: Colors.white38, fontWeight: FontWeight.bold)),
+          Text(label, style: const TextStyle( fontSize: 7.5, color: Colors.white38, fontWeight: FontWeight.bold)),
           const SizedBox(height: 3),
           Text(value, maxLines: 1, overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontFamily: 'Formula1', fontSize: 11, fontWeight: FontWeight.w900, color: color)),
-        ],
-      ),
-    );
+              style: TextStyle( fontSize: 11, fontWeight: FontWeight.w900, color: color)),
+        ]));
   }
 
   Widget _buildSegmentButton(LiveMode mode, String title) {
@@ -720,25 +608,16 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                     BoxShadow(
                       color: Colors.white.withValues(alpha: 0.14),
                       blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
+                      offset: const Offset(0, 2)),
                   ]
-                : null,
-          ),
+                : null),
           child: Text(
             title,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Formula1Wide',
-              fontSize: 9.5,
+            style: TextStyle( fontSize: 9.5,
               fontWeight: FontWeight.w900,
               color: isSelected ? const Color(0xFF09090C) : const Color(0xFF8F909A),
-              letterSpacing: 0.8,
-            ),
-          ),
-        ),
-      ),
-    );
+              letterSpacing: 0.8)))));
   }
 
   // ---------------------------------------------------------
@@ -747,8 +626,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   Widget _buildTimingTower(List<LiveTelemetry> telemetryList, bool isLoading) {
     if (isLoading && telemetryList.isEmpty) {
       return Column(
-        children: List.generate(10, (_) => const SkeletonTimingRow()),
-      );
+        children: List.generate(10, (_) => const SkeletonTimingRow()));
     }
     if (telemetryList.isEmpty) {
       return _buildTimingFallbackTower();
@@ -783,8 +661,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
           (getDriverData(d.name)?.code ?? '').toUpperCase() ==
               _selectedDriverCode ||
           d.name.toLowerCase().contains(_selectedDriverCode.toLowerCase()),
-      orElse: () => telemetryList.first,
-    );
+      orElse: () => telemetryList.first);
 
     return Column(
       children: [
@@ -797,51 +674,31 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                 width: 60,
                 child: Text(
                   'POS / DRIVER',
-                  style: TextStyle(
-                    fontFamily: 'Formula1',
-                    color: Color(0xFF5F606B),
+                  style: TextStyle( color: Color(0xFF5F606B),
                     fontSize: 8,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+                    fontWeight: FontWeight.bold))),
               const Spacer(),
               const Text(
                 'GAP / INT',
-                style: TextStyle(
-                  fontFamily: 'Formula1',
-                  color: Color(0xFF5F606B),
+                style: TextStyle( color: Color(0xFF5F606B),
                   fontSize: 8,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+                  fontWeight: FontWeight.bold)),
               const SizedBox(width: 14),
               const Text(
                 'TYRE',
-                style: TextStyle(
-                  fontFamily: 'Formula1',
-                  color: Color(0xFF5F606B),
+                style: TextStyle( color: Color(0xFF5F606B),
                   fontSize: 8,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+                  fontWeight: FontWeight.bold)),
               const SizedBox(width: 16),
               const SizedBox(
                 width: 50,
                 child: Text(
                   'LAST LAP',
                   textAlign: TextAlign.end,
-                  style: TextStyle(
-                    fontFamily: 'Formula1',
-                    color: Color(0xFF5F606B),
+                  style: TextStyle( color: Color(0xFF5F606B),
                     fontSize: 8,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+                    fontWeight: FontWeight.bold))),
+            ])),
         const SizedBox(height: 2),
 
         // Animated timing tower — cards slide smoothly on position changes
@@ -849,8 +706,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
           drivers: telemetryList,
           overallFastestLapTime: overallFastestLapTime,
           selectedDriverCode: _selectedDriverCode,
-          onDriverTap: (code) => setState(() => _selectedDriverCode = code),
-        ),
+          onDriverTap: (code) => setState(() => _selectedDriverCode = code)),
         const SizedBox(height: 12),
 
         // Pinned Onboard Telemetry Strip
@@ -865,10 +721,8 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               : '8',
           throttlePct: '97',
           ersPct: '61',
-          isDnf: selectedDriver.status == 'DNF' || selectedDriver.status == 'RETIRED',
-        ),
-      ],
-    );
+          isDnf: selectedDriver.status == 'DNF' || selectedDriver.status == 'RETIRED'),
+      ]);
   }
 
   Widget _buildTimingFallbackTower() {
@@ -881,34 +735,24 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
             SizedBox(height: 12),
             Text(
               'NO TIMING DATA',
-              style: TextStyle(
-                fontFamily: 'Formula1Wide',
-                fontSize: 11,
+              style: TextStyle( fontSize: 11,
                 fontWeight: FontWeight.w900,
-                color: Color(0xFF5F606B),
-              ),
-            ),
+                color: Color(0xFF5F606B))),
             SizedBox(height: 4),
             Text(
               'Timing data will appear during live sessions',
-              style: TextStyle(fontSize: 12, color: Color(0xFF5F606B)),
-            ),
-          ],
-        ),
-      ),
-    );
+              style: TextStyle(fontSize: 12, color: Color(0xFF5F606B))),
+          ])));
   }
 
   void _showReplayRaceSelector(BuildContext context) {
     final calendarAsync = ref.read(calendarProvider);
     final pastRaces = calendarAsync.whenOrNull(
-      data: (races) => races.where((r) => r.date.isBefore(DateTime.now())).toList(),
-    ) ?? [];
+      data: (races) => races.where((r) => r.date.isBefore(DateTime.now())).toList()) ?? [];
 
     if (pastRaces.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No completed races available for replay.')),
-      );
+        const SnackBar(content: Text('No completed races available for replay.')));
       return;
     }
 
@@ -917,8 +761,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
       backgroundColor: const Color(0xFF141419),
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => _ReplaySessionPicker(
         pastRaces: pastRaces,
         selectedMeeting: _selectedReplayMeeting,
@@ -928,12 +771,9 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
             year: race.date.year,
             round: int.tryParse(race.round) ?? 1,
             meetingName: race.name,
-            sessionType: sessionType,
-          );
+            sessionType: sessionType);
           Navigator.pop(ctx);
-        },
-      ),
-    );
+        }));
   }
 
   // ---------------------------------------------------------
@@ -943,8 +783,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
     List<LiveTelemetry> telemetryList,
     String meetingName,
     Color accentColor,
-    bool isLive,
-  ) {
+    bool isLive) {
     // 1. Gather all driver codes from live telemetry or fallback roster
     final availableCodes = telemetryList.isNotEmpty
         ? telemetryList
@@ -980,9 +819,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               gap: '',
               color: '#FFFFFF',
               x: 0.5,
-              y: 0.5,
-            ),
-    );
+              y: 0.5));
 
     return Column(
       children: [
@@ -991,8 +828,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
           decoration: BoxDecoration(
             color: const Color(0xFF141419),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0xFF202028)),
-          ),
+            border: Border.all(color: const Color(0xFF202028))),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1005,38 +841,27 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                       children: [
                         Text(
                           isLive ? 'LIVE TRACK' : 'OFFICIAL TRACK REPLAY',
-                          style: TextStyle(
-                            fontFamily: 'Formula1Wide',
-                            fontSize: 9,
+                          style: TextStyle( fontSize: 9,
                             color: isLive ? const Color(0xFF8F909A) : Colors.cyanAccent,
-                            fontWeight: FontWeight.bold,
-                          ),
+                            fontWeight: FontWeight.bold),
                           maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                          overflow: TextOverflow.ellipsis),
                         const SizedBox(height: 2),
                         Text(
                           meetingName.toUpperCase(),
-                          style: const TextStyle(
-                            fontFamily: 'Formula1',
-                            fontSize: 14,
+                          style: const TextStyle( fontSize: 14,
                             fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                          ),
+                            color: Colors.white),
                           maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
+                          overflow: TextOverflow.ellipsis),
+                      ])),
                   const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: (isLive ? const Color(0xFF00E676) : Colors.cyanAccent).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: isLive ? const Color(0xFF00E676) : Colors.cyanAccent, width: 1),
-                    ),
+                      border: Border.all(color: isLive ? const Color(0xFF00E676) : Colors.cyanAccent, width: 1)),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -1044,18 +869,11 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                         const SizedBox(width: 5),
                         Text(
                           isLive ? 'TRACK CLEAR' : 'REPLAY ACTIVE',
-                          style: TextStyle(
-                            fontFamily: 'Formula1',
-                            fontSize: 9.5,
+                          style: TextStyle( fontSize: 9.5,
                             fontWeight: FontWeight.w900,
-                            color: isLive ? const Color(0xFF00E676) : Colors.cyanAccent,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                            color: isLive ? const Color(0xFF00E676) : Colors.cyanAccent)),
+                      ])),
+                ]),
               const SizedBox(height: 14),
 
               // Dedicated Driver Selection Strip (Tap driver to focus on circuit)
@@ -1068,26 +886,17 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                       const SizedBox(width: 5),
                       const Text(
                         'FOCUS DRIVER ON CIRCUIT',
-                        style: TextStyle(
-                          fontFamily: 'Formula1Wide',
-                          fontSize: 8.5,
+                        style: TextStyle( fontSize: 8.5,
                           fontWeight: FontWeight.w900,
                           color: Color(0xFF8F909A),
-                          letterSpacing: 0.5,
-                        ),
-                      ),
+                          letterSpacing: 0.5)),
                       const Spacer(),
                       Text(
                         'SHOWING: $activeCode',
-                        style: TextStyle(
-                          fontFamily: 'Formula1Wide',
-                          fontSize: 8,
+                        style: TextStyle( fontSize: 8,
                           fontWeight: FontWeight.bold,
-                          color: getTeamColor(selectedMeta?.team ?? ''),
-                        ),
-                      ),
-                    ],
-                  ),
+                          color: getTeamColor(selectedMeta?.team ?? ''))),
+                    ]),
                   const SizedBox(height: 8),
                   SizedBox(
                     height: 32,
@@ -1113,9 +922,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
                                 color: isSelected ? teamColor : const Color(0xFF282834),
-                                width: isSelected ? 1.5 : 1.0,
-                              ),
-                            ),
+                                width: isSelected ? 1.5 : 1.0)),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -1124,28 +931,16 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                                   height: 6,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: teamColor,
-                                  ),
-                                ),
+                                    color: teamColor)),
                                 const SizedBox(width: 5),
                                 Text(
                                   code,
-                                  style: TextStyle(
-                                    fontFamily: 'Formula1Wide',
-                                    fontSize: 9,
+                                  style: TextStyle( fontSize: 9,
                                     fontWeight: FontWeight.w900,
-                                    color: isSelected ? Colors.white : const Color(0xFF8F909A),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+                                    color: isSelected ? Colors.white : const Color(0xFF8F909A))),
+                              ])));
+                      })),
+                ]),
               const SizedBox(height: 14),
 
               // Interactive Track Canvas with Real Circuit Map
@@ -1155,8 +950,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                 decoration: BoxDecoration(
                   color: const Color(0xFF0F0F13),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-                ),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.05))),
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
@@ -1168,11 +962,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                           child: Image.asset(
                             getCircuitAssetPath(meetingName),
                             fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) => const SizedBox(),
-                          ),
-                        ),
-                      ),
-                    ),
+                            errorBuilder: (_, __, ___) => const SizedBox())))),
                     Positioned.fill(
                       child: CustomPaint(
                         painter: TrackPainter(
@@ -1180,13 +970,8 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                           telemetryList,
                           meetingName,
                           selectedDriverCode: activeCode,
-                          isLive: isLive,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                          isLive: isLive))),
+                  ])),
               const SizedBox(height: 14),
 
               // Sector & DRS Legend
@@ -1197,11 +982,8 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                   _buildMapLegendItem(const Color(0xFF00E5FF), 'SECTOR 2'),
                   _buildMapLegendItem(const Color(0xFFB388FF), 'SECTOR 3'),
                   _buildMapLegendItem(const Color(0xFF00E676), 'DRS ZONE'),
-                ],
-              ),
-            ],
-          ),
-        ),
+                ]),
+            ])),
         const SizedBox(height: 14),
 
         // Bottom Telemetry Strip for Selected Driver
@@ -1216,10 +998,8 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               : '8',
           throttlePct: targetTelemetry.status == 'DNF' ? '0' : '97',
           ersPct: '61',
-          isDnf: targetTelemetry.status == 'DNF' || targetTelemetry.status == 'RETIRED',
-        ),
-      ],
-    );
+          isDnf: targetTelemetry.status == 'DNF' || targetTelemetry.status == 'RETIRED'),
+      ]);
   }
 
   Widget _buildMapLegendItem(Color color, String label) {
@@ -1231,21 +1011,14 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
           height: 8,
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
+            borderRadius: BorderRadius.circular(2))),
         const SizedBox(width: 5),
         Text(
           label,
-          style: const TextStyle(
-            fontFamily: 'Formula1',
-            fontSize: 9,
+          style: const TextStyle( fontSize: 9,
             color: Color(0xFF8F909A),
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
+            fontWeight: FontWeight.bold)),
+      ]);
   }
 
   // ---------------------------------------------------------
@@ -1253,23 +1026,19 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   // ---------------------------------------------------------
   Widget _buildTeamRadioPanel(
     AsyncValue<List<TeamRadioItem>> radioAsync,
-    Color accentColor,
-  ) {
+    Color accentColor) {
     return radioAsync.when(
       loading: () => Column(
         children: List.generate(5, (_) => const Padding(
           padding: EdgeInsets.only(bottom: 8),
-          child: SkeletonBox(height: 72, borderRadius: 8),
-        )),
-      ),
+          child: SkeletonBox(height: 72, borderRadius: 8)))),
       error: (err, stack) => _buildFallbackRadioList(accentColor),
       data: (radios) {
         if (radios.isEmpty) {
           return _buildFallbackRadioList(accentColor);
         }
         return _buildRadioList(radios, accentColor);
-      },
-    );
+      });
   }
 
   Widget _buildRadioList(List<TeamRadioItem> radios, Color accentColor) {
@@ -1281,8 +1050,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
           decoration: BoxDecoration(
             color: const Color(0xFF141419),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFF202028)),
-          ),
+            border: Border.all(color: const Color(0xFF202028))),
           child: Row(
             children: [
               Icon(Icons.podcasts_rounded, color: accentColor, size: 18),
@@ -1292,45 +1060,28 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                 children: [
                   const Text(
                     'TEAM RADIO STREAM',
-                    style: TextStyle(
-                      fontFamily: 'Formula1',
-                      fontSize: 12,
+                    style: TextStyle( fontSize: 12,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
-                  ),
+                      color: Colors.white)),
                   Text(
                     '${radios.length} MESSAGES · LIVE SESSION',
-                    style: const TextStyle(
-                      fontFamily: 'Formula1Wide',
-                      fontSize: 8.5,
+                    style: const TextStyle( fontSize: 8.5,
                       color: Color(0xFF8F909A),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
+                      fontWeight: FontWeight.bold)),
+                ]),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: Colors.red.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: Colors.red),
-                ),
+                  border: Border.all(color: Colors.red)),
                 child: const Text(
                   'LIVE',
-                  style: TextStyle(
-                    fontFamily: 'Formula1Wide',
-                    fontSize: 8.5,
+                  style: TextStyle( fontSize: 8.5,
                     fontWeight: FontWeight.w900,
-                    color: Colors.redAccent,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+                    color: Colors.redAccent))),
+            ])),
         const SizedBox(height: 12),
 
         ListView.builder(
@@ -1357,12 +1108,9 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                   ? '0:0${(_playbackProgressMs ~/ 1000).toString().padLeft(2, '0')} / 0:17'
                   : '0:00 / 0:17',
               anim: _waveAnimController,
-              onTogglePlay: () => _toggleRadioPlayback(r.id, r.audioUrl),
-            );
-          },
-        ),
-      ],
-    );
+              onTogglePlay: () => _toggleRadioPlayback(r.id, r.audioUrl));
+          }),
+      ]);
   }
 
   Widget _buildFallbackRadioList(Color accentColor) {
@@ -1375,22 +1123,14 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
             SizedBox(height: 12),
             Text(
               'NO RADIO MESSAGES',
-              style: TextStyle(
-                fontFamily: 'Formula1Wide',
-                fontSize: 11,
+              style: TextStyle( fontSize: 11,
                 fontWeight: FontWeight.w900,
-                color: Color(0xFF5F606B),
-              ),
-            ),
+                color: Color(0xFF5F606B))),
             SizedBox(height: 4),
             Text(
               'Team radio will appear during live sessions',
-              style: TextStyle(fontSize: 12, color: Color(0xFF5F606B)),
-            ),
-          ],
-        ),
-      ),
-    );
+              style: TextStyle(fontSize: 12, color: Color(0xFF5F606B))),
+          ])));
   }
 
   // ---------------------------------------------------------
@@ -1398,8 +1138,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   // ---------------------------------------------------------
   Widget _buildTyreStrategyPanel(
     AsyncValue<List<LiveTelemetry>> telemetryAsync,
-    Color accentColor,
-  ) {
+    Color accentColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1408,8 +1147,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
           decoration: BoxDecoration(
             color: const Color(0xFF141419),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFF202028)),
-          ),
+            border: Border.all(color: const Color(0xFF202028))),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -1418,14 +1156,11 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               _buildCompoundLegendBadge('H', 'HARD', Colors.white),
               _buildCompoundLegendBadge('I', 'INTER', const Color(0xFF00E676)),
               _buildCompoundLegendBadge('W', 'WET', const Color(0xFF00B0FF)),
-            ],
-          ),
-        ),
+            ])),
         const SizedBox(height: 12),
         telemetryAsync.when(
           loading: () => Column(
-            children: List.generate(10, (_) => const SkeletonTimingRow()),
-          ),
+            children: List.generate(10, (_) => const SkeletonTimingRow())),
           error: (_, __) => _buildTyreEmptyState(),
           data: (telemetry) {
             if (telemetry.isEmpty) return _buildTyreEmptyState();
@@ -1457,10 +1192,8 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                       topLeft: Radius.circular(2),
                       topRight: Radius.circular(8),
                       bottomLeft: Radius.circular(2),
-                      bottomRight: Radius.circular(8),
-                    ),
-                    border: Border.all(color: const Color(0xFF202028)),
-                  ),
+                      bottomRight: Radius.circular(8)),
+                    border: Border.all(color: const Color(0xFF202028))),
                   child: Row(
                     children: [
                       Container(
@@ -1469,33 +1202,21 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                         margin: const EdgeInsets.only(right: 6),
                         decoration: BoxDecoration(
                           color: teamColor,
-                          borderRadius: BorderRadius.circular(1.5),
-                        ),
-                      ),
+                          borderRadius: BorderRadius.circular(1.5))),
                       SizedBox(
                         width: 22,
                         child: Text(
                           pos,
-                          style: const TextStyle(
-                            fontFamily: 'Formula1Wide',
-                            fontSize: 11,
+                          style: const TextStyle( fontSize: 11,
                             fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
+                            color: Colors.white))),
                       SizedBox(
                         width: 36,
                         child: Text(
                           code,
-                          style: const TextStyle(
-                            fontFamily: 'Formula1',
-                            fontSize: 12,
+                          style: const TextStyle( fontSize: 12,
                             fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
+                            color: Colors.white))),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Container(
@@ -1505,30 +1226,18 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                           decoration: BoxDecoration(
                             color: _tyreColor(tyre).withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(3),
-                            border: Border.all(color: _tyreColor(tyre), width: 1),
-                          ),
+                            border: Border.all(color: _tyreColor(tyre), width: 1)),
                           child: Text(
                             '$tyre · $tyreLife',
-                            style: TextStyle(
-                              fontFamily: 'Formula1',
-                              fontSize: 8.5,
+                            style: TextStyle( fontSize: 8.5,
                               fontWeight: FontWeight.bold,
-                              color: _tyreColor(tyre),
-                            ),
+                              color: _tyreColor(tyre)),
                             maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
-          },
-        ),
-      ],
-    );
+                            overflow: TextOverflow.ellipsis))),
+                    ]));
+              });
+          }),
+      ]);
   }
 
   Widget _buildTyreEmptyState() {
@@ -1541,22 +1250,14 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
             SizedBox(height: 12),
             Text(
               'NO TYRE DATA',
-              style: TextStyle(
-                fontFamily: 'Formula1Wide',
-                fontSize: 11,
+              style: TextStyle( fontSize: 11,
                 fontWeight: FontWeight.w900,
-                color: Color(0xFF5F606B),
-              ),
-            ),
+                color: Color(0xFF5F606B))),
             SizedBox(height: 4),
             Text(
               'Tyre strategy data will appear during live sessions',
-              style: TextStyle(fontSize: 12, color: Color(0xFF5F606B)),
-            ),
-          ],
-        ),
-      ),
-    );
+              style: TextStyle(fontSize: 12, color: Color(0xFF5F606B))),
+          ])));
   }
 
   Color _tyreColor(String compound) {
@@ -1580,32 +1281,20 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.18),
             shape: BoxShape.circle,
-            border: Border.all(color: color, width: 1.3),
-          ),
+            border: Border.all(color: color, width: 1.3)),
           child: Center(
             child: Text(
               code,
-              style: TextStyle(
-                fontFamily: 'Formula1',
-                fontSize: 9,
+              style: TextStyle( fontSize: 9,
                 fontWeight: FontWeight.w900,
-                color: color,
-              ),
-            ),
-          ),
-        ),
+                color: color)))),
         const SizedBox(width: 4),
         Text(
           name,
-          style: const TextStyle(
-            fontFamily: 'Formula1',
-            fontSize: 9,
+          style: const TextStyle( fontSize: 9,
             color: Color(0xFF8F909A),
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
+            fontWeight: FontWeight.bold)),
+      ]);
   }
 }
 // Widget classes extracted to ../widgets/ — see imports above.
@@ -1651,8 +1340,7 @@ class _ReplaySessionPickerState extends State<_ReplaySessionPicker> {
                 margin: const EdgeInsets.symmetric(vertical: 10),
                 width: 40,
                 height: 4,
-                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
-              ),
+                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2))),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
@@ -1660,43 +1348,31 @@ class _ReplaySessionPickerState extends State<_ReplaySessionPicker> {
                     if (_pickedRace != null) ...[
                       GestureDetector(
                         onTap: () => setState(() => _pickedRace = null),
-                        child: const Icon(Icons.chevron_left_rounded, color: Colors.cyanAccent, size: 22),
-                      ),
+                        child: const Icon(Icons.chevron_left_rounded, color: Colors.cyanAccent, size: 22)),
                       const SizedBox(width: 6),
                     ],
                     Expanded(
                       child: Text(
                         _pickedRace == null ? 'SELECT RACE' : 'SELECT SESSION',
-                        style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white),
-                      ),
-                    ),
+                        style: const TextStyle( fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white))),
                     GestureDetector(
                       onTap: () => Navigator.pop(ctx),
-                      child: const Icon(Icons.close, color: Colors.grey, size: 20),
-                    ),
-                  ],
-                ),
-              ),
+                      child: const Icon(Icons.close, color: Colors.grey, size: 20)),
+                  ])),
               const SizedBox(height: 4),
               if (_pickedRace != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
                   child: Text(
                     _pickedRace!.name,
-                    style: const TextStyle(fontFamily: 'Formula1', fontSize: 10, color: Colors.grey),
-                  ),
-                ),
+                    style: const TextStyle( fontSize: 10, color: Colors.grey))),
               const Divider(color: Color(0xFF202028)),
               Expanded(
                 child: _pickedRace == null
                     ? _buildRaceList(scrollController)
-                    : _buildSessionList(),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+                    : _buildSessionList()),
+            ]));
+      });
   }
 
   Widget _buildRaceList(ScrollController ctrl) {
@@ -1718,32 +1394,22 @@ class _ReplaySessionPickerState extends State<_ReplaySessionPicker> {
             children: [
               Text(
                 'RD ${race.round}',
-                style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 8, fontWeight: FontWeight.w900, color: Colors.grey),
-              ),
+                style: const TextStyle( fontSize: 8, fontWeight: FontWeight.w900, color: Colors.grey)),
               Text(
                 getCountryFlag(race.countryCode),
-                style: const TextStyle(fontSize: 16),
-              ),
-            ],
-          ),
+                style: const TextStyle(fontSize: 16)),
+            ]),
           title: Text(
             race.name.replaceAll(' Grand Prix', ' GP'),
-            style: TextStyle(
-              fontFamily: 'Formula1',
-              fontSize: 12,
+            style: TextStyle( fontSize: 12,
               fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
-              color: isSelected ? Colors.cyanAccent : Colors.white,
-            ),
-          ),
+              color: isSelected ? Colors.cyanAccent : Colors.white)),
           subtitle: Text(
             race.date.toIso8601String().substring(0, 10),
-            style: const TextStyle(fontFamily: 'Formula1', fontSize: 9, color: Colors.grey),
-          ),
+            style: const TextStyle( fontSize: 9, color: Colors.grey)),
           trailing: const Icon(Icons.chevron_right_rounded, color: Colors.grey, size: 18),
-          onTap: () => setState(() => _pickedRace = race),
-        );
-      },
-    );
+          onTap: () => setState(() => _pickedRace = race));
+      });
   }
 
   Widget _buildSessionList() {
@@ -1760,8 +1426,7 @@ class _ReplaySessionPickerState extends State<_ReplaySessionPicker> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF1A1A22),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3)),
-                ),
+                  border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3))),
                 child: Row(
                   children: [
                     Container(
@@ -1769,10 +1434,8 @@ class _ReplaySessionPickerState extends State<_ReplaySessionPicker> {
                       height: 40,
                       decoration: BoxDecoration(
                         color: Colors.cyanAccent.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(s['icon'] as IconData, color: Colors.cyanAccent, size: 20),
-                    ),
+                        shape: BoxShape.circle),
+                      child: Icon(s['icon'] as IconData, color: Colors.cyanAccent, size: 20)),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -1780,8 +1443,7 @@ class _ReplaySessionPickerState extends State<_ReplaySessionPicker> {
                         children: [
                           Text(
                             s['label'] as String,
-                            style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white),
-                          ),
+                            style: const TextStyle( fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white)),
                           const SizedBox(height: 2),
                           Text(
                             s['type'] == 'race'
@@ -1789,19 +1451,11 @@ class _ReplaySessionPickerState extends State<_ReplaySessionPicker> {
                                 : s['type'] == 'qualifying'
                                     ? 'Q1 → Q2 → Q3 session breakdown'
                                     : 'Sprint race final results',
-                            style: const TextStyle(fontFamily: 'Formula1', fontSize: 9, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
+                            style: const TextStyle( fontSize: 9, color: Colors.grey)),
+                        ])),
                     const Icon(Icons.play_circle_filled_rounded, color: Colors.cyanAccent, size: 22),
-                  ],
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
+                  ])))),
+      ]);
   }
 }
 
@@ -1880,11 +1534,7 @@ class _AnimatedTimingStack extends StatelessWidget {
               teamColor: teamColor,
               isSelected: isSelected,
               portraitAsset: driverMeta?.portraitAsset ?? '',
-              onTap: () => onDriverTap(code),
-            ),
-          );
-        }).toList(),
-      ),
-    );
+              onTap: () => onDriverTap(code)));
+        }).toList()));
   }
 }

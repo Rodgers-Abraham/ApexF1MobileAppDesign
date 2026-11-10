@@ -31,8 +31,7 @@ class FigmaTelemetryStrip extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF141419),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFF202028)),
-      ),
+        border: Border.all(color: const Color(0xFF202028))),
       child: Row(
         children: [
           Container(
@@ -41,8 +40,7 @@ class FigmaTelemetryStrip extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xFF222228),
-              border: Border.all(color: teamColor.withValues(alpha: 0.6), width: 1),
-            ),
+              border: Border.all(color: teamColor.withValues(alpha: 0.6), width: 1)),
             clipBehavior: Clip.antiAlias,
             child: driverMeta != null && driverMeta.portraitAsset.isNotEmpty
                 ? Image.asset(
@@ -50,20 +48,16 @@ class FigmaTelemetryStrip extends StatelessWidget {
                     fit: BoxFit.cover,
                     alignment: Alignment.topCenter,
                     errorBuilder: (context, error, stackTrace) => Center(
-                      child: Text(driverCode, style: TextStyle(fontFamily: 'Formula1', fontSize: 8, fontWeight: FontWeight.w900, color: teamColor)),
-                    ),
-                  )
-                : Center(child: Text(driverCode, style: TextStyle(fontFamily: 'Formula1', fontSize: 8, fontWeight: FontWeight.w900, color: teamColor))),
-          ),
+                      child: Text(driverCode, style: TextStyle( fontSize: 8, fontWeight: FontWeight.w900, color: teamColor))))
+                : Center(child: Text(driverCode, style: TextStyle( fontSize: 8, fontWeight: FontWeight.w900, color: teamColor)))),
           const SizedBox(width: 6),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('ONBOARD', style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 7, color: Color(0xFF8F909A), fontWeight: FontWeight.bold)),
-              Text(driverCode, style: const TextStyle(fontFamily: 'Formula1', fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white)),
-            ],
-          ),
+              const Text('ONBOARD', style: TextStyle( fontSize: 7, color: Color(0xFF8F909A), fontWeight: FontWeight.bold)),
+              Text(driverCode, style: const TextStyle( fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white)),
+            ]),
           const SizedBox(width: 8),
           Expanded(
             child: Row(
@@ -73,12 +67,8 @@ class FigmaTelemetryStrip extends StatelessWidget {
                 _buildStatCol(isDnf ? 'N' : gear, 'GEAR', Colors.white),
                 _buildStatCol(isDnf ? '0%' : '$throttlePct%', 'THR %', const Color(0xFFFFD600)),
                 _buildStatCol('$ersPct%', 'ERS %', const Color(0xFF00E5FF)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+              ])),
+        ]));
   }
 
   Widget _buildStatCol(String value, String label, Color valueColor) {
@@ -86,11 +76,9 @@ class FigmaTelemetryStrip extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          FittedBox(fit: BoxFit.scaleDown, child: Text(value, style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 11, fontWeight: FontWeight.w900, color: valueColor))),
+          FittedBox(fit: BoxFit.scaleDown, child: Text(value, style: TextStyle( fontSize: 11, fontWeight: FontWeight.w900, color: valueColor))),
           const SizedBox(height: 1),
-          FittedBox(fit: BoxFit.scaleDown, child: Text(label, style: const TextStyle(fontFamily: 'Formula1', fontSize: 7, color: Color(0xFF8F909A), fontWeight: FontWeight.bold))),
-        ],
-      ),
-    );
+          FittedBox(fit: BoxFit.scaleDown, child: Text(label, style: const TextStyle( fontSize: 7, color: Color(0xFF8F909A), fontWeight: FontWeight.bold))),
+        ]));
   }
 }

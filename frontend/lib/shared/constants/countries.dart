@@ -102,8 +102,7 @@ const List<CountryTz> kCountries = [
 CountryTz? findCountry(String name) {
   try {
     return kCountries.firstWhere(
-      (c) => c.name.toLowerCase() == name.toLowerCase(),
-    );
+      (c) => c.name.toLowerCase() == name.toLowerCase());
   } catch (_) {
     return null;
   }

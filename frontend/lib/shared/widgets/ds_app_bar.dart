@@ -40,8 +40,7 @@ class DSAppBar extends StatelessWidget implements PreferredSizeWidget {
               Text('APEX', style: DS.driverCode(size: 13, color: DS.textPrimary)),
               const SizedBox(width: 3),
               DSWidgets.redBadge('F1', size: 9),
-            ],
-          ),
+            ]),
           const SizedBox(width: 8),
           // Vertical divider
           Container(width: 1, height: 20, color: DS.outline),
@@ -50,11 +49,8 @@ class DSAppBar extends StatelessWidget implements PreferredSizeWidget {
             child: Text(
               subtitle.toUpperCase(),
               style: DS.labelCaps(size: 8, color: DS.textMuted),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
+              overflow: TextOverflow.ellipsis)),
+        ]),
       actions: [
         if (isLive || liveLabel != null) ...[
           _LiveBadge(label: liveLabel ?? 'LIVE'),
@@ -67,11 +63,9 @@ class DSAppBar extends StatelessWidget implements PreferredSizeWidget {
         ...?extraActions,
         GestureDetector(
           onTap: () => GoRouter.of(context).go('/settings'),
-          child: const _AvatarChip(),
-        ),
+          child: const _AvatarChip()),
         const SizedBox(width: 10),
-      ],
-    );
+      ]);
   }
 }
 
@@ -86,17 +80,14 @@ class _LiveBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: DS.red.withValues(alpha: 0.15),
         borderRadius: DS.aeroCornerSm,
-        border: Border.all(color: DS.red.withValues(alpha: 0.5)),
-      ),
+        border: Border.all(color: DS.red.withValues(alpha: 0.5))),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(width: 5, height: 5, decoration: BoxDecoration(color: DS.red, shape: BoxShape.circle)),
           const SizedBox(width: 4),
           Text(label, style: DS.labelCaps(size: 8, color: DS.red)),
-        ],
-      ),
-    );
+        ]));
   }
 }
 
@@ -111,17 +102,14 @@ class _LatencyChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: DS.surface2,
         borderRadius: DS.aeroCornerSm,
-        border: Border.all(color: DS.outline),
-      ),
+        border: Border.all(color: DS.outline)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.wifi, size: 9, color: DS.teal),
           const SizedBox(width: 3),
           Text('${ms}ms', style: DS.labelCaps(size: 8, color: DS.teal)),
-        ],
-      ),
-    );
+        ]));
   }
 }
 
@@ -135,10 +123,8 @@ class _AvatarChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: DS.surface3,
         shape: BoxShape.circle,
-        border: Border.all(color: DS.outline),
-      ),
-      child: Icon(Icons.person, size: 16, color: DS.textMuted),
-    );
+        border: Border.all(color: DS.outline)),
+      child: Icon(Icons.person, size: 16, color: DS.textMuted));
   }
 }
 
@@ -188,11 +174,7 @@ class _DSTickerStripState extends State<DSTickerStrip>
                   width: 5, height: 5,
                   decoration: BoxDecoration(
                     color: widget.dotColor ?? DS.green,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ),
+                    shape: BoxShape.circle)))),
             Padding(
               padding: const EdgeInsets.only(left: 22),
               child: SlideTransition(
@@ -200,13 +182,7 @@ class _DSTickerStripState extends State<DSTickerStrip>
                 child: Text(
                   '${widget.text}    ${widget.text}',
                   style: DS.labelCaps(size: 8, color: DS.textMuted),
-                  maxLines: 1,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+                  maxLines: 1))),
+          ])));
   }
 }

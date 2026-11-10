@@ -25,8 +25,7 @@ class ErrorRetryWidget extends StatelessWidget {
             Text(
               message ?? 'Something went wrong',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.grey, fontSize: 14, height: 1.5),
-            ),
+              style: const TextStyle(color: Colors.grey, fontSize: 14, height: 1.5)),
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: onRetry,
@@ -35,13 +34,7 @@ class ErrorRetryWidget extends StatelessWidget {
                 backgroundColor: Colors.redAccent,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+                  borderRadius: BorderRadius.circular(12)))),
+          ])));
   }
 }

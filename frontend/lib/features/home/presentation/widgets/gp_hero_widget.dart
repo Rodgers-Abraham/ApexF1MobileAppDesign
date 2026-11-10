@@ -51,14 +51,12 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
         message: 'Calendar unavailable. Check your connection.',
         icon: Icons.calendar_month_rounded,
         height: 100,
-        onRetry: () => ref.invalidate(calendarProvider),
-      ),
+        onRetry: () => ref.invalidate(calendarProvider)),
       data: (calendar) {
         if (calendar.isEmpty || nextRace == null) {
           return const SizedBox(
             height: 100,
-            child: Center(child: Text('No upcoming races', style: TextStyle(color: Colors.grey))),
-          );
+            child: Center(child: Text('No upcoming races', style: TextStyle(color: Colors.grey))));
         }
 
         final now = DateTime.now();
@@ -86,17 +84,14 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
               topLeft: Radius.circular(4),
               topRight: Radius.circular(18),
               bottomLeft: Radius.circular(4),
-              bottomRight: Radius.circular(18),
-            ),
+              bottomRight: Radius.circular(18)),
             border: Border.all(color: const Color(0xFF292932), width: 1),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.35),
                 blurRadius: 30,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
+                offset: const Offset(0, 10)),
+            ]),
           child: Stack(
             children: [
               Positioned(
@@ -109,10 +104,7 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
                     color: Color(0xFFFF1744),
                     boxShadow: [
                       BoxShadow(color: Color(0xFFFF1744), blurRadius: 12, spreadRadius: 1),
-                    ],
-                  ),
-                ),
-              ),
+                    ]))),
               Padding(
                 padding: const EdgeInsets.all(18),
                 child: Column(
@@ -130,11 +122,9 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
                               colors: [
                                 const Color(0xFF00E676).withValues(alpha: 0.22),
                                 const Color(0xFF00E676).withValues(alpha: 0.06),
-                              ],
-                            ),
+                              ]),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.6), width: 1.2),
-                          ),
+                            border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.6), width: 1.2)),
                           child: Row(
                             children: [
                               Container(
@@ -143,9 +133,7 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
                                 decoration: const BoxDecoration(
                                   color: Color(0xFF00E676),
                                   shape: BoxShape.circle,
-                                  boxShadow: [BoxShadow(color: Color(0xFF00E676), blurRadius: 8, spreadRadius: 2)],
-                                ),
-                              ),
+                                  boxShadow: [BoxShadow(color: Color(0xFF00E676), blurRadius: 8, spreadRadius: 2)])),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Column(
@@ -153,41 +141,28 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
                                   children: [
                                     Text(
                                       'LIVE ON TRACK · ${(sessionStatus?.sessionName ?? "PRACTICE 1").toUpperCase()}',
-                                      style: const TextStyle(
-                                        fontFamily: 'Formula1Wide',
-                                        fontSize: 9.5,
+                                      style: const TextStyle( fontSize: 9.5,
                                         fontWeight: FontWeight.w900,
                                         color: Color(0xFF00E676),
-                                        letterSpacing: 0.8,
-                                      ),
-                                    ),
+                                        letterSpacing: 0.8)),
                                     const SizedBox(height: 2),
                                     Text(
                                       '${sessionStatus?.meetingName ?? nextRace.name} · ${nextRace.circuit}',
-                                      style: const TextStyle(fontFamily: 'Formula1', fontSize: 9, color: Colors.white),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                                      style: const TextStyle( fontSize: 9, color: Colors.white)),
+                                  ])),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF00E676),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
+                                  borderRadius: BorderRadius.circular(4)),
                                 child: const Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Text('PITWALL', style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 8.5, fontWeight: FontWeight.w900, color: Colors.black)),
+                                    Text('PITWALL', style: TextStyle( fontSize: 8.5, fontWeight: FontWeight.w900, color: Colors.black)),
                                     SizedBox(width: 3),
                                     Icon(Icons.arrow_forward_ios_rounded, size: 9, color: Colors.black),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                                  ])),
+                            ]))),
                     ],
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,22 +174,17 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
                             children: [
                               Text(
                                 'FORMULA 1 · ROUND ${nextRace.round}',
-                                style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF8F909A), letterSpacing: 1.0),
-                              ),
+                                style: const TextStyle( fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF8F909A), letterSpacing: 1.0)),
                               const SizedBox(height: 5),
                               Text(
                                 nextRace.name.split(' ').first.toUpperCase(),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: AppFonts.wide(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white),
-                              ),
+                                style: AppFonts.wide(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white)),
                               const Text(
                                 'GRAND PRIX',
-                                style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 16, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic, color: Color(0xFFFF1744)),
-                              ),
-                            ],
-                          ),
-                        ),
+                                style: TextStyle( fontSize: 16, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic, color: Color(0xFFFF1744))),
+                            ])),
                         const SizedBox(width: 8),
                         Container(
                           width: 40,
@@ -222,12 +192,9 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
                           decoration: BoxDecoration(
                             color: const Color(0xFF101014),
                             shape: BoxShape.circle,
-                            border: Border.all(color: const Color(0xFF202028)),
-                          ),
-                          child: Center(child: Text(getCountryFlag(nextRace.countryCode), style: const TextStyle(fontSize: 20))),
-                        ),
-                      ],
-                    ),
+                            border: Border.all(color: const Color(0xFF202028))),
+                          child: Center(child: Text(getCountryFlag(nextRace.countryCode), style: const TextStyle(fontSize: 20)))),
+                      ]),
                     const SizedBox(height: 14),
                     // Next session strip (shown when next session isn't the race itself)
                     if (sessionIsNotRace && sessionDiff != null) ...[
@@ -237,8 +204,7 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
                         decoration: BoxDecoration(
                           color: const Color(0xFF1A1A22),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFF2E2E3A)),
-                        ),
+                          border: Border.all(color: const Color(0xFF2E2E3A))),
                         child: Row(
                           children: [
                             Container(
@@ -246,13 +212,10 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
                               decoration: BoxDecoration(
                                 color: Colors.cyanAccent.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(3),
-                                border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.5)),
-                              ),
+                                border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.5))),
                               child: Text(
                                 nextSession.name.toUpperCase(),
-                                style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 8, fontWeight: FontWeight.w900, color: Colors.cyanAccent),
-                              ),
-                            ),
+                                style: const TextStyle( fontSize: 8, fontWeight: FontWeight.w900, color: Colors.cyanAccent))),
                             const SizedBox(width: 8),
                             if (nextSessionRace?.name != nextRace.name)
                               Expanded(
@@ -260,9 +223,7 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
                                   nextSessionRace?.name.replaceAll(' Grand Prix', ' GP') ?? '',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontFamily: 'Formula1', fontSize: 9.5, color: Colors.white70),
-                                ),
-                              )
+                                  style: const TextStyle( fontSize: 9.5, color: Colors.white70)))
                             else
                               const Spacer(),
                             Column(
@@ -271,42 +232,32 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
                               children: [
                                 Text(
                                   _formatSessionCountdown(sessionDiff),
-                                  style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 10, fontWeight: FontWeight.w900, color: Colors.cyanAccent),
-                                ),
+                                  style: const TextStyle( fontSize: 10, fontWeight: FontWeight.w900, color: Colors.cyanAccent)),
                                 if (userTz != null)
                                   Text(
                                     fmtLocalTime(nextSession.dateTime.toUtc(), userTz),
-                                    style: const TextStyle(fontFamily: 'Formula1', fontSize: 8, color: Colors.white54),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
+                                    style: const TextStyle( fontSize: 8, color: Colors.white54)),
+                              ]),
+                          ])),
                     ],
                     // Race countdown header label
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Text(
                         'RACE STARTS IN',
-                        style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 8, fontWeight: FontWeight.bold, color: Color(0xFF8F909A), letterSpacing: 0.8),
-                      ),
-                    ),
+                        style: const TextStyle( fontSize: 8, fontWeight: FontWeight.bold, color: Color(0xFF8F909A), letterSpacing: 0.8))),
                     Container(
                       decoration: BoxDecoration(
                         color: const Color(0xFF070709).withValues(alpha: 0.8),
                         border: Border.all(color: const Color(0xFF202028)),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+                        borderRadius: BorderRadius.circular(4)),
                       child: Row(
                         children: [
                           _buildCountdownCell(d.toString().padLeft(2, '0'), 'DAYS', true),
                           _buildCountdownCell(h.toString().padLeft(2, '0'), 'HRS', true),
                           _buildCountdownCell(m.toString().padLeft(2, '0'), 'MIN', true),
                           _buildCountdownCell(s.toString().padLeft(2, '0'), 'SEC', false),
-                        ],
-                      ),
-                    ),
+                        ])),
                     const SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -319,10 +270,7 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
                                 getCircuitAssetPath(nextRace.name),
                                 height: 100,
                                 fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) => const SizedBox(height: 80),
-                              ),
-                            ),
-                          ),
+                                errorBuilder: (context, error, stackTrace) => const SizedBox(height: 80)))),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
@@ -332,29 +280,21 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
                                 Text(nextRace.circuit.toUpperCase(), textAlign: TextAlign.end, maxLines: 2, overflow: TextOverflow.ellipsis, style: AppFonts.wide(fontSize: 10.5, fontWeight: FontWeight.w900, color: Colors.white)),
                                 const SizedBox(height: 2),
                                 Text('${nextRace.countryCode} · 2026', style: AppFonts.number(fontSize: 8.5, color: const Color(0xFF8F909A))),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                              ])),
+                        ])),
                     const SizedBox(height: 12),
                     Container(
                       decoration: const BoxDecoration(
                         border: Border(
                           top: BorderSide(color: Color(0xFF202028), width: 1),
-                          bottom: BorderSide(color: Color(0xFF202028), width: 1),
-                        ),
-                      ),
+                          bottom: BorderSide(color: Color(0xFF202028), width: 1))),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       child: Row(
                         children: [
                           _buildHeroStat('58', 'LAPS', true),
                           _buildHeroStat('${nextRace.lengthKm}', 'KM', true),
                           _buildHeroStat('${nextRace.drsZones}', 'DRS ZONES', false),
-                        ],
-                      ),
-                    ),
+                        ])),
                     const SizedBox(height: 14),
                     Row(
                       children: [
@@ -366,25 +306,17 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
                             children: [
                               Text('PARTLY CLOUDY', maxLines: 1, overflow: TextOverflow.ellipsis, style: AppFonts.number(fontSize: 8.5, fontWeight: FontWeight.bold, color: Colors.white)),
                               Text('RAIN 10%', maxLines: 1, overflow: TextOverflow.ellipsis, style: AppFonts.number(fontSize: 7.5, color: const Color(0xFF8F909A))),
-                            ],
-                          ),
-                        ),
+                            ])),
                         const SizedBox(width: 8),
                         _buildWeatherCell('24°', 'AIR'),
                         const SizedBox(width: 8),
                         _buildWeatherCell('38°', 'TRACK'),
                         const SizedBox(width: 8),
                         _buildWeatherCell('45%', 'HUM'),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+                      ]),
+                  ])),
+            ]));
+      });
   }
 
   String _formatSessionCountdown(Duration d) {
@@ -398,17 +330,13 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          border: hasRightBorder ? const Border(right: BorderSide(color: Color(0xFF202028), width: 1)) : null,
-        ),
+          border: hasRightBorder ? const Border(right: BorderSide(color: Color(0xFF202028), width: 1)) : null),
         child: Column(
           children: [
             Text(value, style: AppFonts.number(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white)),
             const SizedBox(height: 2),
-            Text(label, style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 7, fontWeight: FontWeight.bold, color: Color(0xFF8F909A), letterSpacing: 0.8)),
-          ],
-        ),
-      ),
-    );
+            Text(label, style: const TextStyle( fontSize: 7, fontWeight: FontWeight.bold, color: Color(0xFF8F909A), letterSpacing: 0.8)),
+          ])));
   }
 
   Widget _buildHeroStat(String value, String label, bool hasRightBorder) {
@@ -416,17 +344,13 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
-          border: hasRightBorder ? const Border(right: BorderSide(color: Color(0xFF202028), width: 1)) : null,
-        ),
+          border: hasRightBorder ? const Border(right: BorderSide(color: Color(0xFF202028), width: 1)) : null),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(value, style: AppFonts.number(fontSize: 13, fontWeight: FontWeight.w900, color: Colors.white)),
-            Text(label, style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 7.5, fontWeight: FontWeight.bold, color: Color(0xFF8F909A))),
-          ],
-        ),
-      ),
-    );
+            Text(label, style: const TextStyle( fontSize: 7.5, fontWeight: FontWeight.bold, color: Color(0xFF8F909A))),
+          ])));
   }
 
   Widget _buildWeatherCell(String value, String label) {
@@ -435,8 +359,7 @@ class _GPHeroWidgetState extends ConsumerState<GPHeroWidget> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(value, style: AppFonts.number(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.white)),
-        Text(label, style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 6.5, color: Color(0xFF8F909A))),
-      ],
-    );
+        Text(label, style: const TextStyle( fontSize: 6.5, color: Color(0xFF8F909A))),
+      ]);
   }
 }

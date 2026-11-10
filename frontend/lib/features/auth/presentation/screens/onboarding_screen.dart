@@ -73,8 +73,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     } else {
       success = await ref.read(authProvider.notifier).register(
         email, password, name, teamName, '',
-        country: _selectedCountry?.name,
-      );
+        country: _selectedCountry?.name);
       if (success && mounted) {
         setState(() {
           _registeredName = name.isNotEmpty ? name : email.split('@').first;
@@ -96,10 +95,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           duration: const Duration(milliseconds: 280),
           switchInCurve: Curves.easeOut,
           switchOutCurve: Curves.easeIn,
-          child: _buildStep(authState, accent),
-        ),
-      ),
-    );
+          child: _buildStep(authState, accent))));
   }
 
   Widget _buildStep(AuthState authState, Color accent) {
@@ -109,8 +105,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           key: const ValueKey('team'),
           selectedTeam: _tempSelectedTeam,
           onTeamSelected: (t) => setState(() => _tempSelectedTeam = t),
-          onNext: _nextStep,
-        );
+          onNext: _nextStep);
       case OnboardingStep.selectCountry:
         return _CountrySelectStep(
           key: const ValueKey('country'),
@@ -121,8 +116,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           onCountrySelected: (c) => setState(() => _selectedCountry = c),
           onSearchChanged: (v) => setState(() => _countrySearch = v),
           onNext: _nextStep,
-          onBack: _backStep,
-        );
+          onBack: _backStep);
       case OnboardingStep.auth:
         return _AuthStep(
           key: ValueKey('auth_$_isLoginMode'),
@@ -142,16 +136,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           onBack: _backStep,
           onSubmit: _submitAuth,
           onTeamChanged: (t) => setState(() => _tempSelectedTeam = t),
-          onCountryTap: () => setState(() => _currentStep = OnboardingStep.selectCountry),
-        );
+          onCountryTap: () => setState(() => _currentStep = OnboardingStep.selectCountry));
       case OnboardingStep.celebration:
         return _CelebrationStep(
           key: const ValueKey('celebration'),
           driverName: _registeredName,
           team: _tempSelectedTeam,
           country: _selectedCountry,
-          onEnter: () => context.go('/'),
-        );
+          onEnter: () => context.go('/'));
     }
   }
 }
@@ -184,14 +176,11 @@ class _TeamSelectStep extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                 decoration: BoxDecoration(
                   color: DS.red,
-                  borderRadius: DS.aeroCornerSm,
-                ),
-                child: Text('APEX', style: DS.driverCode(size: 12, color: DS.redText)),
-              ),
+                  borderRadius: DS.aeroCornerSm),
+                child: Text('APEX', style: DS.driverCode(size: 12, color: DS.redText))),
               const SizedBox(width: 6),
               DSWidgets.redBadge('F1'),
-            ],
-          ),
+            ]),
           const SizedBox(height: 20),
           Text('CHOOSE YOUR', style: DS.labelCaps(size: 11, color: DS.textMuted)),
           const SizedBox(height: 4),
@@ -199,8 +188,7 @@ class _TeamSelectStep extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'Select your constructor. This sets your Pitwall theme and feed priority.',
-            style: DS.body(size: 12),
-          ),
+            style: DS.body(size: 12)),
           const SizedBox(height: 20),
           // Team grid
           GridView.builder(
@@ -210,8 +198,7 @@ class _TeamSelectStep extends StatelessWidget {
               crossAxisCount: 2,
               childAspectRatio: 1.9,
               crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-            ),
+              mainAxisSpacing: 10),
             itemCount: F1Team.values.length,
             itemBuilder: (context, i) {
               final team = F1Team.values[i];
@@ -230,9 +217,7 @@ class _TeamSelectStep extends StatelessWidget {
                     borderRadius: DS.aeroCorner,
                     border: Border.all(
                       color: isSelected ? tc : DS.outline,
-                      width: isSelected ? 1.5 : 1,
-                    ),
-                  ),
+                      width: isSelected ? 1.5 : 1)),
                   child: Row(
                     children: [
                       Container(
@@ -240,10 +225,7 @@ class _TeamSelectStep extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: tc,
                           borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(8),
-                          ),
-                        ),
-                      ),
+                            topLeft: Radius.circular(8)))),
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.all(10),
@@ -258,22 +240,14 @@ class _TeamSelectStep extends StatelessWidget {
                                       style: DS.driverCode(size: 13, color: isSelected ? tc : DS.textPrimary)),
                                   if (isSelected)
                                     Icon(Icons.check_circle_rounded, color: tc, size: 14),
-                                ],
-                              ),
+                                ]),
                               const SizedBox(height: 2),
                               Text(team.name, style: DS.body(size: 10, color: DS.textVariant), maxLines: 1, overflow: TextOverflow.ellipsis),
                               if (chassis.isNotEmpty)
                                 Text(chassis, style: DS.labelCaps(size: 8, color: DS.textMuted)),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
+                            ]))),
+                    ])));
+            }),
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
@@ -284,22 +258,14 @@ class _TeamSelectStep extends StatelessWidget {
                 duration: const Duration(milliseconds: 200),
                 decoration: BoxDecoration(
                   color: selectedTeam != null ? DS.red : DS.surface3,
-                  borderRadius: DS.aeroCorner,
-                ),
+                  borderRadius: DS.aeroCorner),
                 alignment: Alignment.center,
                 child: Text(
                   'CONFIRM ALLEGIANCE  →',
                   style: DS.driverCode(
                     size: 14,
-                    color: selectedTeam != null ? DS.redText : DS.textMuted,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+                    color: selectedTeam != null ? DS.redText : DS.textMuted))))),
+        ]));
   }
 
   String _teamCode(F1Team team) {
@@ -358,8 +324,7 @@ class _CountrySelectStep extends StatelessWidget {
             children: [
               GestureDetector(
                 onTap: onBack,
-                child: Icon(Icons.chevron_left_rounded, color: accent, size: 26),
-              ),
+                child: Icon(Icons.chevron_left_rounded, color: accent, size: 26)),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
@@ -368,12 +333,8 @@ class _CountrySelectStep extends StatelessWidget {
                     Text('RACE CONTROL TIME SYNC',
                         style: DS.labelCaps(size: 9, color: DS.textMuted)),
                     Text('SELECT YOUR LOCATION', style: DS.headline(size: 16)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+                  ])),
+            ])),
         // Search
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -381,8 +342,7 @@ class _CountrySelectStep extends StatelessWidget {
             decoration: BoxDecoration(
               color: DS.surface2,
               borderRadius: DS.aeroCorner,
-              border: Border.all(color: DS.outline),
-            ),
+              border: Border.all(color: DS.outline)),
             child: TextField(
               controller: searchController,
               style: DS.telemetry(size: 13),
@@ -392,11 +352,7 @@ class _CountrySelectStep extends StatelessWidget {
                 hintStyle: DS.telemetry(size: 12, color: DS.textMuted),
                 prefixIcon: const Icon(Icons.search, color: DS.textMuted, size: 18),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-          ),
-        ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12))))),
         const SizedBox(height: 10),
         // List
         Expanded(
@@ -417,32 +373,23 @@ class _CountrySelectStep extends StatelessWidget {
                     borderRadius: DS.aeroCorner,
                     border: Border.all(
                       color: isSelected ? accent : DS.outline,
-                      width: isSelected ? 1.5 : 1,
-                    ),
-                  ),
+                      width: isSelected ? 1.5 : 1)),
                   child: Row(
                     children: [
                       Text(c.flag, style: const TextStyle(fontSize: 20)),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: Text(c.name, style: DS.headlineMd(size: 13)),
-                      ),
+                        child: Text(c.name, style: DS.headlineMd(size: 13))),
                       DSWidgets.statusChip(
                         'UTC${c.utcOffset >= 0 ? '+' : ''}${c.utcOffset == c.utcOffset.truncateToDouble() ? c.utcOffset.toInt() : c.utcOffset} ${c.abbr}',
                         color: isSelected ? accent : DS.teal,
-                        size: 8,
-                      ),
+                        size: 8),
                       if (isSelected) ...[
                         const SizedBox(width: 6),
                         Icon(Icons.check_rounded, color: accent, size: 16),
                       ],
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
+                    ])));
+            })),
         // Continue button
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
@@ -454,21 +401,14 @@ class _CountrySelectStep extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   color: DS.red,
-                  borderRadius: DS.aeroCorner,
-                ),
+                  borderRadius: DS.aeroCorner),
                 alignment: Alignment.center,
                 child: Text(
                   selectedCountry != null
                       ? 'SYNC ${selectedCountry!.name.toUpperCase()}  →'
                       : 'SKIP — SET LATER  →',
-                  style: DS.driverCode(size: 13, color: DS.redText),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+                  style: DS.driverCode(size: 13, color: DS.redText)))))),
+      ]);
   }
 }
 
@@ -540,8 +480,7 @@ class _AuthStep extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: DS.surface1,
                       borderRadius: DS.aeroCorner,
-                      border: Border.all(color: DS.outline),
-                    ),
+                      border: Border.all(color: DS.outline)),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -550,8 +489,7 @@ class _AuthStep extends StatelessWidget {
                           height: 2,
                           width: 32,
                           color: DS.red,
-                          margin: const EdgeInsets.only(bottom: 10),
-                        ),
+                          margin: const EdgeInsets.only(bottom: 10)),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -559,13 +497,11 @@ class _AuthStep extends StatelessWidget {
                                 style: DS.headline(size: 16)),
                             DSWidgets.statusChip('SEC-LVL 1',
                                 color: DS.surface4),
-                          ],
-                        ),
+                          ]),
                         const SizedBox(height: 4),
                         Text(
                           'Enter paddock credentials to synchronize live pitwall telemetry.',
-                          style: DS.body(size: 12),
-                        ),
+                          style: DS.body(size: 12)),
                         const SizedBox(height: 16),
                         // Email
                         DSWidgets.inputField(
@@ -577,8 +513,7 @@ class _AuthStep extends StatelessWidget {
                           keyboardType: TextInputType.emailAddress,
                           underlineColor: DS.red,
                           validator: (v) => v == null || v.isEmpty || !v.contains('@')
-                              ? 'Valid email required' : null,
-                        ),
+                              ? 'Valid email required' : null),
                         const SizedBox(height: 14),
                         // Password
                         DSWidgets.inputField(
@@ -592,8 +527,7 @@ class _AuthStep extends StatelessWidget {
                           hint: '••••••••••••',
                           underlineColor: DS.orange,
                           validator: (v) => v == null || v.length < 6
-                              ? 'Min 6 characters' : null,
-                        ),
+                              ? 'Min 6 characters' : null),
                         const SizedBox(height: 10),
                         // Remember + forgot
                         Row(
@@ -603,8 +537,7 @@ class _AuthStep extends StatelessWidget {
                                 style: DS.labelCaps(size: 9, color: DS.textMuted)),
                             Text('LOST PASSKEY?',
                                 style: DS.labelCaps(size: 9, color: DS.orange)),
-                          ],
-                        ),
+                          ]),
                         const SizedBox(height: 14),
                         // Error message
                         if (errorMessage != null) ...[
@@ -614,8 +547,7 @@ class _AuthStep extends StatelessWidget {
                               color: DS.red.withValues(alpha: 0.1),
                               borderRadius: DS.aeroCornerSm,
                               border: Border.all(
-                                  color: DS.red.withValues(alpha: 0.4)),
-                            ),
+                                  color: DS.red.withValues(alpha: 0.4))),
                             child: Row(
                               children: [
                                 const Icon(Icons.error_outline_rounded,
@@ -625,9 +557,7 @@ class _AuthStep extends StatelessWidget {
                                     child: Text(errorMessage!,
                                         style: DS.body(
                                             size: 11, color: DS.red))),
-                              ],
-                            ),
-                          ),
+                              ])),
                           const SizedBox(height: 10),
                         ],
                         // CTA button
@@ -639,8 +569,7 @@ class _AuthStep extends StatelessWidget {
                             child: Container(
                               decoration: BoxDecoration(
                                 color: DS.red,
-                                borderRadius: DS.aeroCorner,
-                              ),
+                                borderRadius: DS.aeroCorner),
                               alignment: Alignment.center,
                               child: isLoading
                                   ? const SizedBox(
@@ -651,10 +580,7 @@ class _AuthStep extends StatelessWidget {
                                           color: DS.redText))
                                   : Text('SIGN IN TO PITWALL  →',
                                       style: DS.driverCode(
-                                          size: 14, color: DS.redText)),
-                            ),
-                          ),
-                        ),
+                                          size: 14, color: DS.redText))))),
                         const SizedBox(height: 16),
                         // Biometric divider
                         Row(
@@ -666,12 +592,10 @@ class _AuthStep extends StatelessWidget {
                                   const EdgeInsets.symmetric(horizontal: 10),
                               child: Text('OR BIOMETRIC AUTH',
                                   style: DS.labelCaps(
-                                      size: 8, color: DS.textMuted)),
-                            ),
+                                      size: 8, color: DS.textMuted))),
                             Expanded(
                                 child: Divider(color: DS.outline, height: 1)),
-                          ],
-                        ),
+                          ]),
                         const SizedBox(height: 14),
                         // Fingerprint
                         Center(
@@ -685,11 +609,9 @@ class _AuthStep extends StatelessWidget {
                                   borderRadius: const BorderRadius.all(
                                       Radius.circular(12)),
                                   border: Border.all(
-                                      color: DS.teal.withValues(alpha: 0.4)),
-                                ),
+                                      color: DS.teal.withValues(alpha: 0.4))),
                                 child: const Icon(Icons.fingerprint_rounded,
-                                    color: DS.teal, size: 30),
-                              ),
+                                    color: DS.teal, size: 30)),
                               const SizedBox(height: 6),
                               Text('TOUCH FOR INSTANT PADDOCK ACCESS',
                                   style: DS.labelCaps(
@@ -697,9 +619,7 @@ class _AuthStep extends StatelessWidget {
                               Text('BIOMETRIC_SENSOR // ACTIVE',
                                   style: DS.labelCaps(
                                       size: 8, color: DS.teal)),
-                            ],
-                          ),
-                        ),
+                            ])),
                         const SizedBox(height: 20),
                         // Register link
                         Center(
@@ -713,22 +633,11 @@ class _AuthStep extends StatelessWidget {
                                 child: Text(
                                   'REGISTER FIA SUPERLICENSE  ↗',
                                   style: DS.driverCode(
-                                      size: 13, color: DS.orange),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+                                      size: 13, color: DS.orange))),
+                            ])),
+                      ])),
+                ]))),
+        ]));
   }
 
   Widget _buildRegister(BuildContext context) {
@@ -756,8 +665,7 @@ class _AuthStep extends StatelessWidget {
               decoration: BoxDecoration(
                 color: DS.surface1,
                 borderRadius: DS.aeroCorner,
-                border: Border.all(color: DS.outline),
-              ),
+                border: Border.all(color: DS.outline)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -766,8 +674,7 @@ class _AuthStep extends StatelessWidget {
                     children: [
                       DSWidgets.statusChip('FIA DIGITAL CREDENTIAL  |  CLASS A-SPEC'),
                       Text('#SL-2026', style: DS.telemetry(size: 11, color: DS.orange)),
-                    ],
-                  ),
+                    ]),
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -775,14 +682,11 @@ class _AuthStep extends StatelessWidget {
                           width: 3, height: 32, color: DS.red,
                           margin: const EdgeInsets.only(right: 10)),
                       Text('APEX SUPERLICENSE', style: DS.display(size: 22)),
-                    ],
-                  ),
+                    ]),
                   const SizedBox(height: 4),
                   Text('STAGE 01 // DRIVER PROFILE REGISTRATION',
                       style: DS.labelCaps(size: 9, color: DS.textMuted)),
-                ],
-              ),
-            ),
+                ])),
             const SizedBox(height: 14),
             // ── Credentials form ──────────────────────────────────────────
             Container(
@@ -790,8 +694,7 @@ class _AuthStep extends StatelessWidget {
               decoration: BoxDecoration(
                 color: DS.surface1,
                 borderRadius: DS.aeroCorner,
-                border: Border.all(color: DS.outline),
-              ),
+                border: Border.all(color: DS.outline)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -802,8 +705,7 @@ class _AuthStep extends StatelessWidget {
                           style: DS.labelCaps(size: 9, color: DS.teal)),
                       Text('FIELDS: REQUIRED',
                           style: DS.labelCaps(size: 9, color: DS.textMuted)),
-                    ],
-                  ),
+                    ]),
                   const SizedBox(height: 14),
                   DSWidgets.inputField(
                     label: 'DRIVER FULL NAME',
@@ -813,8 +715,7 @@ class _AuthStep extends StatelessWidget {
                     hint: 'Alexander Vance',
                     underlineColor: DS.teal,
                     validator: (v) =>
-                        v == null || v.isEmpty ? 'Name required' : null,
-                  ),
+                        v == null || v.isEmpty ? 'Name required' : null),
                   const SizedBox(height: 14),
                   DSWidgets.inputField(
                     label: 'PADDOCK COMM EMAIL',
@@ -826,8 +727,7 @@ class _AuthStep extends StatelessWidget {
                     underlineColor: DS.red,
                     validator: (v) =>
                         v == null || v.isEmpty || !v.contains('@')
-                            ? 'Valid email required' : null,
-                  ),
+                            ? 'Valid email required' : null),
                   const SizedBox(height: 14),
                   // Password with strength bar
                   DSWidgets.inputField(
@@ -841,8 +741,7 @@ class _AuthStep extends StatelessWidget {
                     hint: '••••••••••••',
                     underlineColor: DS.orange,
                     validator: (v) =>
-                        v == null || v.length < 6 ? 'Min 6 characters' : null,
-                  ),
+                        v == null || v.length < 6 ? 'Min 6 characters' : null),
                   const SizedBox(height: 6),
                   // Strength bar
                   Row(
@@ -854,12 +753,8 @@ class _AuthStep extends StatelessWidget {
                           margin: const EdgeInsets.only(right: 3),
                           decoration: BoxDecoration(
                             color: segColor,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
+                            borderRadius: BorderRadius.circular(2))));
+                    })),
                   if (strength > 0)
                     Align(
                       alignment: Alignment.centerRight,
@@ -867,13 +762,8 @@ class _AuthStep extends StatelessWidget {
                         padding: const EdgeInsets.only(top: 3),
                         child: Text(
                           '${_strengthPct(strength)}% HARDENED',
-                          style: DS.labelCaps(size: 8, color: DS.teal),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
+                          style: DS.labelCaps(size: 8, color: DS.teal)))),
+                ])),
             const SizedBox(height: 14),
             // ── Country sync ──────────────────────────────────────────────
             GestureDetector(
@@ -883,8 +773,7 @@ class _AuthStep extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: DS.surface1,
                   borderRadius: DS.aeroCorner,
-                  border: Border.all(color: DS.outline),
-                ),
+                  border: Border.all(color: DS.outline)),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -898,12 +787,10 @@ class _AuthStep extends StatelessWidget {
                             const SizedBox(width: 6),
                             Text('RACE CONTROL TIME SYNC',
                                 style: DS.labelCaps(size: 9, color: DS.teal)),
-                          ],
-                        ),
+                          ]),
                         Text('GPS DETECTED',
                             style: DS.labelCaps(size: 9, color: DS.textMuted)),
-                      ],
-                    ),
+                      ]),
                     const SizedBox(height: 10),
                     if (selectedCountry != null) ...[
                       Row(
@@ -921,13 +808,10 @@ class _AuthStep extends StatelessWidget {
                                     '+${selectedCountry!.utcOffset > 0 ? '' : ''}${selectedCountry!.utcOffset.toString()} ${selectedCountry!.abbr} // AUTO-SYNC CIRCUITS',
                                     color: DS.teal,
                                     size: 8),
-                              ],
-                            ),
-                          ),
+                              ])),
                           Text('CHANGE  ›',
                               style: DS.labelCaps(size: 9, color: DS.orange)),
-                        ],
-                      ),
+                        ]),
                     ] else ...[
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -936,13 +820,9 @@ class _AuthStep extends StatelessWidget {
                               style: DS.body(size: 12, color: DS.textMuted)),
                           Text('SELECT  ›',
                               style: DS.labelCaps(size: 9, color: DS.orange)),
-                        ],
-                      ),
+                        ]),
                     ],
-                  ],
-                ),
-              ),
-            ),
+                  ]))),
             const SizedBox(height: 14),
             // ── Error message ─────────────────────────────────────────────
             if (errorMessage != null) ...[
@@ -952,8 +832,7 @@ class _AuthStep extends StatelessWidget {
                   color: DS.red.withValues(alpha: 0.1),
                   borderRadius: DS.aeroCornerSm,
                   border:
-                      Border.all(color: DS.red.withValues(alpha: 0.4)),
-                ),
+                      Border.all(color: DS.red.withValues(alpha: 0.4))),
                 child: Row(
                   children: [
                     const Icon(Icons.error_outline_rounded,
@@ -962,9 +841,7 @@ class _AuthStep extends StatelessWidget {
                     Expanded(
                         child:
                             Text(errorMessage!, style: DS.body(size: 11, color: DS.red))),
-                  ],
-                ),
-              ),
+                  ])),
               const SizedBox(height: 14),
             ],
             // ── FIA terms ─────────────────────────────────────────────────
@@ -978,20 +855,15 @@ class _AuthStep extends StatelessWidget {
                     color: DS.tealDark.withValues(alpha: 0.3),
                     borderRadius: const BorderRadius.all(Radius.circular(3)),
                     border:
-                        Border.all(color: DS.teal.withValues(alpha: 0.6)),
-                  ),
+                        Border.all(color: DS.teal.withValues(alpha: 0.6))),
                   child: const Icon(Icons.check_rounded,
-                      color: DS.teal, size: 12),
-                ),
+                      color: DS.teal, size: 12)),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'I agree to the FIA Trackside Data Regulations and Live Telemetry Broadcast terms. CODE: FIA-APPX-2026-V4 // INCL. GPS, SENSOR LOGGING & TELEMETRY FEEDS',
-                    style: DS.body(size: 10),
-                  ),
-                ),
-              ],
-            ),
+                    style: DS.body(size: 10))),
+              ]),
             const SizedBox(height: 20),
             // ── CTA button ────────────────────────────────────────────────
             SizedBox(
@@ -1002,8 +874,7 @@ class _AuthStep extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     color: DS.red,
-                    borderRadius: DS.aeroCorner,
-                  ),
+                    borderRadius: DS.aeroCorner),
                   alignment: Alignment.center,
                   child: isLoading
                       ? const SizedBox(
@@ -1012,10 +883,7 @@ class _AuthStep extends StatelessWidget {
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: DS.redText))
                       : Text('ISSUE SUPERLICENSE & ENTER  →',
-                          style: DS.driverCode(size: 13, color: DS.redText)),
-                ),
-              ),
-            ),
+                          style: DS.driverCode(size: 13, color: DS.redText))))),
             const SizedBox(height: 14),
             Center(
               child: GestureDetector(
@@ -1029,15 +897,8 @@ class _AuthStep extends StatelessWidget {
                       TextSpan(
                           text: 'SIGN IN  →',
                           style: DS.driverCode(size: 12, color: DS.orange)),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+                    ])))),
+          ])));
   }
 
   String _strengthLabel(int s) {
@@ -1075,12 +936,10 @@ class _LoginHero extends StatelessWidget {
         children: [
           // Dot-grid background
           Positioned.fill(
-            child: CustomPaint(painter: _DotGridPainter()),
-          ),
+            child: CustomPaint(painter: _DotGridPainter())),
           // Track curve SVG (simulated with CustomPainter)
           Positioned.fill(
-            child: CustomPaint(painter: _TrackCurvePainter()),
-          ),
+            child: CustomPaint(painter: _TrackCurvePainter())),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1098,10 +957,8 @@ class _LoginHero extends StatelessWidget {
                           style: DS.telemetry(
                               size: 9, color: DS.orange)
                               .copyWith(fontWeight: FontWeight.w700)),
-                    ],
-                  ),
-                ],
-              ),
+                    ]),
+                ]),
               const SizedBox(height: 20),
               // FIA portal label
               Row(
@@ -1111,8 +968,7 @@ class _LoginHero extends StatelessWidget {
                       margin: const EdgeInsets.only(right: 8)),
                   Text('FIA TELEMETRY PORTAL // PRO PASS',
                       style: DS.labelCaps(size: 9, color: DS.textVariant)),
-                ],
-              ),
+                ]),
               const SizedBox(height: 6),
               Text('BACK ON TRACK', style: DS.display(size: 28)),
               const SizedBox(height: 6),
@@ -1126,8 +982,7 @@ class _LoginHero extends StatelessWidget {
                   Text('SESSION: FP2 SYNC',
                       style: DS.telemetry(
                           size: 10, color: DS.textVariant)),
-                ],
-              ),
+                ]),
               const SizedBox(height: 16),
               // Telemetry speed-strip + latency
               Row(
@@ -1143,17 +998,12 @@ class _LoginHero extends StatelessWidget {
                           color: DS.orange,
                           margin: const EdgeInsets.only(right: 3)),
                       Container(width: 6, height: 4, color: DS.teal),
-                    ],
-                  ),
+                    ]),
                   Text('SERVER LATENCY: 14MS // SECTOR 1-3 LINKED',
                       style: DS.labelCaps(size: 7, color: DS.textMuted)),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+                ]),
+            ]),
+        ]));
   }
 }
 
@@ -1183,13 +1033,11 @@ class _TrackCurvePainter extends CustomPainter {
     path.cubicTo(
       size.width * 0.65, size.height * 0.05,
       size.width * 0.35, size.height * 0.3,
-      size.width * 0.42, size.height * 0.65,
-    );
+      size.width * 0.42, size.height * 0.65);
     path.cubicTo(
       size.width * 0.5, size.height * 0.9,
       size.width * 0.15, size.height * 0.9,
-      -10, size.height,
-    );
+      -10, size.height);
 
     final paint = Paint()
       ..style = PaintingStyle.stroke
@@ -1197,8 +1045,7 @@ class _TrackCurvePainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topRight,
         end: Alignment.bottomLeft,
-        colors: [DS.orange, DS.red, DS.teal],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+        colors: [DS.orange, DS.red, DS.teal]).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     canvas.save();
     canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
@@ -1239,8 +1086,7 @@ class _CelebrationStepState extends State<_CelebrationStep>
     super.initState();
     _pulseCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1600),
-    )..repeat(reverse: true);
+      duration: const Duration(milliseconds: 1600))..repeat(reverse: true);
   }
 
   @override
@@ -1267,8 +1113,7 @@ class _CelebrationStepState extends State<_CelebrationStep>
             decoration: BoxDecoration(
               color: DS.surface0,
               borderRadius: DS.aeroCornerSm,
-              border: Border.all(color: DS.outline),
-            ),
+              border: Border.all(color: DS.outline)),
             child: Column(
               children: [
                 Row(
@@ -1281,21 +1126,15 @@ class _CelebrationStepState extends State<_CelebrationStep>
                         decoration: BoxDecoration(
                           color: DS.teal
                               .withValues(alpha: 0.4 + 0.6 * _pulseCtrl.value),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
+                          shape: BoxShape.circle))),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         'CREDENTIAL VERIFIED // ENCRYPTED LINK ESTABLISHED',
                         style: DS.labelCaps(size: 8, color: DS.teal),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
+                        overflow: TextOverflow.ellipsis)),
                     DSWidgets.statusChip('#SL-2026-A${Random().nextInt(900) + 100}', size: 7),
-                  ],
-                ),
+                  ]),
                 const SizedBox(height: 6),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1310,23 +1149,18 @@ class _CelebrationStepState extends State<_CelebrationStep>
                         Text('11ms',
                             style: DS.telemetry(size: 9, color: DS.teal)
                                 .copyWith(fontWeight: FontWeight.w700)),
-                      ],
-                    ),
+                      ]),
                     Text('NODE: PADDOCK_VIP // 52.67.108.4',
                         style: DS.telemetry(size: 8, color: DS.textVariant)),
-                  ],
-                ),
-              ],
-            ),
-          ),
+                  ]),
+              ])),
           const SizedBox(height: 14),
           // ── Hero celebration card ──────────────────────────────────────
           Container(
             decoration: BoxDecoration(
               color: DS.surface1,
               borderRadius: DS.aeroCorner,
-              border: Border.all(color: DS.outline),
-            ),
+              border: Border.all(color: DS.outline)),
             child: Stack(
               children: [
                 // AUTH 100% ribbon (top-right)
@@ -1349,14 +1183,7 @@ class _CelebrationStepState extends State<_CelebrationStep>
                             child: Text(
                               'AUTH 100%',
                               textAlign: TextAlign.center,
-                              style: DS.labelCaps(size: 7, color: DS.redText),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                              style: DS.labelCaps(size: 7, color: DS.redText)))))))),
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -1373,13 +1200,10 @@ class _CelebrationStepState extends State<_CelebrationStep>
                               color: DS.surface0,
                               border: Border.all(
                                   color: DS.teal
-                                      .withValues(alpha: 0.3 + 0.4 * _pulseCtrl.value)),
-                            ),
+                                      .withValues(alpha: 0.3 + 0.4 * _pulseCtrl.value))),
                             child: const Icon(Icons.security_rounded,
-                                color: DS.red, size: 36),
-                          );
-                        },
-                      ),
+                                color: DS.red, size: 36));
+                        }),
                       const SizedBox(height: 12),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -1389,8 +1213,7 @@ class _CelebrationStepState extends State<_CelebrationStep>
                           DSWidgets.statusChip(
                               'CLASS A-SPEC // TRACKSIDE ACCESS',
                               color: DS.teal, size: 8),
-                        ],
-                      ),
+                        ]),
                       const SizedBox(height: 10),
                       Text('SUPERLICENSE ISSUED',
                           style: DS.headline(size: 20),
@@ -1412,15 +1235,9 @@ class _CelebrationStepState extends State<_CelebrationStep>
                                 text:
                                     '. Your credential is authenticated on the global telemetry mesh.',
                                 style: DS.body(size: 13)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+                          ])),
+                    ])),
+              ])),
           const SizedBox(height: 14),
           // ── Digital credential card ────────────────────────────────────
           DSWidgets.leftAccentCard(
@@ -1439,12 +1256,9 @@ class _CelebrationStepState extends State<_CelebrationStep>
                               style: DS.labelCaps(size: 8, color: DS.textMuted)),
                           Text('APEX F1 DIGITAL CREDENTIAL',
                               style: DS.headlineMd(size: 13)),
-                        ],
-                      ),
-                    ),
+                        ])),
                     DSWidgets.statusChip('ACTIVE S26', color: DS.teal),
-                  ],
-                ),
+                  ]),
                 const SizedBox(height: 10),
                 Row(
                   children: [
@@ -1455,9 +1269,7 @@ class _CelebrationStepState extends State<_CelebrationStep>
                         widget.driverName.isNotEmpty
                             ? widget.driverName.substring(0, 1).toUpperCase()
                             : 'D',
-                        style: DS.driverCode(size: 20, color: tc),
-                      ),
-                    ),
+                        style: DS.driverCode(size: 20, color: tc))),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -1474,16 +1286,12 @@ class _CelebrationStepState extends State<_CelebrationStep>
                                     style: const TextStyle(fontSize: 12)),
                               Text(teamName,
                                   style: DS.body(size: 11, color: tc)),
-                            ],
-                          ),
+                            ]),
                           if (chassis.isNotEmpty)
                             Text(chassis,
                                 style: DS.labelCaps(size: 8, color: DS.textMuted)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                        ])),
+                  ]),
                 const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1500,10 +1308,8 @@ class _CelebrationStepState extends State<_CelebrationStep>
                                 style: DS.labelCaps(size: 7, color: DS.textMuted)),
                             Text('256-BIT CRYPTO TOKEN',
                                 style: DS.labelCaps(size: 7, color: DS.textVariant)),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ]),
+                      ]),
                     Row(
                       children: [
                         const Icon(Icons.verified_user_rounded,
@@ -1511,13 +1317,9 @@ class _CelebrationStepState extends State<_CelebrationStep>
                         const SizedBox(width: 4),
                         Text('CHIP ACTIVE',
                             style: DS.labelCaps(size: 8, color: DS.teal)),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+                      ]),
+                  ]),
+              ])),
           const SizedBox(height: 14),
           // ── Privileges grid ───────────────────────────────────────────
           Text('SYSTEM PRIVILEGES ALLOCATED',
@@ -1535,28 +1337,23 @@ class _CelebrationStepState extends State<_CelebrationStep>
                 icon: Icons.bar_chart_rounded,
                 label: 'LIVE PITWALL TELEMETRY',
                 status: 'UNRESTRICTED',
-                dotColor: DS.green,
-              ),
+                dotColor: DS.green),
               _PrivilegeTile(
                 icon: Icons.radio_rounded,
                 label: 'TEAM RADIO STREAM',
                 status: 'UNFILTERED COMMS',
-                dotColor: DS.orange,
-              ),
+                dotColor: DS.orange),
               _PrivilegeTile(
                 icon: Icons.bar_chart_sharp,
                 label: 'PREDICTOR LEAGUE',
                 status: '100 PTS SEED',
-                dotColor: DS.green,
-              ),
+                dotColor: DS.green),
               _PrivilegeTile(
                 icon: Icons.psychology_rounded,
                 label: 'AI STRATEGIST (GEMINI)',
                 status: 'ARMED & SYNCED',
-                dotColor: DS.red,
-              ),
-            ],
-          ),
+                dotColor: DS.red),
+            ]),
           const SizedBox(height: 20),
           // ── Enter CTA ────────────────────────────────────────────────
           SizedBox(
@@ -1567,8 +1364,7 @@ class _CelebrationStepState extends State<_CelebrationStep>
               child: Container(
                 decoration: BoxDecoration(
                   color: DS.red,
-                  borderRadius: DS.aeroCorner,
-                ),
+                  borderRadius: DS.aeroCorner),
                 alignment: Alignment.center,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1580,11 +1376,7 @@ class _CelebrationStepState extends State<_CelebrationStep>
                         style: DS.driverCode(size: 14, color: DS.redText)),
                     Text('  SESSION READY  →',
                         style: DS.telemetry(size: 12, color: DS.redText)),
-                  ],
-                ),
-              ),
-            ),
-          ),
+                  ])))),
           const SizedBox(height: 10),
           // Ghost buttons
           Row(
@@ -1594,8 +1386,7 @@ class _CelebrationStepState extends State<_CelebrationStep>
                   height: 42,
                   decoration: BoxDecoration(
                     borderRadius: DS.aeroCornerSm,
-                    border: Border.all(color: DS.outline),
-                  ),
+                    border: Border.all(color: DS.outline)),
                   alignment: Alignment.center,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1605,18 +1396,14 @@ class _CelebrationStepState extends State<_CelebrationStep>
                       const SizedBox(width: 6),
                       Text('SAVE TO WALLET',
                           style: DS.labelCaps(size: 8, color: DS.textMuted)),
-                    ],
-                  ),
-                ),
-              ),
+                    ]))),
               const SizedBox(width: 10),
               Expanded(
                 child: Container(
                   height: 42,
                   decoration: BoxDecoration(
                     borderRadius: DS.aeroCornerSm,
-                    border: Border.all(color: DS.outline),
-                  ),
+                    border: Border.all(color: DS.outline)),
                   alignment: Alignment.center,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1626,12 +1413,8 @@ class _CelebrationStepState extends State<_CelebrationStep>
                       const SizedBox(width: 6),
                       Text('SHARE CREDENTIAL',
                           style: DS.labelCaps(size: 8, color: DS.textMuted)),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+                    ]))),
+            ]),
           const SizedBox(height: 10),
           // Bottom ticker
           Container(
@@ -1649,15 +1432,9 @@ class _CelebrationStepState extends State<_CelebrationStep>
                   child: Text(
                     'LAS VEGAS CIRCUIT // NEXT SESSION GREEN LIGHT IN 11D 14H 22M',
                     style: DS.labelCaps(size: 8, color: DS.teal),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+                    overflow: TextOverflow.ellipsis)),
+              ])),
+        ]));
   }
 }
 
@@ -1681,8 +1458,7 @@ class _PrivilegeTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: DS.surface2,
         borderRadius: DS.aeroCornerSm,
-        border: Border.all(color: DS.outline),
-      ),
+        border: Border.all(color: DS.outline)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1695,8 +1471,7 @@ class _PrivilegeTile extends StatelessWidget {
                   height: 7,
                   decoration: BoxDecoration(
                       color: dotColor, shape: BoxShape.circle)),
-            ],
-          ),
+            ]),
           const Spacer(),
           Text(label,
               style: DS.labelCaps(size: 7, color: DS.textMuted),
@@ -1704,8 +1479,6 @@ class _PrivilegeTile extends StatelessWidget {
           Text(status,
               style: DS.headlineMd(size: 11),
               maxLines: 1, overflow: TextOverflow.ellipsis),
-        ],
-      ),
-    );
+        ]));
   }
 }

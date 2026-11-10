@@ -39,8 +39,7 @@ final GoRouter appRouter = GoRouter(
       path: '/onboarding',
       builder: (BuildContext context, GoRouterState state) {
         return const OnboardingScreen();
-      },
-    ),
+      }),
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
       builder: (BuildContext context, GoRouterState state, Widget child) {
@@ -51,45 +50,36 @@ final GoRouter appRouter = GoRouter(
           path: '/',
           builder: (BuildContext context, GoRouterState state) {
             return const PitWallScreen();
-          },
-        ),
+          }),
         GoRoute(
           path: '/standings',
           builder: (BuildContext context, GoRouterState state) {
             return const StandingsScreen();
-          },
-        ),
+          }),
         GoRoute(
           path: '/live',
           builder: (BuildContext context, GoRouterState state) {
             return const LiveTrackerScreen();
-          },
-        ),
+          }),
         GoRoute(
           path: '/history',
           builder: (BuildContext context, GoRouterState state) {
             return const HistoryScreen();
-          },
-        ),
+          }),
         GoRoute(
           path: '/predictor',
           builder: (BuildContext context, GoRouterState state) {
             return const PredictorScreen();
-          },
-        ),
+          }),
         GoRoute(
           path: '/chat',
           builder: (BuildContext context, GoRouterState state) {
             return const ChatScreen();
-          },
-        ),
+          }),
         GoRoute(
           path: '/settings',
           builder: (BuildContext context, GoRouterState state) {
             return const SettingsScreen();
-          },
-        ),
-      ],
-    ),
-  ],
-);
+          }),
+      ]),
+  ]);

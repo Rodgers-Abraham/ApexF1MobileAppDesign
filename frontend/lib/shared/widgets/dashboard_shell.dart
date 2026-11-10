@@ -65,9 +65,7 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topRight: Radius.circular(0),
-          bottomRight: Radius.circular(0),
-        ),
-      ),
+          bottomRight: Radius.circular(0))),
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,8 +74,7 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
             Container(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
               decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: DS.outline)),
-              ),
+                border: Border(bottom: BorderSide(color: DS.outline))),
               child: Row(
                 children: [
                   Container(
@@ -85,9 +82,7 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
                     height: 36,
                     decoration: BoxDecoration(
                       color: DS.red,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
+                      borderRadius: BorderRadius.circular(2))),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,19 +92,14 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
                           Text('APEX', style: DS.driverCode(size: 14, color: DS.textPrimary)),
                           const SizedBox(width: 4),
                           DSWidgets.redBadge('F1', size: 9),
-                        ],
-                      ),
+                        ]),
                       Text('MORE OPTIONS', style: DS.labelCaps(size: 8, color: DS.textMuted)),
-                    ],
-                  ),
+                    ]),
                   const Spacer(),
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
-                    child: Icon(Icons.close, size: 18, color: DS.textMuted),
-                  ),
-                ],
-              ),
-            ),
+                    child: Icon(Icons.close, size: 18, color: DS.textMuted)),
+                ])),
             const SizedBox(height: 8),
 
             // Menu items with connecting line (UX Law 5 — Connectedness)
@@ -128,26 +118,19 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
                             padding: const EdgeInsets.only(top: 20, left: 23),
                             child: Container(
                               width: 1,
-                              color: DS.outline,
-                            ),
-                          ),
+                              color: DS.outline)),
                           Expanded(
                             child: Column(
                               children: items.map((item) {
                                 return _buildDrawerMenuItem(context, item);
-                              }).toList(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                              }).toList())),
+                        ])),
                     const Spacer(),
 
                     // Sign out at bottom
                     Container(
                       decoration: BoxDecoration(
-                        border: Border(top: BorderSide(color: DS.outline)),
-                      ),
+                        border: Border(top: BorderSide(color: DS.outline))),
                       child: Padding(
                         padding: const EdgeInsets.only(top: 12, bottom: 8),
                         child: GestureDetector(
@@ -161,20 +144,14 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
                             decoration: BoxDecoration(
                               color: DS.red.withValues(alpha: 0.08),
                               borderRadius: DS.aeroCornerSm,
-                              border: Border.all(color: DS.red.withValues(alpha: 0.3)),
-                            ),
+                              border: Border.all(color: DS.red.withValues(alpha: 0.3))),
                             child: Row(
                               children: [
                                 const SizedBox(width: 8),
                                 Icon(Icons.logout_rounded, size: 18, color: DS.red),
                                 const SizedBox(width: 12),
                                 Text('SIGN OUT', style: DS.labelCaps(size: 10, color: DS.red)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                              ]))))),
 
                     // User info footer
                     if (authState.name != null) ...[
@@ -188,14 +165,11 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
                               decoration: BoxDecoration(
                                 color: accentColor.withValues(alpha: 0.2),
                                 shape: BoxShape.circle,
-                                border: Border.all(color: accentColor.withValues(alpha: 0.5)),
-                              ),
+                                border: Border.all(color: accentColor.withValues(alpha: 0.5))),
                               alignment: Alignment.center,
                               child: Text(
                                 authState.name![0].toUpperCase(),
-                                style: DS.labelCaps(size: 10, color: accentColor),
-                              ),
-                            ),
+                                style: DS.labelCaps(size: 10, color: accentColor))),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Column(
@@ -203,21 +177,11 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
                                 children: [
                                   Text(authState.name!, style: DS.body(size: 11, color: DS.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
                                   Text(authState.email ?? '', style: DS.labelCaps(size: 8, color: DS.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                                ])),
+                          ])),
                     ],
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+                  ]))),
+          ])));
   }
 
   Widget _buildDrawerMenuItem(BuildContext context, _DrawerItem item) {
@@ -235,18 +199,15 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
         decoration: BoxDecoration(
           color: isActive ? item.color.withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: DS.aeroCornerSm,
-          border: isActive ? Border.all(color: item.color.withValues(alpha: 0.3)) : null,
-        ),
+          border: isActive ? Border.all(color: item.color.withValues(alpha: 0.3)) : null),
         child: Row(
           children: [
             Container(
               width: 32, height: 32,
               decoration: BoxDecoration(
                 color: item.color.withValues(alpha: 0.15),
-                borderRadius: DS.aeroCornerSm,
-              ),
-              child: Icon(item.icon, size: 16, color: item.color),
-            ),
+                borderRadius: DS.aeroCornerSm),
+              child: Icon(item.icon, size: 16, color: item.color)),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -255,14 +216,9 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
                   Text(item.label, style: DS.labelCaps(size: 10, color: isActive ? item.color : DS.textPrimary)),
                   const SizedBox(height: 2),
                   Text(item.sublabel, style: DS.labelCaps(size: 8, color: DS.textMuted)),
-                ],
-              ),
-            ),
+                ])),
             Icon(Icons.chevron_right, size: 14, color: DS.textMuted),
-          ],
-        ),
-      ),
-    );
+          ])));
   }
 
   @override
@@ -280,9 +236,7 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
         decoration: BoxDecoration(
           color: DS.surface0,
           border: Border(
-            top: BorderSide(color: DS.outline, width: 1),
-          ),
-        ),
+            top: BorderSide(color: DS.outline, width: 1))),
         child: SafeArea(
           top: false,
           child: SizedBox(
@@ -292,34 +246,24 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
                 _buildNavItem(
                   context: context, index: 0, currentIndex: selectedIndex,
                   label: 'PITWALL', icon: Icons.dashboard_outlined,
-                  activeIcon: Icons.dashboard_rounded, accentColor: accentColor,
-                ),
+                  activeIcon: Icons.dashboard_rounded, accentColor: accentColor),
                 _buildNavItem(
                   context: context, index: 1, currentIndex: selectedIndex,
                   label: 'TIMING', icon: Icons.timer_outlined,
-                  activeIcon: Icons.timer_rounded, accentColor: accentColor,
-                ),
+                  activeIcon: Icons.timer_rounded, accentColor: accentColor),
                 _buildNavItem(
                   context: context, index: 2, currentIndex: selectedIndex,
                   label: 'STANDINGS', icon: Icons.emoji_events_outlined,
-                  activeIcon: Icons.emoji_events_rounded, accentColor: accentColor,
-                ),
+                  activeIcon: Icons.emoji_events_rounded, accentColor: accentColor),
                 _buildNavItem(
                   context: context, index: 3, currentIndex: selectedIndex,
                   label: 'PREDICT', icon: Icons.gps_fixed_outlined,
-                  activeIcon: Icons.gps_fixed_rounded, accentColor: accentColor,
-                ),
+                  activeIcon: Icons.gps_fixed_rounded, accentColor: accentColor),
                 _buildNavItem(
                   context: context, index: 4, currentIndex: selectedIndex,
                   label: 'MORE', icon: Icons.menu_rounded,
-                  activeIcon: Icons.menu_open_rounded, accentColor: accentColor,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+                  activeIcon: Icons.menu_open_rounded, accentColor: accentColor),
+              ])))));
   }
 
   Widget _buildNavItem({
@@ -345,15 +289,12 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
               height: 2,
               decoration: BoxDecoration(
                 color: accentColor,
-                borderRadius: BorderRadius.circular(1),
-              ),
-            ),
+                borderRadius: BorderRadius.circular(1))),
             const SizedBox(height: 4),
             Icon(
               isSelected ? activeIcon : icon,
               size: 20,
-              color: isSelected ? accentColor : DS.textMuted,
-            ),
+              color: isSelected ? accentColor : DS.textMuted),
             const SizedBox(height: 2),
             Text(
               label,
@@ -362,15 +303,9 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
               textAlign: TextAlign.center,
               style: DS.labelCaps(
                 size: 7.5,
-                color: isSelected ? DS.textPrimary : DS.textMuted,
-              ).copyWith(
-                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+                color: isSelected ? DS.textPrimary : DS.textMuted).copyWith(
+                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w500)),
+          ])));
   }
 }
 

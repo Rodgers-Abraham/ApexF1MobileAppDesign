@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/providers/telemetry_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
+import '../../../home/data/calendar_provider.dart';
 import '../../../../shared/theme/app_design_system.dart';
 import '../../../../shared/widgets/ds_app_bar.dart';
 import '../../../../shared/constants/f1_data.dart';
@@ -50,6 +51,14 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
 
     final driversAsync = ref.watch(liveDriverStandingsProvider);
     final constructorsAsync = ref.watch(liveConstructorStandingsProvider);
+    final calendarAsync = ref.watch(calendarProvider);
+    final calendar = calendarAsync.valueOrNull ?? [];
+    final now = DateTime.now();
+    final completedRounds = calendar.where((r) => r.date.isBefore(now)).length;
+    final totalRounds = calendar.isEmpty ? 24 : calendar.length;
+    final roundProgress = totalRounds > 0 ? completedRounds / totalRounds : 0.0;
+    final roundLabel = 'ROUND $completedRounds/$totalRounds';
+    final pctLabel = '${(roundProgress * 100).round()}% COMPLETED';
 
     return Scaffold(
       backgroundColor: DS.bg,
@@ -59,10 +68,9 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
           children: [
             DSAppBar(
               subtitle: 'TRACKSIDE TELEMETRY',
-              isLive: true,
-              liveLabel: 'LIVE R24',
-              latencyMs: '12',
-            ),
+              isLive: completedRounds < totalRounds,
+              liveLabel: 'R$completedRounds',
+              latencyMs: '12'),
             // Season progress
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
@@ -74,19 +82,15 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                     children: [
                       Text('STANDINGS // 2026 SEASON', style: DS.labelCaps(size: 8, color: DS.textMuted)),
                       const Spacer(),
-                      Text('ROUND 12/24', style: DS.labelCaps(size: 8, color: DS.orange)),
+                      Text(roundLabel, style: DS.labelCaps(size: 8, color: DS.orange)),
                       const SizedBox(width: 6),
-                      DSWidgets.statusChip('50% COMPLETED', color: DS.orange, size: 8),
-                    ],
-                  ),
+                      DSWidgets.statusChip(pctLabel, color: DS.orange, size: 8),
+                    ]),
                   const SizedBox(height: 3),
                   ClipRRect(
                     borderRadius: DS.aeroCornerSm,
-                    child: LinearProgressIndicator(value: 0.5, backgroundColor: DS.surface3, valueColor: AlwaysStoppedAnimation<Color>(DS.orange), minHeight: 3),
-                  ),
-                ],
-              ),
-            ),
+                    child: LinearProgressIndicator(value: roundProgress, backgroundColor: DS.surface3, valueColor: AlwaysStoppedAnimation<Color>(DS.orange), minHeight: 3)),
+                ])),
             // Tab bar
             Container(
               color: DS.surface0,
@@ -104,12 +108,8 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                   Tab(text: 'DRIVERS'),
                   Tab(text: 'CONSTRUCTORS'),
                   Tab(text: 'ARCHIVE'),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+                ])),
+          ])),
       body: TabBarView(
         controller: _tabController,
         children: [
@@ -119,20 +119,16 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
             error: (err, stack) => ErrorRetryWidget(
               message: 'Could not load driver standings.\nCheck your connection.',
               icon: Icons.people_alt_rounded,
-              onRetry: () => ref.invalidate(liveDriverStandingsProvider),
-            ),
-            data: (drivers) => _buildDriversView(accentColor, drivers),
-          ),
+              onRetry: () => ref.invalidate(liveDriverStandingsProvider)),
+            data: (drivers) => _buildDriversView(accentColor, drivers)),
           // Constructors Standings
           constructorsAsync.when(
             loading: () => const SkeletonStandingsList(count: 10),
             error: (err, stack) => ErrorRetryWidget(
               message: 'Could not load constructor standings.\nCheck your connection.',
               icon: Icons.construction_rounded,
-              onRetry: () => ref.invalidate(liveConstructorStandingsProvider),
-            ),
-            data: (constructors) => _buildConstructorsView(accentColor, themeState.selectedTeam.name, constructors),
-          ),
+              onRetry: () => ref.invalidate(liveConstructorStandingsProvider)),
+            data: (constructors) => _buildConstructorsView(accentColor, themeState.selectedTeam.name, constructors)),
           // Archive tab — navigates to /history (handled by TabController listener)
           Center(
             child: Column(
@@ -143,19 +139,14 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                 Text('OPENING F1 ARCHIVE', style: DS.labelCaps(size: 11, color: DS.teal)),
                 const SizedBox(height: 4),
                 Text('2010 — 2026', style: DS.body(size: 13, color: DS.textMuted)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+              ])),
+        ]));
   }
 
   Widget _buildDriversView(Color accentColor, List<DriverStandingJolpica> drivers) {
     if (drivers.isEmpty) {
       return Center(
-        child: Text('No driver standings available', style: DS.body(size: 13, color: DS.textMuted)),
-      );
+        child: Text('No driver standings available', style: DS.body(size: 13, color: DS.textMuted)));
     }
 
     final top3 = drivers.take(3).toList();
@@ -173,21 +164,16 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
               children: [
                 // 2nd Place (Left)
                 Expanded(
-                  child: _buildPodiumCard(top3[1], 2, const Color(0xFFC0C0C0), 185),
-                ),
+                  child: _buildPodiumCard(top3[1], 2, const Color(0xFFC0C0C0), 185)),
                 const SizedBox(width: 8),
                 // 1st Place (Center - Elevated)
                 Expanded(
-                  child: _buildPodiumCard(top3[0], 1, const Color(0xFFFFD700), 215),
-                ),
+                  child: _buildPodiumCard(top3[0], 1, const Color(0xFFFFD700), 215)),
                 const SizedBox(width: 8),
                 // 3rd Place (Right)
                 Expanded(
-                  child: _buildPodiumCard(top3[2], 3, const Color(0xFFCD7F32), 175),
-                ),
-              ],
-            ),
-          ),
+                  child: _buildPodiumCard(top3[2], 3, const Color(0xFFCD7F32), 175)),
+              ])),
 
         // ── SECTION HEADER ───────────────────────────────────────────────────
         Padding(
@@ -198,36 +184,24 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
               Expanded(
                 child: Text(
                   'DRIVER RANKINGS (P4 - P22)',
-                  style: TextStyle(
-                    fontFamily: 'Formula1Wide',
-                    fontSize: 9.5,
+                  style: TextStyle( fontSize: 9.5,
                     fontWeight: FontWeight.bold,
                     color: Colors.grey[400],
-                    letterSpacing: 0.8,
-                  ),
+                    letterSpacing: 0.8),
                   maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
+                  overflow: TextOverflow.ellipsis)),
               const SizedBox(width: 8),
               Text(
                 'POINTS',
-                style: TextStyle(
-                  fontFamily: 'Formula1Wide',
-                  fontSize: 9.5,
+                style: TextStyle( fontSize: 9.5,
                   fontWeight: FontWeight.bold,
                   color: Colors.grey[400],
-                  letterSpacing: 0.8,
-                ),
-              ),
-            ],
-          ),
-        ),
+                  letterSpacing: 0.8)),
+            ])),
 
         // ── POSITIONS 4 TO 22 LIST ───────────────────────────────────────────
         ...remaining.map((d) => _buildDriverRow(d)),
-      ],
-    );
+      ]);
   }
 
   Widget _buildPodiumCard(DriverStandingJolpica d, int place, Color placeColor, double height) {
@@ -244,18 +218,15 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isFirst ? placeColor.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.08),
-          width: isFirst ? 1.8 : 1.0,
-        ),
+          width: isFirst ? 1.8 : 1.0),
         boxShadow: isFirst
             ? [
                 BoxShadow(
                   color: placeColor.withValues(alpha: 0.15),
                   blurRadius: 16,
-                  spreadRadius: 2,
-                )
+                  spreadRadius: 2)
               ]
-            : null,
-      ),
+            : null),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -267,22 +238,17 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: placeColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(4),
-                ),
+                  borderRadius: BorderRadius.circular(4)),
                 child: Text(
                   '0$place',
-                  style: DS.telemetry(size: 11, color: placeColor),
-                ),
-              ),
+                  style: DS.telemetry(size: 11, color: placeColor))),
               if (teamData != null && teamData.logoWhiteAsset.isNotEmpty)
                 SvgPicture.asset(
                   teamData.logoWhiteAsset,
                   width: 14,
                   height: 14,
-                  colorFilter: ColorFilter.mode(teamColor, BlendMode.srcIn),
-                ),
-            ],
-          ),
+                  colorFilter: ColorFilter.mode(teamColor, BlendMode.srcIn)),
+            ]),
 
           // Driver Portrait Cutout
           Container(
@@ -291,8 +257,7 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xFF202028),
-              border: Border.all(color: teamColor.withValues(alpha: 0.6), width: 2),
-            ),
+              border: Border.all(color: teamColor.withValues(alpha: 0.6), width: 2)),
             clipBehavior: Clip.antiAlias,
             child: driverData != null && driverData.portraitAsset.isNotEmpty
                 ? Image.asset(
@@ -301,17 +266,11 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                     errorBuilder: (context, error, stackTrace) => Center(
                       child: Text(
                         driverData.code,
-                        style: DS.telemetry(size: 12, color: Colors.white),
-                      ),
-                    ),
-                  )
+                        style: DS.telemetry(size: 12, color: Colors.white))))
                 : Center(
                     child: Text(
                       d.name.split(' ').map((n) => n.isNotEmpty ? n[0] : '').take(2).join(),
-                      style: DS.telemetry(size: 12, color: Colors.white),
-                    ),
-                  ),
-          ),
+                      style: DS.telemetry(size: 12, color: Colors.white)))),
 
           // Driver Info & Points
           Column(
@@ -320,35 +279,25 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                 driverData?.code ?? (d.name.split(' ').last.toUpperCase().length >= 3
                     ? d.name.split(' ').last.toUpperCase().substring(0, 3)
                     : d.name.split(' ').last.toUpperCase()),
-                style: DS.headlineMd(size: isFirst ? 14 : 12, color: Colors.white),
-              ),
+                style: DS.headlineMd(size: isFirst ? 14 : 12, color: Colors.white)),
               const SizedBox(height: 1),
               Text(
                 d.name.split(' ').last,
                 style: DS.body(size: 10, color: DS.textMuted),
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+                overflow: TextOverflow.ellipsis),
               const SizedBox(height: 4),
               Text(
                 '${d.pts} PTS',
-                style: DS.telemetry(size: isFirst ? 13 : 11, color: isFirst ? placeColor : Colors.white),
-              ),
+                style: DS.telemetry(size: isFirst ? 13 : 11, color: isFirst ? placeColor : Colors.white)),
               if (d.wins != '0')
                 Text(
                   '${d.wins} WINS',
-                  style: TextStyle(
-                    fontFamily: 'Formula1Wide',
-                    fontSize: 7.5,
+                  style: TextStyle( fontSize: 7.5,
                     color: const Color(0xFFFF1744),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
+                    fontWeight: FontWeight.bold)),
+            ]),
+        ]));
   }
 
   Widget _buildDriverRow(DriverStandingJolpica d) {
@@ -362,8 +311,7 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
       decoration: BoxDecoration(
         color: const Color(0xFF141419),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
-      ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.04))),
       child: Row(
         children: [
           Container(
@@ -372,17 +320,13 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
             margin: const EdgeInsets.only(right: 8),
             decoration: BoxDecoration(
               color: teamColor,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+              borderRadius: BorderRadius.circular(2))),
           // Position
           SizedBox(
             width: 26,
             child: Text(
               d.pos,
-              style: DS.telemetry(size: 13, color: Colors.grey[400]!),
-            ),
-          ),
+              style: DS.telemetry(size: 13, color: Colors.grey[400]!))),
           const SizedBox(width: 6),
 
           // Driver Portrait Thumbnail
@@ -392,17 +336,14 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xFF202028),
-              border: Border.all(color: teamColor.withValues(alpha: 0.5), width: 1.2),
-            ),
+              border: Border.all(color: teamColor.withValues(alpha: 0.5), width: 1.2)),
             clipBehavior: Clip.antiAlias,
             child: driverData != null && driverData.portraitAsset.isNotEmpty
                 ? Image.asset(
                     driverData.portraitAsset,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const SizedBox(),
-                  )
-                : const SizedBox(),
-          ),
+                    errorBuilder: (context, error, stackTrace) => const SizedBox())
+                : const SizedBox()),
           const SizedBox(width: 10),
 
           // Driver Name + Team
@@ -414,33 +355,23 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                   children: [
                     Text(
                       driverData?.code ?? '',
-                      style: DS.headlineMd(size: 12, color: Colors.white),
-                    ),
+                      style: DS.headlineMd(size: 12, color: Colors.white)),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         d.name,
                         style: DS.body(size: 10.5, color: DS.textMuted),
                         maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
+                        overflow: TextOverflow.ellipsis)),
+                  ]),
                 const SizedBox(height: 2),
                 Text(
                   teamData?.name ?? d.team,
-                  style: TextStyle(
-                    fontFamily: 'Formula1',
-                    color: Colors.grey[500],
-                    fontSize: 9.5,
-                  ),
+                  style: TextStyle( color: Colors.grey[500],
+                    fontSize: 9.5),
                   maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
+                  overflow: TextOverflow.ellipsis),
+              ])),
 
           // Wins
           if (d.wins != '0')
@@ -449,27 +380,18 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
               decoration: BoxDecoration(
                 color: const Color(0xFFFF1744).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(3),
-              ),
+                borderRadius: BorderRadius.circular(3)),
               child: Text(
                 '${d.wins}W',
-                style: TextStyle(
-                  fontFamily: 'Formula1Wide',
-                  color: const Color(0xFFFF1744),
+                style: TextStyle( color: const Color(0xFFFF1744),
                   fontSize: 8,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+                  fontWeight: FontWeight.bold))),
 
           // Points
           Text(
             '${d.pts} PTS',
-            style: DS.telemetry(size: 12.5, color: Colors.white),
-          ),
-        ],
-      ),
-    );
+            style: DS.telemetry(size: 12.5, color: Colors.white)),
+        ]));
   }
 
   Widget _buildConstructorsView(Color accentColor, String userFavouriteTeam, List<ConstructorStandingJolpica> constructors) {
@@ -490,18 +412,15 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: isUserFavorite ? accentColor.withValues(alpha: 0.7) : Colors.white.withValues(alpha: 0.05),
-              width: isUserFavorite ? 1.5 : 1,
-            ),
+              width: isUserFavorite ? 1.5 : 1),
             boxShadow: isUserFavorite
                 ? [
                     BoxShadow(
                       color: accentColor.withValues(alpha: 0.12),
                       blurRadius: 10,
-                      spreadRadius: 1,
-                    )
+                      spreadRadius: 1)
                   ]
-                : null,
-          ),
+                : null),
           child: Row(
             children: [
               Container(
@@ -510,17 +429,13 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                 margin: const EdgeInsets.only(right: 8),
                 decoration: BoxDecoration(
                   color: teamColor,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+                  borderRadius: BorderRadius.circular(2))),
               // Rank (01 to 11)
               SizedBox(
                 width: 26,
                 child: Text(
                   c.pos.padLeft(2, '0'),
-                  style: DS.telemetry(size: 13, color: isUserFavorite ? accentColor : Colors.grey[500]!),
-                ),
-              ),
+                  style: DS.telemetry(size: 13, color: isUserFavorite ? accentColor : Colors.grey[500]!))),
               const SizedBox(width: 8),
 
               // Vector Team Logo
@@ -530,16 +445,13 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
                   color: const Color(0xFF1C1C24),
-                  borderRadius: BorderRadius.circular(6),
-                ),
+                  borderRadius: BorderRadius.circular(6)),
                 child: teamData != null && teamData.logoWhiteAsset.isNotEmpty
                     ? SvgPicture.asset(
                         teamData.logoWhiteAsset,
                         fit: BoxFit.contain,
-                        colorFilter: ColorFilter.mode(teamColor, BlendMode.srcIn),
-                      )
-                    : Icon(Icons.shield, color: teamColor, size: 18),
-              ),
+                        colorFilter: ColorFilter.mode(teamColor, BlendMode.srcIn))
+                    : Icon(Icons.shield, color: teamColor, size: 18)),
               const SizedBox(width: 12),
 
               // Constructor Name + Spec
@@ -554,40 +466,28 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                             teamData?.name.toUpperCase() ?? c.name.toUpperCase(),
                             style: DS.headlineMd(size: 13, color: Colors.white),
                             maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
+                            overflow: TextOverflow.ellipsis)),
                         if (isUserFavorite) ...[
                           const SizedBox(width: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                             decoration: BoxDecoration(
                               color: accentColor.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(3),
-                            ),
+                              borderRadius: BorderRadius.circular(3)),
                             child: Text(
                               'FAVORITE',
-                              style: TextStyle(
-                                fontFamily: 'Formula1Wide',
-                                fontSize: 7,
+                              style: TextStyle( fontSize: 7,
                                 color: accentColor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
+                                fontWeight: FontWeight.bold))),
                         ],
-                      ],
-                    ),
+                      ]),
                     const SizedBox(height: 2),
                     Text(
                       teamData?.chassisPu ?? '2026 CONSTRUCTOR',
                       style: DS.body(size: 9.5, color: DS.textMuted),
                       maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
+                      overflow: TextOverflow.ellipsis),
+                  ])),
 
               // Front car render thumbnail
               if (teamData != null && teamData.carFrontAsset.isNotEmpty) ...[
@@ -595,8 +495,7 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                   teamData.carFrontAsset,
                   height: 28,
                   fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => const SizedBox(),
-                ),
+                  errorBuilder: (context, error, stackTrace) => const SizedBox()),
                 const SizedBox(width: 10),
               ],
 
@@ -606,23 +505,14 @@ class _StandingsScreenState extends ConsumerState<StandingsScreen> with SingleTi
                 children: [
                   Text(
                     c.pts,
-                    style: DS.telemetry(size: 14, color: isUserFavorite ? accentColor : Colors.white),
-                  ),
+                    style: DS.telemetry(size: 14, color: isUserFavorite ? accentColor : Colors.white)),
                   Text(
                     'PTS',
-                    style: TextStyle(
-                      fontFamily: 'Formula1Wide',
-                      fontSize: 7.5,
+                    style: TextStyle( fontSize: 7.5,
                       color: Colors.grey[500],
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
+                      fontWeight: FontWeight.bold)),
+                ]),
+            ]));
+      });
   }
 }

@@ -24,8 +24,7 @@ class SessionResult {
       position: json['position'] as int,
       driverName: json['driver_name'] as String,
       team: json['team'] as String,
-      timeOrGap: json['time_or_gap'] as String,
-    );
+      timeOrGap: json['time_or_gap'] as String);
   }
 }
 
@@ -59,8 +58,7 @@ class LatestSession {
       sessionType: json['session_type'] as String,
       status: json['status'] as String,
       dateStart: json['date_start'] ?? '',
-      results: results,
-    );
+      results: results);
   }
 }
 
@@ -76,8 +74,7 @@ class DriverProbability {
   factory DriverProbability.fromJson(Map<String, dynamic> json) {
     return DriverProbability(
       driverName: json['driver_name'] as String,
-      probability: (json['probability'] as num).toDouble(),
-    );
+      probability: (json['probability'] as num).toDouble());
   }
 }
 
@@ -96,8 +93,7 @@ class SessionPredictions {
 
     return SessionPredictions(
       sessionKey: json['session_key'] as int,
-      predictions: predictions,
-    );
+      predictions: predictions);
   }
 }
 
@@ -209,8 +205,7 @@ class RaceDetails {
       driverOfTheDay: json['driver_of_the_day'] as String?,
       circuitLengthKm: (json['circuit_length_km'] as num?)?.toDouble(),
       turns: json['turns'] as int?,
-      drsZones: json['drs_zones'] as int?,
-    );
+      drsZones: json['drs_zones'] as int?);
   }
 }
 

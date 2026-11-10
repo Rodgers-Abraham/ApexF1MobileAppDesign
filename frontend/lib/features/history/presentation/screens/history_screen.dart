@@ -59,8 +59,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       appBar: DSAppBar(
         subtitle: 'DATABASE ONLINE // FIA OFFICIAL CLASSIFICATION ARCH V4.92',
         isLive: false,
-        latencyMs: '12',
-      ),
+        latencyMs: '12'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         child: Column(
@@ -74,8 +73,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 Text('♦ F1 ARCHIVE // 2010 – 2026', style: DS.headline(size: 16)),
                 const Spacer(),
                 DSWidgets.statusChip('24 RNDS', color: DS.orange, size: 8),
-              ],
-            ),
+              ]),
             const SizedBox(height: 4),
             Text('Historical race results, official classifications, and telemetry replays across turbo-hybrid and ground-effect eras.', style: DS.body(size: 11)),
             const SizedBox(height: 16),
@@ -102,16 +100,13 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
                         icon: Icon(Icons.clear, size: 16, color: DS.textMuted),
-                        onPressed: () { _searchController.clear(); setState(() => _searchQuery = ''); },
-                      )
+                        onPressed: () { _searchController.clear(); setState(() => _searchQuery = ''); })
                     : null,
                 border: OutlineInputBorder(borderRadius: DS.aeroCorner, borderSide: BorderSide(color: DS.outline)),
                 enabledBorder: OutlineInputBorder(borderRadius: DS.aeroCorner, borderSide: BorderSide(color: DS.outline)),
                 focusedBorder: OutlineInputBorder(borderRadius: DS.aeroCorner, borderSide: BorderSide(color: DS.red)),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                isDense: true,
-              ),
-            ),
+                isDense: true)),
             const SizedBox(height: 14),
 
             // Smart search results
@@ -129,17 +124,14 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               error: (_, __) => _DSYearFilterBar(
                 selectedYear: _selectedYear,
                 years: const [2026, 2025, 2024, 2023, 2022, 2021, 2020],
-                onYearSelected: (y) => setState(() => _selectedYear = y),
-              ),
+                onYearSelected: (y) => setState(() => _selectedYear = y)),
               data: (seasons) {
                 final yearList = seasons.map((s) => int.tryParse(s['season']?.toString() ?? '') ?? 2026).where((y) => y >= 2010 && y <= 2026).toList();
                 return _DSYearFilterBar(
                   selectedYear: _selectedYear,
                   years: yearList.isNotEmpty ? yearList : const [2026, 2025, 2024],
-                  onYearSelected: (y) => setState(() => _selectedYear = y),
-                );
-              },
-            ),
+                  onYearSelected: (y) => setState(() => _selectedYear = y));
+              }),
             const SizedBox(height: 16),
 
             // Season header
@@ -155,9 +147,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   Text('GRAND PRIX RESULTS', style: DS.labelCaps(size: 8)),
                   const Spacer(),
                   Text('TAP RACE FOR REPLAY', style: DS.labelCaps(size: 8, color: DS.teal)),
-                ],
-              ),
-            ),
+                ])),
             const SizedBox(height: 12),
 
             // Season Races Results List
@@ -165,14 +155,12 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               loading: () => const SkeletonStandingsList(count: 5),
               error: (err, stack) => Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text('Error loading season results: $err', style: const TextStyle(color: Colors.red)),
-              ),
+                child: Text('Error loading season results: $err', style: const TextStyle(color: Colors.red))),
               data: (races) {
                 if (races.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.all(32),
-                    child: Center(child: Text('No historical race records found for this season.', style: TextStyle(color: Colors.grey))),
-                  );
+                    child: Center(child: Text('No historical race records found for this season.', style: TextStyle(color: Colors.grey))));
                 }
 
                 return ListView.builder(
@@ -196,8 +184,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                       decoration: BoxDecoration(
                         color: const Color(0xFF141418),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.white.withValues(alpha:0.05)),
-                      ),
+                        border: Border.all(color: Colors.white.withValues(alpha:0.05))),
                       child: Row(
                         children: [
                           Container(
@@ -205,15 +192,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                             height: 38,
                             decoration: BoxDecoration(
                               color: accentColor.withValues(alpha:0.12),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                              borderRadius: BorderRadius.circular(8)),
                             child: Center(
                               child: Text(
                                 'R$roundNum',
-                                style: DS.telemetry(size: 11, color: accentColor),
-                              ),
-                            ),
-                          ),
+                                style: DS.telemetry(size: 11, color: accentColor)))),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -221,16 +204,12 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                               children: [
                                 Text(
                                   raceName,
-                                  style: DS.headlineMd(size: 13, color: Colors.white),
-                                ),
+                                  style: DS.headlineMd(size: 13, color: Colors.white)),
                                 const SizedBox(height: 2),
                                 Text(
                                   '$circuitName ${locality.isNotEmpty ? "• $locality" : ""} ${date.isNotEmpty ? "($date)" : ""}',
-                                  style: DS.body(size: 11, color: Colors.grey[400]!),
-                                ),
-                              ],
-                            ),
-                          ),
+                                  style: DS.body(size: 11, color: Colors.grey[400]!)),
+                              ])),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
@@ -240,28 +219,17 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                                   const SizedBox(width: 4),
                                   Text(
                                     winnerName,
-                                    style: DS.headlineMd(size: 12, color: Colors.white),
-                                  ),
-                                ],
-                              ),
+                                    style: DS.headlineMd(size: 12, color: Colors.white)),
+                                ]),
                               Text(
                                 winnerConstructor,
-                                style: DS.body(size: 10, color: Colors.grey[500]!),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+                                style: DS.body(size: 10, color: Colors.grey[500]!)),
+                            ]),
+                        ]));
+                  });
+              }),
             const SizedBox(height: 40),
-          ],
-        ),
-      ),
-    );
+          ])));
   }
 }
 
@@ -294,14 +262,9 @@ class _DSYearFilterBar extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isSelected ? DS.red : DS.surface1,
                 borderRadius: DS.aeroCornerSm,
-                border: Border.all(color: isSelected ? DS.red : DS.outline),
-              ),
-              child: Text('$year', style: DS.telemetry(size: 12, color: isSelected ? DS.redText : DS.textMuted)),
-            ),
-          );
-        },
-      ),
-    );
+                border: Border.all(color: isSelected ? DS.red : DS.outline)),
+              child: Text('$year', style: DS.telemetry(size: 12, color: isSelected ? DS.redText : DS.textMuted))));
+        }));
   }
 }
 
@@ -335,8 +298,7 @@ class _SmartSearchCard extends ConsumerWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF141418),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: accentColor.withValues(alpha:0.4), width: 1.5),
-            ),
+              border: Border.all(color: accentColor.withValues(alpha:0.4), width: 1.5)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -346,22 +308,17 @@ class _SmartSearchCard extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Text(
                       name.toUpperCase(),
-                      style: DS.headline(size: 14, color: Colors.white),
-                    ),
+                      style: DS.headline(size: 14, color: Colors.white)),
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: Colors.amber.withValues(alpha:0.2),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
+                        borderRadius: BorderRadius.circular(6)),
                       child: Text(
                         'DRIVER LEGEND',
-                        style: TextStyle(color: Colors.amber[300], fontSize: 10),
-                      ),
-                    ),
-                  ],
-                ),
+                        style: TextStyle(color: Colors.amber[300], fontSize: 10))),
+                  ]),
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -371,24 +328,20 @@ class _SmartSearchCard extends ConsumerWidget {
                       children: [
                         Text('Championship Titles', style: DS.body(size: 10, color: Colors.grey)),
                         Text(titles, style: DS.telemetry(size: 13, color: accentColor)),
-                      ],
-                    ),
+                      ]),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text('Race Wins', style: DS.body(size: 10, color: Colors.grey)),
                         Text('$wins Wins', style: DS.telemetry(size: 13, color: Colors.amber)),
-                      ],
-                    ),
+                      ]),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text('Pole Positions', style: DS.body(size: 10, color: Colors.grey)),
                         Text('$poles Poles', style: DS.telemetry(size: 13, color: Colors.white)),
-                      ],
-                    ),
-                  ],
-                ),
+                      ]),
+                  ]),
                 const Divider(color: Colors.white10, height: 20),
                 Text('TEAMS DRIVEN FOR', style: DS.body(size: 10, color: Colors.grey)),
                 Text(teams, style: DS.headlineMd(size: 12, color: Colors.white70)),
@@ -397,9 +350,7 @@ class _SmartSearchCard extends ConsumerWidget {
                   Text('ICONIC CAREER MOMENT', style: DS.body(size: 10, color: Colors.grey)),
                   Text('"$moment"', style: const TextStyle(fontSize: 12, color: Colors.white, fontStyle: FontStyle.italic)),
                 ],
-              ],
-            ),
-          );
+              ]));
         }
 
         if (type == 'team') {
@@ -413,8 +364,7 @@ class _SmartSearchCard extends ConsumerWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF141418),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: accentColor.withValues(alpha:0.4), width: 1.5),
-            ),
+              border: Border.all(color: accentColor.withValues(alpha:0.4), width: 1.5)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -424,22 +374,17 @@ class _SmartSearchCard extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Text(
                       name.toUpperCase(),
-                      style: DS.headline(size: 14, color: Colors.white),
-                    ),
+                      style: DS.headline(size: 14, color: Colors.white)),
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: accentColor.withValues(alpha:0.2),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
+                        borderRadius: BorderRadius.circular(6)),
                       child: Text(
                         'CONSTRUCTOR',
-                        style: TextStyle(color: accentColor, fontSize: 10),
-                      ),
-                    ),
-                  ],
-                ),
+                        style: TextStyle(color: accentColor, fontSize: 10))),
+                  ]),
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -449,23 +394,18 @@ class _SmartSearchCard extends ConsumerWidget {
                       children: [
                         Text('Constructor Titles', style: DS.body(size: 10, color: Colors.grey)),
                         Text(titles, style: DS.telemetry(size: 12, color: accentColor)),
-                      ],
-                    ),
+                      ]),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text('Total Victories', style: DS.body(size: 10, color: Colors.grey)),
                         Text('$wins Wins', style: DS.telemetry(size: 12, color: Colors.amber)),
-                      ],
-                    ),
-                  ],
-                ),
+                      ]),
+                  ]),
                 const Divider(color: Colors.white10, height: 20),
                 Text('LEGENDARY DRIVERS', style: DS.body(size: 10, color: Colors.grey)),
                 Text(drivers, style: DS.headlineMd(size: 12, color: Colors.white70)),
-              ],
-            ),
-          );
+              ]));
         }
 
         // Default: Circuit Archive Card
@@ -481,8 +421,7 @@ class _SmartSearchCard extends ConsumerWidget {
           decoration: BoxDecoration(
             color: const Color(0xFF141418),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: accentColor.withValues(alpha:0.3), width: 1.5),
-          ),
+            border: Border.all(color: accentColor.withValues(alpha:0.3), width: 1.5)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -492,10 +431,8 @@ class _SmartSearchCard extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Text(
                     'CIRCUIT ARCHIVE: ${raceName.toUpperCase()}',
-                    style: DS.headline(size: 13, color: Colors.white),
-                  ),
-                ],
-              ),
+                    style: DS.headline(size: 13, color: Colors.white)),
+                ]),
               const SizedBox(height: 12),
 
               // Layout Image
@@ -505,18 +442,14 @@ class _SmartSearchCard extends ConsumerWidget {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: const Color(0xFF09090B),
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                  borderRadius: BorderRadius.circular(12)),
                 child: Center(
                   child: Image.asset(
                     getCircuitAssetPath(raceName),
                     fit: BoxFit.contain,
                     color: Colors.white.withValues(alpha:0.9),
                     colorBlendMode: BlendMode.srcIn,
-                    errorBuilder: (context, error, stackTrace) => Icon(Icons.map_rounded, color: accentColor, size: 36),
-                  ),
-                ),
-              ),
+                    errorBuilder: (context, error, stackTrace) => Icon(Icons.map_rounded, color: accentColor, size: 36)))),
               const SizedBox(height: 14),
 
               Row(
@@ -527,17 +460,14 @@ class _SmartSearchCard extends ConsumerWidget {
                     children: [
                       Text('First Held', style: DS.body(size: 10, color: Colors.grey)),
                       Text('$firstHeld Season', style: DS.telemetry(size: 12)),
-                    ],
-                  ),
+                    ]),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text('Total Grand Prix', style: DS.body(size: 10, color: Colors.grey)),
                       Text('$totalRaces Races', style: DS.telemetry(size: 12)),
-                    ],
-                  ),
-                ],
-              ),
+                    ]),
+                ]),
               const Divider(color: Colors.white10, height: 20),
 
               Row(
@@ -549,20 +479,15 @@ class _SmartSearchCard extends ConsumerWidget {
                       children: [
                         Text('Most Wins Driver', style: DS.body(size: 10, color: Colors.grey)),
                         Text(topDriver, style: DS.headlineMd(size: 12, color: Colors.amber)),
-                      ],
-                    ),
-                  ),
+                      ])),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text('Most Wins Constructor', style: DS.body(size: 10, color: Colors.grey)),
                         Text(topTeam, style: DS.headlineMd(size: 12, color: Colors.redAccent)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                      ])),
+                ]),
 
               if (recentList.isNotEmpty) ...[
                 const Divider(color: Colors.white10, height: 20),
@@ -582,16 +507,10 @@ class _SmartSearchCard extends ConsumerWidget {
                           const SizedBox(width: 10),
                           Expanded(child: Text(drv, style: DS.headlineMd(size: 12, color: Colors.white))),
                           Text(team, style: DS.body(size: 11, color: Colors.grey[400]!)),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
+                        ]));
+                  }).toList()),
               ],
-            ],
-          ),
-        );
-      },
-    );
+            ]));
+      });
   }
 }

@@ -31,9 +31,7 @@ class ErrorRetryWidget extends StatelessWidget {
               child: Text(
                 message,
                 textAlign: TextAlign.center,
-                style: DS.body(size: 11, color: DS.textMuted),
-              ),
-            ),
+                style: DS.body(size: 11, color: DS.textMuted))),
             if (onRetry != null) ...[
               const SizedBox(height: 12),
               GestureDetector(
@@ -43,23 +41,16 @@ class ErrorRetryWidget extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: DS.surface2,
                     borderRadius: DS.aeroCornerSm,
-                    border: Border.all(color: DS.outline),
-                  ),
+                    border: Border.all(color: DS.outline)),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.refresh_rounded, size: 13, color: DS.textMuted),
                       const SizedBox(width: 5),
                       Text('RETRY', style: DS.labelCaps(size: 9, color: DS.textMuted)),
-                    ],
-                  ),
-                ),
-              ),
+                    ]))),
             ],
-          ],
-        ),
-      ),
-    );
+          ])));
   }
 }
 
@@ -77,25 +68,20 @@ class InlineErrorBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: DS.red.withValues(alpha: 0.08),
         borderRadius: DS.aeroCornerSm,
-        border: Border.all(color: DS.red.withValues(alpha: 0.4)),
-      ),
+        border: Border.all(color: DS.red.withValues(alpha: 0.4))),
       child: Row(
         children: [
           Icon(Icons.error_outline_rounded, size: 14, color: DS.red),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(message, style: DS.body(size: 10, color: DS.red)),
-          ),
+            child: Text(message, style: DS.body(size: 10, color: DS.red))),
           if (onRetry != null) ...[
             const SizedBox(width: 8),
             GestureDetector(
               onTap: onRetry,
-              child: Text('RETRY', style: DS.labelCaps(size: 8, color: DS.red)),
-            ),
+              child: Text('RETRY', style: DS.labelCaps(size: 8, color: DS.red))),
           ],
-        ],
-      ),
-    );
+        ]));
   }
 }
 
@@ -116,11 +102,7 @@ class BackendOfflineBanner extends StatelessWidget {
           Expanded(
             child: Text(
               'Backend offline — some features unavailable. Showing cached data.',
-              style: DS.labelCaps(size: 9, color: DS.orange),
-            ),
-          ),
-        ],
-      ),
-    );
+              style: DS.labelCaps(size: 9, color: DS.orange))),
+        ]));
   }
 }

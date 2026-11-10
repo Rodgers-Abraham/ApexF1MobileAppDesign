@@ -88,8 +88,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       barrierColor: Colors.black.withValues(alpha: 0.75),
       backgroundColor: DS.surface1,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheetState) {
           return Padding(
@@ -97,8 +96,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               left: 20,
               right: 20,
               top: 20,
-              bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
-            ),
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,8 +108,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const Spacer(),
                   GestureDetector(
                     onTap: () => Navigator.pop(ctx),
-                    child: Icon(Icons.close, size: 18, color: DS.textMuted),
-                  ),
+                    child: Icon(Icons.close, size: 18, color: DS.textMuted)),
                 ]),
                 const SizedBox(height: 20),
                 if (sheetError != null) ...[
@@ -120,11 +117,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     decoration: BoxDecoration(
                       color: DS.red.withValues(alpha: 0.1),
                       borderRadius: DS.aeroCornerSm,
-                      border: Border.all(color: DS.red.withValues(alpha: 0.4)),
-                    ),
+                      border: Border.all(color: DS.red.withValues(alpha: 0.4))),
                     child: Text(sheetError!,
-                        style: DS.labelCaps(size: 9, color: DS.red)),
-                  ),
+                        style: DS.labelCaps(size: 9, color: DS.red))),
                   const SizedBox(height: 12),
                 ],
                 StatefulBuilder(
@@ -153,11 +148,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 : Icons.visibility_off_outlined,
                             size: 18,
                             color: DS.textMuted),
-                        onPressed: () => ss(() => obscureNew = !obscureNew),
-                      ),
-                    ),
-                  ),
-                ),
+                        onPressed: () => ss(() => obscureNew = !obscureNew))))),
                 const SizedBox(height: 12),
                 StatefulBuilder(
                   builder: (c, ss) => TextField(
@@ -186,11 +177,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             size: 18,
                             color: DS.textMuted),
                         onPressed: () =>
-                            ss(() => obscureConfirm = !obscureConfirm),
-                      ),
-                    ),
-                  ),
-                ),
+                            ss(() => obscureConfirm = !obscureConfirm))))),
                 const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
@@ -200,8 +187,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                           borderRadius: DS.aeroCorner),
-                      elevation: 0,
-                    ),
+                      elevation: 0),
                     onPressed: () async {
                       if (newPwCtrl.text.length < 6) {
                         setSheetState(() => sheetError =
@@ -226,15 +212,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       }
                     },
                     child: Text('CONFIRM NEW PASSWORD',
-                        style: DS.labelCaps(size: 10, color: DS.redText)),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
+                        style: DS.labelCaps(size: 10, color: DS.redText)))),
+              ]));
+        }));
     newPwCtrl.dispose();
     confirmCtrl.dispose();
   }
@@ -249,8 +229,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       barrierColor: Colors.black.withValues(alpha: 0.75),
       backgroundColor: DS.surface1,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheetState) {
           return SizedBox(
@@ -266,10 +245,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const Spacer(),
                     GestureDetector(
                       onTap: () => Navigator.pop(ctx),
-                      child: Icon(Icons.close, size: 18, color: DS.textMuted),
-                    ),
-                  ]),
-                ),
+                      child: Icon(Icons.close, size: 18, color: DS.textMuted)),
+                  ])),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: TextField(
@@ -301,10 +278,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           borderRadius: DS.aeroCorner,
                           borderSide: BorderSide(color: DS.teal)),
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
-                    ),
-                  ),
-                ),
+                          horizontal: 12, vertical: 10)))),
                 const SizedBox(height: 8),
                 Expanded(
                   child: ListView.builder(
@@ -334,8 +308,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             border: Border.all(
                                 color: isSelected
                                     ? DS.teal.withValues(alpha: 0.5)
-                                    : DS.outline),
-                          ),
+                                    : DS.outline)),
                           child: Row(
                             children: [
                               Text(country.flag,
@@ -347,30 +320,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                         size: 13,
                                         color: isSelected
                                             ? DS.teal
-                                            : DS.textPrimary)),
-                              ),
+                                            : DS.textPrimary))),
                               Text(
                                 'UTC${_fmtOffset(country.utcOffset)}',
-                                style: DS.labelCaps(size: 8, color: DS.textMuted),
-                              ),
+                                style: DS.labelCaps(size: 8, color: DS.textMuted)),
                               if (isSelected) ...[
                                 const SizedBox(width: 8),
                                 Icon(Icons.check_circle,
                                     size: 16, color: DS.teal),
                               ],
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
+                            ])));
+                    })),
+              ]));
+        }));
     searchCtrl.dispose();
   }
 
@@ -389,23 +351,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ]),
         content: Text(
           'Permanently delete your account and all telemetry history? This cannot be undone.',
-          style: DS.body(size: 13),
-        ),
+          style: DS.body(size: 13)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text('CANCEL',
-                style: DS.labelCaps(size: 9, color: DS.textMuted)),
-          ),
+                style: DS.labelCaps(size: 9, color: DS.textMuted))),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: TextButton.styleFrom(foregroundColor: DS.red),
             child: Text('DELETE ACCOUNT',
-                style: DS.labelCaps(size: 9, color: DS.red)),
-          ),
-        ],
-      ),
-    );
+                style: DS.labelCaps(size: 9, color: DS.red))),
+        ]));
 
     if (confirm == true) {
       setState(() {
@@ -469,17 +426,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       color: accentColor.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                       border: Border.all(
-                          color: accentColor.withValues(alpha: 0.5), width: 2),
-                    ),
+                          color: accentColor.withValues(alpha: 0.5), width: 2)),
                     alignment: Alignment.center,
                     child: Text(
                       (authState.name?.isNotEmpty == true
                               ? authState.name![0]
                               : 'A')
                           .toUpperCase(),
-                      style: DS.display(size: 22, color: accentColor),
-                    ),
-                  ),
+                      style: DS.display(size: 22, color: accentColor))),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
@@ -503,12 +457,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 style: const TextStyle(fontSize: 14)),
                           ],
                         ]),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                      ])),
+                ])),
             const SizedBox(height: 6),
             Row(
               children: [
@@ -520,8 +470,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const Spacer(),
                 Text('VIP PADDOCK PASS',
                     style: DS.labelCaps(size: 8, color: DS.orange)),
-              ],
-            ),
+              ]),
             const SizedBox(height: 20),
 
             // ── CHANGE TEAM ──
@@ -555,9 +504,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           borderRadius: DS.aeroCornerSm,
                           border: Border.all(
                             color: isSelected ? team.primaryColor : DS.outline,
-                            width: isSelected ? 1.5 : 1.0,
-                          ),
-                        ),
+                            width: isSelected ? 1.5 : 1.0)),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -569,8 +516,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 colorFilter: isSelected
                                     ? null
                                     : ColorFilter.mode(
-                                        DS.textMuted, BlendMode.srcIn),
-                              )
+                                        DS.textMuted, BlendMode.srcIn))
                             else
                               Icon(Icons.shield,
                                   size: 28,
@@ -584,12 +530,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   size: 7,
                                   color: isSelected
                                       ? team.primaryColor
-                                      : DS.textMuted),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
+                                      : DS.textMuted)),
+                          ])));
                   }),
                   if (!_showAllTeams)
                     GestureDetector(
@@ -601,8 +543,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         decoration: BoxDecoration(
                           color: DS.surface2,
                           borderRadius: DS.aeroCornerSm,
-                          border: Border.all(color: DS.outline),
-                        ),
+                          border: Border.all(color: DS.outline)),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -611,13 +552,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             Text('ALL ${F1Team.values.length}',
                                 style:
                                     DS.labelCaps(size: 7, color: DS.textMuted)),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
+                          ]))),
+                ])),
             const SizedBox(height: 20),
 
             // ── CHANGE DRIVER ──
@@ -656,10 +592,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   color: isSelected
                                       ? driverTeamColor
                                       : DS.outline,
-                                  width: isSelected ? 2.5 : 1.5,
-                                ),
-                                color: DS.surface2,
-                              ),
+                                  width: isSelected ? 2.5 : 1.5),
+                                color: DS.surface2),
                               child: ClipOval(
                                 child: Image.asset(
                                   driver.portraitAsset,
@@ -667,10 +601,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   errorBuilder: (_, __, ___) => Icon(
                                       Icons.person,
                                       size: 28,
-                                      color: DS.textMuted),
-                                ),
-                              ),
-                            ),
+                                      color: DS.textMuted)))),
                             const SizedBox(height: 4),
                             Text(
                               driver.code,
@@ -678,20 +609,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   size: 8,
                                   color: isSelected
                                       ? driverTeamColor
-                                      : DS.textMuted),
-                            ),
+                                      : DS.textMuted)),
                             if (isSelected)
                               Container(
                                 width: 4,
                                 height: 4,
                                 decoration: BoxDecoration(
                                     color: driverTeamColor,
-                                    shape: BoxShape.circle),
-                              ),
-                          ],
-                        ),
-                      ),
-                    );
+                                    shape: BoxShape.circle)),
+                          ])));
                   }),
                   if (!_showAllDrivers)
                     GestureDetector(
@@ -703,8 +629,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(color: DS.outline),
-                          color: DS.surface2,
-                        ),
+                          color: DS.surface2),
                         alignment: Alignment.center,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -714,13 +639,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             Text('ALL',
                                 style: DS.labelCaps(
                                     size: 7, color: DS.textMuted)),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
+                          ]))),
+                ])),
             const SizedBox(height: 20),
 
             // ── LOCATION & TIMEZONE ──
@@ -735,8 +655,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 decoration: BoxDecoration(
                   color: DS.surface1,
                   borderRadius: DS.aeroCorner,
-                  border: Border.all(color: DS.outline),
-                ),
+                  border: Border.all(color: DS.outline)),
                 child: Row(
                   children: [
                     if (userCountry != null) ...[
@@ -752,11 +671,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                     size: 13, color: DS.textPrimary)),
                             Text(
                               'UTC${_fmtOffset(userCountry.utcOffset)} ${userCountry.abbr}',
-                              style: DS.labelCaps(size: 8, color: DS.teal),
-                            ),
-                          ],
-                        ),
-                      ),
+                              style: DS.labelCaps(size: 8, color: DS.teal)),
+                          ])),
                     ] else ...[
                       Icon(Icons.language_outlined,
                           size: 22, color: DS.textMuted),
@@ -764,14 +680,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       Expanded(
                         child: Text('TAP TO SELECT YOUR COUNTRY',
                             style: DS.labelCaps(
-                                size: 9, color: DS.textMuted)),
-                      ),
+                                size: 9, color: DS.textMuted))),
                     ],
                     Icon(Icons.chevron_right, size: 18, color: DS.textMuted),
-                  ],
-                ),
-              ),
-            ),
+                  ]))),
             const SizedBox(height: 20),
 
             // ── DRIVER PROFILE / DISPLAY NAME ──
@@ -783,8 +695,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               decoration: BoxDecoration(
                 color: DS.surface1,
                 borderRadius: DS.aeroCorner,
-                border: Border.all(color: DS.outline),
-              ),
+                border: Border.all(color: DS.outline)),
               child: Column(
                 children: [
                   TextField(
@@ -806,9 +717,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           borderRadius: DS.aeroCorner,
                           borderSide: BorderSide(color: accentColor)),
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 12),
-                    ),
-                  ),
+                          horizontal: 12, vertical: 12))),
                   const SizedBox(height: 14),
                   SizedBox(
                     width: double.infinity,
@@ -819,8 +728,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                             borderRadius: DS.aeroCorner),
-                        elevation: 0,
-                      ),
+                        elevation: 0),
                       child: _isSaving
                           ? const SizedBox(
                               width: 18,
@@ -829,12 +737,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   color: Colors.black, strokeWidth: 2))
                           : Text('SAVE DISPLAY NAME',
                               style: DS.labelCaps(
-                                  size: 10, color: Colors.black)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                                  size: 10, color: Colors.black)))),
+                ])),
             const SizedBox(height: 20),
 
             // ── TELEMETRY FEEDS & ALERTS ──
@@ -882,16 +786,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 options: ['KM/H', 'MPH'],
                 selected: _isKph ? 0 : 1,
                 onSelect: (i) => setState(() => _isKph = i == 0),
-                accentColor: accentColor,
-              ),
+                accentColor: accentColor),
               _buildUnitRow(
                 'Track Surface Temp',
                 'Pirelli tire carcass & asphalt thermal',
                 options: ['°C', '°F'],
                 selected: _isCelsius ? 0 : 1,
                 onSelect: (i) => setState(() => _isCelsius = i == 0),
-                accentColor: accentColor,
-              ),
+                accentColor: accentColor),
             ]),
             const SizedBox(height: 20),
 
@@ -919,8 +821,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(color: DS.outline),
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: DS.aeroCorner),
-                ),
+                  shape: RoundedRectangleBorder(borderRadius: DS.aeroCorner)),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -929,10 +830,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     Text('SIGN OUT',
                         style:
                             DS.labelCaps(size: 10, color: DS.textMuted)),
-                  ],
-                ),
-              ),
-            ),
+                  ]))),
             const SizedBox(height: 20),
 
             // ── DANGER ZONE ──
@@ -941,8 +839,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               decoration: BoxDecoration(
                 color: DS.red.withValues(alpha: 0.06),
                 borderRadius: DS.aeroCorner,
-                border: Border.all(color: DS.red.withValues(alpha: 0.35)),
-              ),
+                border: Border.all(color: DS.red.withValues(alpha: 0.35))),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -956,8 +853,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const SizedBox(height: 10),
                   Text(
                     'Permanently deletes your account and all associated telemetry history. VIP credentials will be revoked.',
-                    style: DS.body(size: 11),
-                  ),
+                    style: DS.body(size: 11)),
                   const SizedBox(height: 14),
                   SizedBox(
                     width: double.infinity,
@@ -969,8 +865,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                             borderRadius: DS.aeroCorner),
-                        backgroundColor: DS.red.withValues(alpha: 0.08),
-                      ),
+                        backgroundColor: DS.red.withValues(alpha: 0.08)),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -979,13 +874,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           const SizedBox(width: 8),
                           Text('DELETE ACCOUNT & TELEMETRY HISTORY',
                               style: DS.labelCaps(size: 9, color: DS.red)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                        ]))),
+                ])),
             const SizedBox(height: 20),
 
             // ── ABOUT ──
@@ -994,8 +884,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               decoration: BoxDecoration(
                 color: DS.surface1,
                 borderRadius: DS.aeroCorner,
-                border: Border.all(color: DS.outline),
-              ),
+                border: Border.all(color: DS.outline)),
               child: Row(
                 children: [
                   Container(
@@ -1005,8 +894,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         color: DS.red, borderRadius: DS.aeroCornerSm),
                     alignment: Alignment.center,
                     child: Text('A',
-                        style: DS.display(size: 16, color: Colors.white)),
-                  ),
+                        style: DS.display(size: 16, color: Colors.white))),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -1018,21 +906,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             'POWERED BY SPORTRADAR · AWS · FIA DIRECT TIMING',
                             style:
                                 DS.labelCaps(size: 7, color: DS.textMuted)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                      ])),
+                ])),
             const SizedBox(height: 8),
             Center(
               child: Text('FIA DATA // ENCRYPTED SESSION',
-                  style: DS.labelCaps(size: 7, color: DS.surface4)),
-            ),
-          ],
-        ),
-      ),
-    );
+                  style: DS.labelCaps(size: 7, color: DS.surface4))),
+          ])));
   }
 
   Widget _buildStatusBanner(String msg, Color color) {
@@ -1042,8 +922,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: DS.aeroCornerSm,
-        border: Border.all(color: color.withValues(alpha: 0.5)),
-      ),
+        border: Border.all(color: color.withValues(alpha: 0.5))),
       child: Row(
         children: [
           Icon(
@@ -1054,9 +933,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               color: color),
           const SizedBox(width: 8),
           Text(msg, style: DS.labelCaps(size: 9, color: color)),
-        ],
-      ),
-    );
+        ]));
   }
 
   Widget _buildSectionHeader(
@@ -1068,8 +945,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         Text(title, style: DS.labelCaps(size: 10, color: DS.textPrimary)),
         const Spacer(),
         DSWidgets.statusChip(meta, color: metaColor, size: 7),
-      ],
-    );
+      ]);
   }
 
   Widget _buildGroupedSection(List<Widget> children) {
@@ -1077,8 +953,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       decoration: BoxDecoration(
         color: DS.surface1,
         borderRadius: DS.aeroCorner,
-        border: Border.all(color: DS.outline),
-      ),
+        border: Border.all(color: DS.outline)),
       child: Column(
         children: children.asMap().entries.map((e) {
           final isLast = e.key == children.length - 1;
@@ -1086,11 +961,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             children: [
               e.value,
               if (!isLast) Divider(color: DS.outline, height: 1, thickness: 1),
-            ],
-          );
-        }).toList(),
-      ),
-    );
+            ]);
+        }).toList()));
   }
 
   Widget _buildToggleRow(
@@ -1118,13 +990,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ]),
                 const SizedBox(height: 2),
                 Text(subtitle, style: DS.bodySm(size: 11)),
-              ],
-            ),
-          ),
+              ])),
           Switch(value: value, activeThumbColor: activeColor, activeTrackColor: activeColor.withValues(alpha: 0.5), onChanged: onChanged),
-        ],
-      ),
-    );
+        ]));
   }
 
   Widget _buildUnitRow(
@@ -1146,16 +1014,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 Text(title, style: DS.body(size: 13, color: DS.textPrimary)),
                 const SizedBox(height: 2),
                 Text(subtitle, style: DS.bodySm(size: 11)),
-              ],
-            ),
-          ),
+              ])),
           Container(
             padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               color: DS.surface2,
               borderRadius: DS.aeroCornerSm,
-              border: Border.all(color: DS.outline),
-            ),
+              border: Border.all(color: DS.outline)),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: options.asMap().entries.map((e) {
@@ -1168,22 +1033,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: isSelected ? accentColor : Colors.transparent,
-                      borderRadius: DS.aeroCornerSm,
-                    ),
+                      borderRadius: DS.aeroCornerSm),
                     child: Text(
                       e.value,
                       style: DS.labelCaps(
                           size: 9,
-                          color: isSelected ? Colors.black : DS.textMuted),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-        ],
-      ),
-    );
+                          color: isSelected ? Colors.black : DS.textMuted))));
+              }).toList())),
+        ]));
   }
 
   Widget _buildActionRow(
@@ -1199,8 +1056,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               height: 32,
               decoration: BoxDecoration(
                   color: DS.surface2, borderRadius: DS.aeroCornerSm),
-              child: Icon(icon, size: 16, color: DS.textMuted),
-            ),
+              child: Icon(icon, size: 16, color: DS.textMuted)),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -1209,13 +1065,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Text(title, style: DS.body(size: 13, color: DS.textPrimary)),
                   const SizedBox(height: 2),
                   Text(subtitle, style: DS.bodySm(size: 11)),
-                ],
-              ),
-            ),
+                ])),
             Icon(Icons.chevron_right, size: 18, color: DS.textMuted),
-          ],
-        ),
-      ),
-    );
+          ])));
   }
 }

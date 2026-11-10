@@ -31,8 +31,7 @@ class RaceRecap {
       date: json['date']?.toString() ?? '',
       winnerDriver: json['winner_driver']?.toString() ?? '',
       winnerTeam: json['winner_team']?.toString() ?? '',
-      isCompleted: json['is_completed'] == true,
-    );
+      isCompleted: json['is_completed'] == true);
   }
 
   String get youtubeSearchUrl {

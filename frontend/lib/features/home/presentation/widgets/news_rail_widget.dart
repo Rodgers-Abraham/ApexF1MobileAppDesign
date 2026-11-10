@@ -22,15 +22,12 @@ class NewsRailWidget extends ConsumerWidget {
             Expanded(
               child: Text(
                 'PADDOCK FEED',
-                style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 0.8),
+                style: const TextStyle( fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 0.8),
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+                overflow: TextOverflow.ellipsis)),
             const SizedBox(width: 8),
             Text('LATEST ARTICLES', style: DS.labelCaps(size: 9, color: DS.textMuted)),
-          ],
-        ),
+          ]),
         const SizedBox(height: 10),
         Builder(
           builder: (context) {
@@ -42,8 +39,7 @@ class NewsRailWidget extends ConsumerWidget {
               return Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(color: const Color(0xFF141419), borderRadius: BorderRadius.circular(10)),
-                child: Text('No recent paddock articles available.', style: DS.body(size: 11, color: DS.textMuted)),
-              );
+                child: Text('No recent paddock articles available.', style: DS.body(size: 11, color: DS.textMuted)));
             }
 
             return SizedBox(
@@ -64,10 +60,8 @@ class NewsRailWidget extends ConsumerWidget {
                         topLeft: Radius.circular(3),
                         topRight: Radius.circular(14),
                         bottomLeft: Radius.circular(3),
-                        bottomRight: Radius.circular(14),
-                      ),
-                      border: Border.all(color: const Color(0xFF202028)),
-                    ),
+                        bottomRight: Radius.circular(14)),
+                      border: Border.all(color: const Color(0xFF202028))),
                     clipBehavior: Clip.antiAlias,
                     child: Material(
                       color: Colors.transparent,
@@ -93,14 +87,11 @@ class NewsRailWidget extends ConsumerWidget {
                                       fit: BoxFit.cover,
                                       errorBuilder: (context, error, stackTrace) => Container(
                                         color: const Color(0xFF202028),
-                                        child: const Center(child: Icon(Icons.sports_motorsports, color: Colors.grey, size: 30)),
-                                      ),
-                                    )
+                                        child: const Center(child: Icon(Icons.sports_motorsports, color: Colors.grey, size: 30))))
                                   else
                                     Container(
                                       color: const Color(0xFF202028),
-                                      child: const Center(child: Icon(Icons.sports_motorsports, color: Colors.grey, size: 30)),
-                                    ),
+                                      child: const Center(child: Icon(Icons.sports_motorsports, color: Colors.grey, size: 30))),
                                   Positioned.fill(
                                     child: DecoratedBox(
                                       decoration: BoxDecoration(
@@ -108,11 +99,7 @@ class NewsRailWidget extends ConsumerWidget {
                                           begin: Alignment.topCenter,
                                           end: Alignment.bottomCenter,
                                           colors: [Colors.transparent, Colors.black.withValues(alpha: 0.75)],
-                                          stops: const [0.4, 1.0],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                                          stops: const [0.4, 1.0])))),
                                   Positioned(
                                     bottom: 8,
                                     left: 10,
@@ -121,13 +108,8 @@ class NewsRailWidget extends ConsumerWidget {
                                       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(2)),
                                       child: Text(
                                         item.category.isNotEmpty ? item.category.toUpperCase() : 'OFFICIAL',
-                                        style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 7.5, fontWeight: FontWeight.w900, color: Color(0xFF0B0B0E)),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                                        style: const TextStyle( fontSize: 7.5, fontWeight: FontWeight.w900, color: Color(0xFF0B0B0E))))),
+                                ])),
                             Padding(
                               padding: const EdgeInsets.all(10),
                               child: Column(
@@ -137,8 +119,7 @@ class NewsRailWidget extends ConsumerWidget {
                                     item.title,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontFamily: 'Formula1', fontSize: 11.5, fontWeight: FontWeight.bold, color: Colors.white, height: 1.25),
-                                  ),
+                                    style: const TextStyle( fontSize: 11.5, fontWeight: FontWeight.bold, color: Colors.white, height: 1.25)),
                                   const SizedBox(height: 8),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -148,27 +129,14 @@ class NewsRailWidget extends ConsumerWidget {
                                           '${item.timeAgo.isNotEmpty ? item.timeAgo : "RECENT"} · ${item.source.toUpperCase()}',
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: DS.labelCaps(size: 8, color: DS.textMuted),
-                                        ),
-                                      ),
+                                          style: DS.labelCaps(size: 8, color: DS.textMuted))),
                                       const SizedBox(width: 6),
                                       const Icon(Icons.arrow_outward_rounded, size: 14, color: Colors.grey),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            );
-          },
-        ),
-      ],
-    );
+                                    ]),
+                                ])),
+                          ]))));
+                }));
+          }),
+      ]);
   }
 }

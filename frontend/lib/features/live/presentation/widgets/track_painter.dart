@@ -74,9 +74,8 @@ class TrackPainter extends CustomPainter {
 
   void _drawBadge(Canvas canvas, Offset pos, String text, Color bg, Color fg) {
     final tp = TextPainter(
-      text: TextSpan(text: text, style: TextStyle(fontFamily: 'Formula1', fontSize: 7, fontWeight: FontWeight.w900, color: fg)),
-      textDirection: TextDirection.ltr,
-    )..layout();
+      text: TextSpan(text: text, style: TextStyle( fontSize: 7, fontWeight: FontWeight.w900, color: fg)),
+      textDirection: TextDirection.ltr)..layout();
 
     final rrect = RRect.fromRectAndRadius(Rect.fromCenter(center: pos, width: tp.width + 8, height: tp.height + 4), const Radius.circular(3));
     canvas.drawRRect(rrect, Paint()..color = bg);
@@ -96,9 +95,8 @@ class TrackPainter extends CustomPainter {
     canvas.drawLine(pos + Offset(0, isNearTop ? 6 : -6), badgeCenter + Offset(0, isNearTop ? -10 : 10), Paint()..color = color.withValues(alpha: 0.8)..strokeWidth = 1.2);
 
     final tp = TextPainter(
-      text: TextSpan(text: text, style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 7.5, fontWeight: FontWeight.w900, color: Colors.white)),
-      textDirection: TextDirection.ltr,
-    )..layout();
+      text: TextSpan(text: text, style: const TextStyle( fontSize: 7.5, fontWeight: FontWeight.w900, color: Colors.white)),
+      textDirection: TextDirection.ltr)..layout();
 
     final rrect = RRect.fromRectAndRadius(Rect.fromCenter(center: badgeCenter, width: tp.width + 16, height: tp.height + 7), const Radius.circular(5));
     canvas.drawRRect(rrect, Paint()..color = const Color(0xFF141419));
@@ -106,8 +104,7 @@ class TrackPainter extends CustomPainter {
 
     final leftBar = RRect.fromRectAndRadius(
       Rect.fromLTWH(badgeCenter.dx - (tp.width + 16) / 2, badgeCenter.dy - (tp.height + 7) / 2, 3.5, tp.height + 7),
-      const Radius.circular(1.5),
-    );
+      const Radius.circular(1.5));
     canvas.drawRRect(leftBar, Paint()..color = color);
     tp.paint(canvas, badgeCenter - Offset(tp.width / 2 - 2, tp.height / 2));
   }

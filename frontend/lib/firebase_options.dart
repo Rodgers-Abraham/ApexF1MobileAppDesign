@@ -10,8 +10,7 @@ class DefaultFirebaseOptions {
         return android;
       default:
         throw UnsupportedError(
-          '${defaultTargetPlatform.name} is not supported.',
-        );
+          '${defaultTargetPlatform.name} is not supported.');
     }
   }
 
@@ -20,6 +19,5 @@ class DefaultFirebaseOptions {
     appId: '1:986052833183:android:9b98e5c7cdf35865b917aa',
     messagingSenderId: '986052833183',
     projectId: 'f1-iq-2026',
-    storageBucket: 'f1-iq-2026.firebasestorage.app',
-  );
+    storageBucket: 'f1-iq-2026.firebasestorage.app');
 }

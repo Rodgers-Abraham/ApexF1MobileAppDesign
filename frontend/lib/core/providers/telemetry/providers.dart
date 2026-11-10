@@ -202,8 +202,7 @@ class RaceReplayState {
       flagStatus: flagStatus ?? this.flagStatus,
       allLaps: allLaps ?? this.allLaps,
       finalClassification: finalClassification ?? this.finalClassification,
-      focusedDriverName: clearFocusedDriver ? null : (focusedDriverName ?? this.focusedDriverName),
-    );
+      focusedDriverName: clearFocusedDriver ? null : (focusedDriverName ?? this.focusedDriverName));
   }
 
   String get lapLabel {
@@ -261,8 +260,7 @@ class RaceReplayState {
       team: finalEntry.team,
       finalPosition: int.tryParse(finalEntry.pos) ?? 0,
       fastestLap: fastest,
-      fastestLapNum: fastestLapNum,
-    );
+      fastestLapNum: fastestLapNum);
   }
 }
 
@@ -287,8 +285,7 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
       isLoading: true,
       loadError: null,
       allLaps: [],
-      telemetry: [],
-    );
+      telemetry: []);
 
     try {
       final client = _ref.read(apiClientProvider);
@@ -328,16 +325,14 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
           allLaps: entries,
           finalClassification: finalClassif,
           isLoading: false,
-          telemetry: lap1Entry?.positions ?? [],
-        );
+          telemetry: lap1Entry?.positions ?? []);
       }
     } catch (e) {
       debugPrint('Session replay error: $e');
       if (mounted) {
         state = state.copyWith(
           isLoading: false,
-          loadError: 'Timing data not yet available for this session. Try again later.',
-        );
+          loadError: 'Timing data not yet available for this session. Try again later.');
       }
     }
   }
@@ -366,8 +361,7 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
       gear: '',
       color: driverData,
       x: 0.0,
-      y: 0.0,
-    );
+      y: 0.0);
   }
 
   String _colorForTeam(String team) {
@@ -393,8 +387,7 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
     final entry = state.allLaps.firstWhere(
       (l) => l.lap == clamped,
       orElse: () => state.allLaps.reduce((a, b) =>
-          (a.lap - clamped).abs() < (b.lap - clamped).abs() ? a : b),
-    );
+          (a.lap - clamped).abs() < (b.lap - clamped).abs() ? a : b));
     state = state.copyWith(currentLap: clamped, telemetry: entry.positions);
   }
 

@@ -19,8 +19,7 @@ class DriverStandingJolpica {
       name: json['name']?.toString() ?? '',
       team: json['team']?.toString() ?? '',
       pts: json['pts']?.toString() ?? '0',
-      wins: json['wins']?.toString() ?? '0',
-    );
+      wins: json['wins']?.toString() ?? '0');
   }
 }
 
@@ -42,8 +41,7 @@ class ConstructorStandingJolpica {
       pos: json['pos']?.toString() ?? '0',
       name: json['name']?.toString() ?? '',
       pts: json['pts']?.toString() ?? '0',
-      wins: json['wins']?.toString() ?? '0',
-    );
+      wins: json['wins']?.toString() ?? '0');
   }
 }
 
@@ -116,8 +114,7 @@ class LiveTelemetry {
       gear: json['gear']?.toString() ?? 'G7',
       color: json['color']?.toString() ?? '#3671C6',
       x: (json['x'] as num?)?.toDouble() ?? 90.0,
-      y: (json['y'] as num?)?.toDouble() ?? 90.0,
-    );
+      y: (json['y'] as num?)?.toDouble() ?? 90.0);
   }
 }
 
@@ -153,8 +150,7 @@ class RaceFlagStatus {
       vscActive: json['vsc_active'] as bool? ?? false,
       redFlagActive: json['red_flag_active'] as bool? ?? false,
       yellowFlagActive: json['yellow_flag_active'] as bool? ?? false,
-      activeSector: (json['active_sector'] as num?)?.toInt() ?? 0,
-    );
+      activeSector: (json['active_sector'] as num?)?.toInt() ?? 0);
   }
 
   bool get isSafetyCar => safetyCarActive;
@@ -194,8 +190,7 @@ class TeamRadioItem {
       color: json['color']?.toString() ?? '#00D2BE',
       timestamp: json['timestamp']?.toString() ?? 'LIVE',
       audioUrl: json['audio_url']?.toString() ?? '',
-      transcript: json['transcript']?.toString() ?? 'Radio message received.',
-    );
+      transcript: json['transcript']?.toString() ?? 'Radio message received.');
   }
 }
 
@@ -232,8 +227,7 @@ class RaceEventItem {
       team: json['team']?.toString() ?? 'FIA',
       timestamp: json['timestamp']?.toString() ?? 'LIVE',
       lapNumber: (json['lap_number'] as num?)?.toInt() ?? 0,
-      lapTime: json['lap_time']?.toString() ?? '',
-    );
+      lapTime: json['lap_time']?.toString() ?? '');
   }
 }
 
@@ -267,8 +261,7 @@ class LiveNewsArticle {
       publishedAt: json['published_at']?.toString() ?? 'Just now',
       imageUrl: json['image_url']?.toString() ?? '',
       timeAgo: json['time_ago']?.toString() ?? '',
-      category: json['category']?.toString() ?? 'F1',
-    );
+      category: json['category']?.toString() ?? 'F1');
   }
 }
 
@@ -320,8 +313,7 @@ class SessionLiveStatus {
       nextSessionMeeting: json['next_session_meeting'] as String? ?? 'Upcoming GP',
       nextSessionDate: json['next_session_date'] as String? ?? '',
       nextSessionCircuit: json['next_session_circuit'] as String? ?? '',
-      secondsUntilNext: json['seconds_until_next'] as int? ?? 0,
-    );
+      secondsUntilNext: json['seconds_until_next'] as int? ?? 0);
   }
 }
 
@@ -364,8 +356,7 @@ class TrackConditions {
       trackStatus: json['track_status']?.toString() ?? '',
       sessionName: json['session_name']?.toString() ?? '',
       circuitName: json['circuit_name']?.toString() ?? '',
-      summary: json['summary']?.toString() ?? '',
-    );
+      summary: json['summary']?.toString() ?? '');
   }
 }
 
@@ -390,8 +381,7 @@ class CompoundStrategyItem {
       laps: (json['laps'] as num?)?.toInt() ?? 0,
       avgLaps: (json['avg_laps'] as num?)?.toInt() ?? 0,
       stintsCount: (json['stints_count'] as num?)?.toInt() ?? 0,
-      color: json['color']?.toString() ?? '#CCCCCC',
-    );
+      color: json['color']?.toString() ?? '#CCCCCC');
   }
 }
 
@@ -411,7 +401,6 @@ class TireStrategyData {
     return TireStrategyData(
       sessionKey: (json['session_key'] as num?)?.toInt() ?? 0,
       totalStints: (json['total_stints'] as num?)?.toInt() ?? 0,
-      strategies: list.map((i) => CompoundStrategyItem.fromJson(i as Map<String, dynamic>)).toList(),
-    );
+      strategies: list.map((i) => CompoundStrategyItem.fromJson(i as Map<String, dynamic>)).toList());
   }
 }

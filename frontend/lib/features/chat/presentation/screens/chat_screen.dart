@@ -38,8 +38,7 @@ class ChatState {
     return ChatState(
       messages: messages ?? this.messages,
       isLoading: isLoading ?? this.isLoading,
-      error: error,
-    );
+      error: error);
   }
 }
 
@@ -52,8 +51,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       messages: [
         ChatMessage(
           text: "Hi! I am F1-IQ, your strictly Formula 1 AI assistant. Ask me anything about F1 history, statistics, standings, rules, or telemetry. What's on your mind today?",
-          isUser: false,
-        )
+          isUser: false)
       ]
     );
   }
@@ -63,8 +61,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
     state = state.copyWith(
       messages: [...state.messages, userMsg],
       isLoading: true,
-      error: null,
-    );
+      error: null);
 
     // Format chat history for backend (matching ChatMessage structure in FastAPI)
     final history = state.messages.sublist(0, state.messages.length - 1).map((m) {
@@ -80,8 +77,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
         data: {
           'message': text,
           'history': history,
-        },
-      );
+        });
 
       final responseText = response.data['response'] as String;
 
@@ -95,18 +91,15 @@ class ChatNotifier extends StateNotifier<ChatState> {
       final assistantMsg = ChatMessage(
         text: cleanedText,
         isUser: false,
-        citations: citations,
-      );
+        citations: citations);
 
       state = state.copyWith(
         messages: [...state.messages, assistantMsg],
-        isLoading: false,
-      );
+        isLoading: false);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: "Failed to connect to F1-IQ server. Please try again.",
-      );
+        error: "Failed to connect to F1-IQ server. Please try again.");
     }
   }
 
@@ -141,8 +134,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent + 100,
         duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
+        curve: Curves.easeOut);
     });
   }
 
@@ -171,8 +163,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         subtitle: 'APEX INTELLIGENCE',
         isLive: true,
         liveLabel: 'GEMINI',
-        latencyMs: '12',
-      ),
+        latencyMs: '12'),
       body: Column(
         children: [
           // Track status bar
@@ -185,9 +176,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 const SizedBox(width: 6),
                 Text('TRACK STATUS: GREEN', style: DS.labelCaps(size: 8, color: DS.green)),
                 Text('  //  AIR 26°C · TRACK 38.4°C  |  ENGINE ACTIVE', style: DS.labelCaps(size: 8, color: DS.textMuted)),
-              ],
-            ),
-          ),
+              ])),
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
@@ -221,13 +210,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                 const SkeletonBox(height: 10, borderRadius: 3),
                                 const SizedBox(height: 6),
                                 SkeletonBox(width: MediaQuery.of(context).size.width * 0.5, height: 10, borderRadius: 3),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
+                              ]))),
+                      ]));
                 }
 
                 final msg = chatState.messages[index];
@@ -239,9 +223,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(color: DS.red, borderRadius: DS.aeroCorner),
-                      child: Text(msg.text, style: DS.body(size: 13, color: DS.redText)),
-                    ),
-                  );
+                      child: Text(msg.text, style: DS.body(size: 13, color: DS.redText))));
                 }
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6),
@@ -272,21 +254,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                         const Icon(Icons.bookmark_outline, size: 9, color: Color(0xFF29DEC9)),
                                         const SizedBox(width: 3),
                                         Text(cite, style: DS.labelCaps(size: 8, color: DS.teal)),
-                                      ]),
-                                    );
-                                  }).toList(),
-                                )
+                                      ]));
+                                  }).toList())
                               ],
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
+                            ]))),
+                    ]));
+              })),
 
           if (chatState.error != null)
             Padding(
@@ -294,17 +267,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(color: DS.red.withValues(alpha: 0.1), borderRadius: DS.aeroCornerSm, border: Border.all(color: DS.red.withValues(alpha: 0.4))),
-                child: Text(chatState.error!, style: DS.body(size: 11, color: DS.red)),
-              ),
-            ),
+                child: Text(chatState.error!, style: DS.body(size: 11, color: DS.red)))),
 
           // Input bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: DS.surface0,
-              border: Border(top: BorderSide(color: DS.outline)),
-            ),
+              border: Border(top: BorderSide(color: DS.outline))),
             child: Row(
               children: [
                 Icon(Icons.mic_none, size: 20, color: DS.textMuted),
@@ -322,27 +292,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       enabledBorder: OutlineInputBorder(borderRadius: DS.aeroCorner, borderSide: BorderSide(color: DS.outline)),
                       focusedBorder: OutlineInputBorder(borderRadius: DS.aeroCorner, borderSide: BorderSide(color: DS.red)),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      isDense: true,
-                    ),
+                      isDense: true),
                     textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _send(),
-                  ),
-                ),
+                    onSubmitted: (_) => _send())),
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: _send,
                   child: Container(
                     width: 36, height: 36,
                     decoration: BoxDecoration(color: DS.red, shape: BoxShape.circle),
-                    child: const Icon(Icons.arrow_upward_rounded, color: Colors.white, size: 18),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+                    child: const Icon(Icons.arrow_upward_rounded, color: Colors.white, size: 18))),
+              ])),
+        ]));
   }
 
   Widget _buildSuggestionsPanel(List<String> suggestions) {
@@ -370,12 +331,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       ]),
                       const SizedBox(height: 4),
                       Text('Pitwall telemetry analysis, strategy simulation and F1 history ready for query.', style: DS.body(size: 11)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+                    ])),
+              ])),
           const SizedBox(height: 12),
           // Suggestion chips
           GridView.builder(
@@ -394,20 +351,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 decoration: BoxDecoration(
                   color: DS.surface2,
                   borderRadius: DS.aeroCornerSm,
-                  border: Border(left: BorderSide(color: DS.red, width: 2)),
-                ),
+                  border: Border(left: BorderSide(color: DS.red, width: 2))),
                 child: Row(
                   children: [
                     Expanded(child: Text(suggestions[i], style: DS.body(size: 10, color: DS.textVariant))),
                     Icon(Icons.arrow_forward, size: 12, color: DS.textMuted),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+                  ])))),
+        ]));
   }
 
 }
@@ -419,7 +369,6 @@ class _AiAvatar extends StatelessWidget {
       width: 28, height: 28,
       decoration: BoxDecoration(color: DS.tealDark, borderRadius: DS.aeroCornerSm),
       alignment: Alignment.center,
-      child: Text('A', style: DS.driverCode(size: 13, color: DS.teal)),
-    );
+      child: Text('A', style: DS.driverCode(size: 13, color: DS.teal)));
   }
 }

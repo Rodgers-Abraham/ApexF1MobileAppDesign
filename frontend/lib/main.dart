@@ -18,17 +18,14 @@ void main() async {
 
   try {
     await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+      options: DefaultFirebaseOptions.currentPlatform);
   } catch (e) {
     debugPrint('Firebase init error: $e');
   }
 
   runApp(
     const ProviderScope(
-      child: F1ApexApp(),
-    ),
-  );
+      child: F1ApexApp()));
 }
 
 class F1ApexApp extends ConsumerWidget {
@@ -44,7 +41,6 @@ class F1ApexApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: themeNotifier.getThemeData(),
       themeMode: themeState.themeMode,
-      routerConfig: appRouter,
-    );
+      routerConfig: appRouter);
   }
 }

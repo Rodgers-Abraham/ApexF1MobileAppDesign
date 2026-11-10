@@ -23,26 +23,22 @@ class RaceRecapsWidget extends ConsumerWidget {
           children: [
             const Text(
               'RACE RECAPS',
-              style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 0.8),
-            ),
+              style: TextStyle( fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 0.8)),
             Text('2026 SEASON', style: AppFonts.number(fontSize: 9, color: Colors.grey.shade500, fontWeight: FontWeight.bold)),
-          ],
-        ),
+          ]),
         const SizedBox(height: 10),
         recapsAsync.when(
           loading: () => const SkeletonCardRow(count: 3, cardWidth: 220, cardHeight: 160),
           error: (_, __) => Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(color: const Color(0xFF141419), borderRadius: BorderRadius.circular(10)),
-            child: Text('Recaps unavailable.', style: AppFonts.regular(fontSize: 11, color: Colors.grey)),
-          ),
+            child: Text('Recaps unavailable.', style: AppFonts.regular(fontSize: 11, color: Colors.grey))),
           data: (recaps) {
             if (recaps.isEmpty) {
               return Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(color: const Color(0xFF141419), borderRadius: BorderRadius.circular(10)),
-                child: Text('No completed races yet this season.', style: AppFonts.regular(fontSize: 11, color: Colors.grey)),
-              );
+                child: Text('No completed races yet this season.', style: AppFonts.regular(fontSize: 11, color: Colors.grey)));
             }
             return SizedBox(
               height: 195,
@@ -52,13 +48,9 @@ class RaceRecapsWidget extends ConsumerWidget {
                 padding: EdgeInsets.only(right: MediaQuery.of(context).size.width * 0.32),
                 itemCount: recaps.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 10),
-                itemBuilder: (context, index) => _RecapCard(recap: recaps[index], accent: accent),
-              ),
-            );
-          },
-        ),
-      ],
-    );
+                itemBuilder: (context, index) => _RecapCard(recap: recaps[index], accent: accent)));
+          }),
+      ]);
   }
 }
 
@@ -81,10 +73,8 @@ class _RecapCard extends StatelessWidget {
           topLeft: Radius.circular(3),
           topRight: Radius.circular(14),
           bottomLeft: Radius.circular(3),
-          bottomRight: Radius.circular(14),
-        ),
-        border: Border.all(color: const Color(0xFF202028)),
-      ),
+          bottomRight: Radius.circular(14)),
+        border: Border.all(color: const Color(0xFF202028))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -94,8 +84,7 @@ class _RecapCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: teamColor.withValues(alpha: 0.15),
               borderRadius: const BorderRadius.only(topLeft: Radius.circular(3), topRight: Radius.circular(14)),
-              border: Border(bottom: BorderSide(color: teamColor.withValues(alpha: 0.4), width: 1)),
-            ),
+              border: Border(bottom: BorderSide(color: teamColor.withValues(alpha: 0.4), width: 1))),
             child: Row(
               children: [
                 Text(flag, style: const TextStyle(fontSize: 14)),
@@ -103,16 +92,11 @@ class _RecapCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'RD ${recap.round}',
-                    style: AppFonts.number(fontSize: 9, fontWeight: FontWeight.w900, color: teamColor),
-                  ),
-                ),
+                    style: AppFonts.number(fontSize: 9, fontWeight: FontWeight.w900, color: teamColor))),
                 Text(
                   recap.date.length >= 7 ? recap.date.substring(5, 7) + '/' + recap.date.substring(0, 4) : recap.date,
-                  style: AppFonts.number(fontSize: 8, color: Colors.grey.shade500),
-                ),
-              ],
-            ),
-          ),
+                  style: AppFonts.number(fontSize: 8, color: Colors.grey.shade500)),
+              ])),
           Padding(
             padding: const EdgeInsets.all(10),
             child: Column(
@@ -122,8 +106,7 @@ class _RecapCard extends StatelessWidget {
                   recap.raceName.replaceAll(' Grand Prix', ' GP'),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white),
-                ),
+                  style: const TextStyle( fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white)),
                 const SizedBox(height: 6),
                 if (recap.winnerDriver.isNotEmpty) ...[
                   Row(
@@ -135,13 +118,10 @@ class _RecapCard extends StatelessWidget {
                           recap.winnerDriver,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: AppFonts.regular(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
+                          style: AppFonts.regular(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold))),
+                    ]),
                   const SizedBox(height: 2),
-                  Text(recap.winnerTeam, style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 8, color: teamColor)),
+                  Text(recap.winnerTeam, style: TextStyle( fontSize: 8, color: teamColor)),
                 ] else
                   Text('Results pending', style: AppFonts.regular(fontSize: 10, color: Colors.grey)),
                 const SizedBox(height: 10),
@@ -151,14 +131,9 @@ class _RecapCard extends StatelessWidget {
                     _YtButton(label: 'RACE', url: recap.youtubeSearchUrl, color: const Color(0xFFFF0000)),
                     const SizedBox(width: 6),
                     _YtButton(label: 'QUALI', url: recap.qualiYoutubeUrl, color: Colors.grey.shade700),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+                  ]),
+              ])),
+        ]));
   }
 }
 
@@ -180,17 +155,13 @@ class _YtButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: color.withValues(alpha: 0.5)),
-        ),
+          border: Border.all(color: color.withValues(alpha: 0.5))),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.play_circle_filled_rounded, size: 10, color: color),
             const SizedBox(width: 3),
-            Text(label, style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 7.5, fontWeight: FontWeight.w900, color: color)),
-          ],
-        ),
-      ),
-    );
+            Text(label, style: TextStyle( fontSize: 7.5, fontWeight: FontWeight.w900, color: color)),
+          ])));
   }
 }

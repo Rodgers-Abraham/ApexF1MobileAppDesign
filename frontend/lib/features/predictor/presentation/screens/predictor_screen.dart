@@ -110,8 +110,7 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not save picks: $e'), backgroundColor: Colors.red),
-        );
+          SnackBar(content: Text('Could not save picks: $e'), backgroundColor: Colors.red));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -130,8 +129,7 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
       context: context,
       backgroundColor: const Color(0xFF141419),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (context) {
         final excludedCodes = _podiumPicks.whereType<String>().toSet();
         final currentPick = _podiumPicks[slotIndex];
@@ -151,9 +149,7 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                 height: 4,
                 decoration: BoxDecoration(
                   color: Colors.white24,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+                  borderRadius: BorderRadius.circular(2))),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
@@ -161,21 +157,14 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                   children: [
                     Text(
                       'SELECT P${slotIndex + 1} DRIVER',
-                      style: const TextStyle(
-                        fontFamily: 'Formula1Wide',
-                        fontSize: 12,
+                      style: const TextStyle( fontSize: 12,
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
-                        letterSpacing: 1,
-                      ),
-                    ),
+                        letterSpacing: 1)),
                     IconButton(
                       icon: const Icon(Icons.close_rounded, color: Colors.grey, size: 20),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-              ),
+                      onPressed: () => Navigator.pop(context)),
+                  ])),
               const Divider(color: Color(0xFF202028), height: 1),
               Expanded(
                 child: ListView.builder(
@@ -190,14 +179,12 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                       decoration: BoxDecoration(
                         color: const Color(0xFF19191F),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFF282832)),
-                      ),
+                        border: Border.all(color: const Color(0xFF282832))),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
                           decoration: BoxDecoration(
-                            border: Border(left: BorderSide(color: teamColor, width: 3.5)),
-                          ),
+                            border: Border(left: BorderSide(color: teamColor, width: 3.5))),
                           child: ListTile(
                             onTap: () {
                               setState(() {
@@ -211,57 +198,33 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                           height: 36,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            border: Border.all(color: teamColor.withValues(alpha: 0.5), width: 1.2),
-                          ),
+                            border: Border.all(color: teamColor.withValues(alpha: 0.5), width: 1.2)),
                           clipBehavior: Clip.antiAlias,
                           child: d.portraitAsset.isNotEmpty
                               ? Image.asset(d.portraitAsset, fit: BoxFit.cover, alignment: Alignment.topCenter)
-                              : const SizedBox(),
-                        ),
+                              : const SizedBox()),
                         title: Row(
                           children: [
                             Text(
                               d.code,
-                              style: const TextStyle(
-                                fontFamily: 'Formula1',
-                                fontSize: 13,
+                              style: const TextStyle( fontSize: 13,
                                 fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                              ),
-                            ),
+                                color: Colors.white)),
                             const SizedBox(width: 8),
                             Text(
                               d.name,
-                              style: const TextStyle(
-                                fontFamily: 'Formula1',
-                                fontSize: 11.5,
-                                color: Colors.white70,
-                              ),
-                            ),
-                          ],
-                        ),
+                              style: const TextStyle( fontSize: 11.5,
+                                color: Colors.white70)),
+                          ]),
                         subtitle: Text(
                           d.team,
-                          style: TextStyle(
-                            fontFamily: 'Formula1',
-                            fontSize: 9.5,
+                          style: TextStyle( fontSize: 9.5,
                             color: teamColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey, size: 14),
-                      ),
-                    ),
-                  ),
-                );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+                            fontWeight: FontWeight.bold)),
+                        trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey, size: 14)))));
+                  })),
+            ]));
+      });
   }
 
   @override
@@ -287,8 +250,7 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
         subtitle: 'TRACKSIDE TELEMETRY',
         isLive: true,
         liveLabel: 'LIVE R24',
-        latencyMs: '12',
-      ),
+        latencyMs: '12'),
       body: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 28),
           child: Column(
@@ -304,59 +266,38 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                     children: [
                       Text(
                         'RACE WEEKEND',
-                        style: TextStyle(
-                          fontFamily: 'Formula1Wide',
-                          fontSize: 10,
+                        style: TextStyle( fontSize: 10,
                           letterSpacing: 1.5,
                           color: Colors.grey[400],
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                          fontWeight: FontWeight.bold)),
                       const SizedBox(height: 3),
                       const Text(
                         'PREDICTOR',
-                        style: TextStyle(
-                          fontFamily: 'Formula1',
-                          fontSize: 22,
+                        style: TextStyle( fontSize: 22,
                           fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
+                          color: Colors.white)),
+                    ]),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                     decoration: BoxDecoration(
                       color: const Color(0xFF141419),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: const Color(0xFF202028)),
-                    ),
+                      border: Border.all(color: const Color(0xFF202028))),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         const Text(
                           'LOCKS IN',
-                          style: TextStyle(
-                            fontFamily: 'Formula1Wide',
-                            fontSize: 7.5,
+                          style: TextStyle( fontSize: 7.5,
                             color: Color(0xFF8F909A),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                            fontWeight: FontWeight.bold)),
                         Text(
                           lockLabel,
-                          style: TextStyle(
-                            fontFamily: 'Formula1Wide',
-                            fontSize: 11,
+                          style: TextStyle( fontSize: 11,
                             fontWeight: FontWeight.w900,
-                            color: _isPermanentlyLocked ? Colors.grey : accentColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                            color: _isPermanentlyLocked ? Colors.grey : accentColor)),
+                      ])),
+                ]),
               const SizedBox(height: 14),
 
               // Hero Card
@@ -365,8 +306,7 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF141419),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFF202028)),
-                ),
+                  border: Border.all(color: const Color(0xFF202028))),
                 child: Row(
                   children: [
                     Container(
@@ -375,10 +315,8 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                       decoration: BoxDecoration(
                         color: accentColor.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
-                        border: Border.all(color: accentColor.withValues(alpha: 0.4), width: 1.5),
-                      ),
-                      child: Icon(Icons.track_changes_rounded, color: accentColor, size: 24),
-                    ),
+                        border: Border.all(color: accentColor.withValues(alpha: 0.4), width: 1.5)),
+                      child: Icon(Icons.track_changes_rounded, color: accentColor, size: 24)),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -388,18 +326,13 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                             nextRace != null
                                 ? 'ROUND ${nextRace.round.padLeft(2, '0')} · ${nextRace.name.toUpperCase()}'
                                 : 'UPCOMING GRAND PRIX',
-                            style: DS.labelCaps(size: 8.5, color: DS.textMuted),
-                          ),
+                            style: DS.labelCaps(size: 8.5, color: DS.textMuted)),
                           const SizedBox(height: 2),
                           Text(
                             _isLocked ? 'PICKS LOCKED' : 'CALL THE RACE',
-                            style: const TextStyle(
-                              fontFamily: 'Formula1',
-                              fontSize: 14,
+                            style: const TextStyle( fontSize: 14,
                               fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                            ),
-                          ),
+                              color: Colors.white)),
                           const SizedBox(height: 2),
                           Text(
                             _isLocked
@@ -407,12 +340,8 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                                 : 'Build your race card. Higher confidence = higher reward.',
                             style: const TextStyle(
                               fontSize: 11,
-                              color: Color(0xFF8F909A),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                              color: Color(0xFF8F909A))),
+                        ])),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
@@ -421,22 +350,13 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                             : const Color(0xFF202028),
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(
-                          color: _isLocked ? const Color(0xFF00E676) : Colors.white12,
-                        ),
-                      ),
+                          color: _isLocked ? const Color(0xFF00E676) : Colors.white12)),
                       child: Text(
                         _isLocked ? 'LIVE' : '${_podiumPicks.whereType<String>().length}/5',
-                        style: TextStyle(
-                          fontFamily: 'Formula1Wide',
-                          fontSize: 9,
+                        style: TextStyle( fontSize: 9,
                           fontWeight: FontWeight.w900,
-                          color: _isLocked ? const Color(0xFF00E676) : Colors.white70,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                          color: _isLocked ? const Color(0xFF00E676) : Colors.white70))),
+                  ])),
               const SizedBox(height: 20),
 
               // Section 1: Podium Prediction (30 PTS)
@@ -445,31 +365,20 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                 children: [
                   const Text(
                     'Podium Prediction',
-                    style: TextStyle(
-                      fontFamily: 'Formula1',
-                      fontSize: 14,
+                    style: TextStyle( fontSize: 14,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
-                  ),
+                      color: Colors.white)),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFD600).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
+                      borderRadius: BorderRadius.circular(4)),
                     child: const Text(
                       '30 PTS',
-                      style: TextStyle(
-                        fontFamily: 'Formula1Wide',
-                        fontSize: 8.5,
+                      style: TextStyle( fontSize: 8.5,
                         fontWeight: FontWeight.w900,
-                        color: Color(0xFFFFD600),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                        color: Color(0xFFFFD600)))),
+                ]),
               const SizedBox(height: 10),
 
               // 3 Podium Slots (P1 Gold, P2 Silver, P3 Bronze)
@@ -480,8 +389,7 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                   _buildPodiumSlot(1, 'P2', const Color(0xFFC0C0C0)),
                   const SizedBox(width: 8),
                   _buildPodiumSlot(2, 'P3', const Color(0xFFCD7F32)),
-                ],
-              ),
+                ]),
 
               if (_showError) ...[
                 const SizedBox(height: 10),
@@ -490,8 +398,7 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                   decoration: BoxDecoration(
                     color: const Color(0xFFFF1744).withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: const Color(0xFFFF1744)),
-                  ),
+                    border: Border.all(color: const Color(0xFFFF1744))),
                   child: const Row(
                     children: [
                       Icon(Icons.error_outline_rounded, color: Color(0xFFFF1744), size: 16),
@@ -499,12 +406,8 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                       Expanded(
                         child: Text(
                           'Complete all three podium positions before locking your picks.',
-                          style: TextStyle(color: Color(0xFFFF1744), fontSize: 11, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                          style: TextStyle(color: Color(0xFFFF1744), fontSize: 11, fontWeight: FontWeight.bold))),
+                    ])),
               ],
               const SizedBox(height: 24),
 
@@ -514,31 +417,20 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                 children: [
                   const Text(
                     'Race Calls',
-                    style: TextStyle(
-                      fontFamily: 'Formula1',
-                      fontSize: 14,
+                    style: TextStyle( fontSize: 14,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
-                  ),
+                      color: Colors.white)),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: const Color(0xFF00E5FF).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
+                      borderRadius: BorderRadius.circular(4)),
                     child: const Text(
                       '20 PTS',
-                      style: TextStyle(
-                        fontFamily: 'Formula1Wide',
-                        fontSize: 8.5,
+                      style: TextStyle( fontSize: 8.5,
                         fontWeight: FontWeight.w900,
-                        color: Color(0xFF00E5FF),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                        color: Color(0xFF00E5FF)))),
+                ]),
               const SizedBox(height: 10),
 
               Container(
@@ -546,8 +438,7 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF141419),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFF202028)),
-                ),
+                  border: Border.all(color: const Color(0xFF202028))),
                 child: Column(
                   children: [
                     // Pole Sitter
@@ -557,8 +448,7 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                       kDrivers2026List.map((d) => d.code).toList(),
                       (val) {
                         if (!_isLocked && val != null) setState(() => _poleSitter = val);
-                      },
-                    ),
+                      }),
                     const Divider(color: Color(0xFF202028), height: 18),
 
                     // Fastest Lap
@@ -568,8 +458,7 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                       kDrivers2026List.map((d) => d.code).toList(),
                       (val) {
                         if (!_isLocked && val != null) setState(() => _fastestLap = val);
-                      },
-                    ),
+                      }),
                     const Divider(color: Color(0xFF202028), height: 18),
 
                     // Safety Cars Stepper
@@ -579,14 +468,9 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                         const Expanded(
                           child: Text(
                             'SAFETY CARS',
-                            style: TextStyle(
-                              fontFamily: 'Formula1Wide',
-                              fontSize: 9,
+                            style: TextStyle( fontSize: 9,
                               color: Color(0xFF8F909A),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+                              fontWeight: FontWeight.bold))),
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -596,32 +480,23 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                               constraints: const BoxConstraints(),
                               onPressed: _isLocked || _safetyCars <= 0
                                   ? null
-                                  : () => setState(() => _safetyCars--),
-                            ),
+                                  : () => setState(() => _safetyCars--)),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 10),
                               child: Text(
                                 '$_safetyCars',
-                                style: const TextStyle(
-                                  fontFamily: 'Formula1Wide',
-                                  fontSize: 13,
+                                style: const TextStyle( fontSize: 13,
                                   fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
+                                  color: Colors.white))),
                             IconButton(
                               icon: const Icon(Icons.add_circle_outline, color: Colors.white70, size: 20),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
                               onPressed: _isLocked || _safetyCars >= 5
                                   ? null
-                                  : () => setState(() => _safetyCars++),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                                  : () => setState(() => _safetyCars++)),
+                          ]),
+                      ]),
                     const Divider(color: Color(0xFF202028), height: 18),
 
                     // First Team to Pit
@@ -631,11 +506,8 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                       kTeams2026.keys.toList(),
                       (val) {
                         if (!_isLocked && val != null) setState(() => _firstTeamToPit = val);
-                      },
-                    ),
-                  ],
-                ),
-              ),
+                      }),
+                  ])),
               const SizedBox(height: 24),
 
               // Section 3: Confidence Slider
@@ -644,8 +516,7 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF141419),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFF202028)),
-                ),
+                  border: Border.all(color: const Color(0xFF202028))),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -654,24 +525,15 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                       children: [
                         const Text(
                           'CONFIDENCE',
-                          style: TextStyle(
-                            fontFamily: 'Formula1Wide',
-                            fontSize: 9.5,
+                          style: TextStyle( fontSize: 9.5,
                             color: Color(0xFF8F909A),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                            fontWeight: FontWeight.bold)),
                         Text(
                           '${_confidence.toInt()}%',
-                          style: TextStyle(
-                            fontFamily: 'Formula1Wide',
-                            fontSize: 13,
+                          style: TextStyle( fontSize: 13,
                             fontWeight: FontWeight.w900,
-                            color: accentColor,
-                          ),
-                        ),
-                      ],
-                    ),
+                            color: accentColor)),
+                      ]),
                     Slider(
                       value: _confidence,
                       min: 25,
@@ -681,33 +543,21 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                       inactiveColor: const Color(0xFF202028),
                       onChanged: _isLocked
                           ? null
-                          : (val) => setState(() => _confidence = val),
-                    ),
+                          : (val) => setState(() => _confidence = val)),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
                           'SAFE',
-                          style: TextStyle(
-                            fontFamily: 'Formula1Wide',
-                            fontSize: 8.5,
-                            color: Color(0xFF8F909A),
-                          ),
-                        ),
+                          style: TextStyle( fontSize: 8.5,
+                            color: Color(0xFF8F909A))),
                         Text(
                           'MAX REWARD · $maxReward PTS',
-                          style: TextStyle(
-                            fontFamily: 'Formula1Wide',
-                            fontSize: 8.5,
+                          style: TextStyle( fontSize: 8.5,
                             fontWeight: FontWeight.w900,
-                            color: accentColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+                            color: accentColor)),
+                      ]),
+                  ])),
               const SizedBox(height: 24),
 
               // Submit / Edit Picks Button
@@ -720,8 +570,7 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                         decoration: BoxDecoration(
                           color: const Color(0xFF141419),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.white12),
-                        ),
+                          border: Border.all(color: Colors.white12)),
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -729,18 +578,14 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                             SizedBox(width: 8),
                             Text(
                               'PREDICTIONS CLOSED',
-                              style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 11, fontWeight: FontWeight.w900, color: Colors.grey, letterSpacing: 1),
-                            ),
-                          ],
-                        ),
-                      )
+                              style: TextStyle( fontSize: 11, fontWeight: FontWeight.w900, color: Colors.grey, letterSpacing: 1)),
+                          ]))
                     : _isLocked
                     ? OutlinedButton(
                         onPressed: _editPicks,
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: Colors.white24, width: 1.5),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -748,18 +593,14 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                             SizedBox(width: 8),
                             Text(
                               'PICKS LOCKED · TAP TO EDIT',
-                              style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1),
-                            ),
-                          ],
-                        ),
-                      )
+                              style: TextStyle( fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1)),
+                          ]))
                     : ElevatedButton(
                         onPressed: _isSaving ? null : _submitPicks,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: accentColor,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          elevation: 0,
-                        ),
+                          elevation: 0),
                         child: _isSaving
                             ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
                             : const Row(
@@ -767,18 +608,11 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                                 children: [
                                   Text(
                                     'LOCK MY PICKS',
-                                    style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 11, fontWeight: FontWeight.w900, color: Colors.black, letterSpacing: 1),
-                                  ),
+                                    style: TextStyle( fontSize: 11, fontWeight: FontWeight.w900, color: Colors.black, letterSpacing: 1)),
                                   SizedBox(width: 8),
                                   Icon(Icons.lock_rounded, color: Colors.black, size: 18),
-                                ],
-                              ),
-                      ),
-              ),
-            ],
-          ),
-        ),
-    );
+                                ]))),
+            ])));
   }
 
   Widget _buildPodiumSlot(int index, String label, Color metalColor) {
@@ -796,20 +630,14 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: pick != null ? metalColor : const Color(0xFF202028),
-              width: pick != null ? 1.5 : 1.0,
-            ),
-          ),
+              width: pick != null ? 1.5 : 1.0)),
           child: Column(
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  fontFamily: 'Formula1Wide',
-                  fontSize: 10,
+                style: TextStyle( fontSize: 10,
                   fontWeight: FontWeight.w900,
-                  color: metalColor,
-                ),
-              ),
+                  color: metalColor)),
               const SizedBox(height: 8),
               if (driver != null) ...[
                 Container(
@@ -817,33 +645,23 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                   height: 44,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: teamColor.withValues(alpha: 0.6), width: 1.5),
-                  ),
+                    border: Border.all(color: teamColor.withValues(alpha: 0.6), width: 1.5)),
                   clipBehavior: Clip.antiAlias,
                   child: driver.portraitAsset.isNotEmpty
                       ? Image.asset(driver.portraitAsset, fit: BoxFit.cover, alignment: Alignment.topCenter)
-                      : Center(child: Text(driver.code, style: TextStyle(color: teamColor))),
-                ),
+                      : Center(child: Text(driver.code, style: TextStyle(color: teamColor)))),
                 const SizedBox(height: 6),
                 Text(
                   driver.code,
-                  style: const TextStyle(
-                    fontFamily: 'Formula1',
-                    fontSize: 13,
+                  style: const TextStyle( fontSize: 13,
                     fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                  ),
-                ),
+                    color: Colors.white)),
                 Text(
                   driver.team,
-                  style: const TextStyle(
-                    fontFamily: 'Formula1',
-                    fontSize: 8.5,
-                    color: Color(0xFF8F909A),
-                  ),
+                  style: const TextStyle( fontSize: 8.5,
+                    color: Color(0xFF8F909A)),
                   maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                  overflow: TextOverflow.ellipsis),
               ] else ...[
                 Container(
                   width: 44,
@@ -851,44 +669,28 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                   decoration: BoxDecoration(
                     color: const Color(0xFF19191F),
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white12),
-                  ),
+                    border: Border.all(color: Colors.white12)),
                   child: const Center(
-                    child: Icon(Icons.add_rounded, color: Colors.white38, size: 24),
-                  ),
-                ),
+                    child: Icon(Icons.add_rounded, color: Colors.white38, size: 24))),
                 const SizedBox(height: 6),
                 const Text(
                   'SELECT',
-                  style: TextStyle(
-                    fontFamily: 'Formula1',
-                    fontSize: 10,
+                  style: TextStyle( fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                  ),
-                ),
+                    color: Colors.grey)),
                 const Text(
                   'DRIVER',
-                  style: TextStyle(
-                    fontFamily: 'Formula1',
-                    fontSize: 8,
-                    color: Colors.grey,
-                  ),
-                ),
+                  style: TextStyle( fontSize: 8,
+                    color: Colors.grey)),
               ],
-            ],
-          ),
-        ),
-      ),
-    );
+            ]))));
   }
 
   Widget _buildDropdownRow(
     String label,
     String currentValue,
     List<String> options,
-    ValueChanged<String?> onChanged,
-  ) {
+    ValueChanged<String?> onChanged) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -896,16 +698,11 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
           flex: 5,
           child: Text(
             label,
-            style: const TextStyle(
-              fontFamily: 'Formula1Wide',
-              fontSize: 9,
+            style: const TextStyle( fontSize: 9,
               color: Color(0xFF8F909A),
-              fontWeight: FontWeight.bold,
-            ),
+              fontWeight: FontWeight.bold),
             maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
+            overflow: TextOverflow.ellipsis)),
         const SizedBox(width: 8),
         Expanded(
           flex: 6,
@@ -916,12 +713,9 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
               value: options.contains(currentValue) ? currentValue : options.first,
               dropdownColor: const Color(0xFF1E1E26),
               underline: const SizedBox(),
-              style: const TextStyle(
-                fontFamily: 'Formula1',
-                fontSize: 11,
+              style: const TextStyle( fontSize: 11,
                 fontWeight: FontWeight.w900,
-                color: Colors.white,
-              ),
+                color: Colors.white),
               icon: const Icon(Icons.arrow_drop_down, color: Colors.white70, size: 20),
               selectedItemBuilder: (BuildContext context) {
                 return options.map<Widget>((String item) {
@@ -931,14 +725,9 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                       item,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontFamily: 'Formula1',
-                        fontSize: 11,
+                      style: const TextStyle( fontSize: 11,
                         fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                    ),
-                  );
+                        color: Colors.white)));
                 }).toList();
               },
               items: options.map((opt) {
@@ -948,20 +737,11 @@ class _PredictorScreenState extends ConsumerState<PredictorScreen> {
                     opt,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: 'Formula1',
-                      fontSize: 11,
+                    style: const TextStyle( fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                );
+                      color: Colors.white)));
               }).toList(),
-              onChanged: _isLocked ? null : onChanged,
-            ),
-          ),
-        ),
-      ],
-    );
+              onChanged: _isLocked ? null : onChanged))),
+      ]);
   }
 }

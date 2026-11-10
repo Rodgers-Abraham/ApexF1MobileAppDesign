@@ -10,8 +10,7 @@ class RaceSession {
   factory RaceSession.fromJson(Map<String, dynamic> json) {
     return RaceSession(
       name: json['name']?.toString() ?? '',
-      dateTime: DateTime.tryParse(json['datetime']?.toString() ?? '') ?? DateTime.now(),
-    );
+      dateTime: DateTime.tryParse(json['datetime']?.toString() ?? '') ?? DateTime.now());
   }
 
   bool get isQuali => name == 'Qualifying';
@@ -75,8 +74,7 @@ class RaceEvent {
       drsZones: (json['drs_zones'] as num?)?.toInt() ?? 2,
       sessions: rawSessions
           .map((s) => RaceSession.fromJson(s as Map<String, dynamic>))
-          .toList(),
-    );
+          .toList());
   }
 }
 

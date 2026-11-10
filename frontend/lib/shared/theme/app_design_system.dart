@@ -39,16 +39,13 @@ class DS {
   /// Aero-cut asymmetric corner: TL+BR rounded, TR+BL sharp.
   static const BorderRadius aeroCornerSm = BorderRadius.only(
     topLeft: Radius.circular(4),
-    bottomRight: Radius.circular(4),
-  );
+    bottomRight: Radius.circular(4));
   static const BorderRadius aeroCorner = BorderRadius.only(
     topLeft: Radius.circular(8),
-    bottomRight: Radius.circular(8),
-  );
+    bottomRight: Radius.circular(8));
   static const BorderRadius aeroCornerLg = BorderRadius.only(
     topLeft: Radius.circular(12),
-    bottomRight: Radius.circular(12),
-  );
+    bottomRight: Radius.circular(12));
 
   // ── Typography ─────────────────────────────────────────────────────────────
   static TextStyle display({double size = 28, Color? color}) =>
@@ -56,72 +53,63 @@ class DS {
         fontSize: size,
         fontWeight: FontWeight.w700,
         letterSpacing: size * -0.02,
-        color: color ?? textPrimary,
-      );
+        color: color ?? textPrimary);
 
   static TextStyle headline({double size = 18, Color? color}) =>
       GoogleFonts.jetBrainsMono(
         fontSize: size,
         fontWeight: FontWeight.w700,
         letterSpacing: size * 0.01,
-        color: color ?? textPrimary,
-      );
+        color: color ?? textPrimary);
 
   static TextStyle headlineMd({double size = 15, Color? color}) =>
       GoogleFonts.jetBrainsMono(
         fontSize: size,
         fontWeight: FontWeight.w600,
         letterSpacing: size * 0.01,
-        color: color ?? textPrimary,
-      );
+        color: color ?? textPrimary);
 
   static TextStyle driverCode({double size = 14, Color? color}) =>
       GoogleFonts.jetBrainsMono(
         fontSize: size,
         fontWeight: FontWeight.w700,
         letterSpacing: size * 0.06,
-        color: color ?? textPrimary,
-      );
+        color: color ?? textPrimary);
 
   static TextStyle telemetry({double size = 13, Color? color}) =>
       GoogleFonts.jetBrainsMono(
         fontSize: size,
         fontWeight: FontWeight.w600,
         letterSpacing: 0,
-        color: color ?? textPrimary,
-      );
+        color: color ?? textPrimary);
 
   static TextStyle telemetryLg({double size = 18, Color? color}) =>
       GoogleFonts.jetBrainsMono(
         fontSize: size,
         fontWeight: FontWeight.w700,
         letterSpacing: size * -0.02,
-        color: color ?? textPrimary,
-      );
+        color: color ?? textPrimary);
 
   static TextStyle labelCaps({double size = 9, Color? color}) =>
       GoogleFonts.jetBrainsMono(
         fontSize: size,
         fontWeight: FontWeight.w700,
         letterSpacing: size * 0.08,
-        color: color ?? textMuted,
-      );
+        color: color ?? textMuted);
 
   static TextStyle body({double size = 13, Color? color}) =>
       GoogleFonts.jetBrainsMono(
         fontSize: size,
         fontWeight: FontWeight.w400,
         letterSpacing: size * 0.01,
-        color: color ?? textVariant,
-      );
+        color: color ?? textVariant);
 
   static TextStyle bodySm({double size = 11, Color? color}) =>
       GoogleFonts.jetBrainsMono(
         fontSize: size,
         fontWeight: FontWeight.w400,
         letterSpacing: size * 0.01,
-        color: color ?? textVariant,
-      );
+        color: color ?? textVariant);
 }
 
 /// Reusable DS widget helpers.
@@ -140,8 +128,7 @@ class DSWidgets {
       decoration: BoxDecoration(
         color: bgColor ?? DS.surface2,
         borderRadius: radius ?? DS.aeroCorner,
-        border: Border.all(color: DS.outline, width: 1),
-      ),
+        border: Border.all(color: DS.outline, width: 1)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -151,19 +138,12 @@ class DSWidgets {
               color: accent,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(8),
-                bottomLeft: Radius.zero,
-              ),
-            ),
-          ),
+                bottomLeft: Radius.zero))),
           Expanded(
             child: Padding(
               padding: padding ?? const EdgeInsets.all(14),
-              child: child,
-            ),
-          ),
-        ],
-      ),
-    );
+              child: child)),
+        ]));
   }
 
   /// Small all-caps JetBrains Mono label.
@@ -175,13 +155,10 @@ class DSWidgets {
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
         decoration: BoxDecoration(
           color: DS.red,
-          borderRadius: DS.aeroCornerSm,
-        ),
+          borderRadius: DS.aeroCornerSm),
         child: Text(
           text,
-          style: DS.labelCaps(size: size, color: DS.redText),
-        ),
-      );
+          style: DS.labelCaps(size: size, color: DS.redText)));
 
   /// Status chip with optional color.
   static Widget statusChip(String text, {Color? color, double size = 9}) =>
@@ -192,14 +169,10 @@ class DSWidgets {
           borderRadius: DS.aeroCornerSm,
           border: Border.all(
             color: (color ?? DS.teal).withValues(alpha: 0.5),
-            width: 1,
-          ),
-        ),
+            width: 1)),
         child: Text(
           text,
-          style: DS.labelCaps(size: size, color: color ?? DS.teal),
-        ),
-      );
+          style: DS.labelCaps(size: size, color: color ?? DS.teal)));
 
   /// Custom input field with mono label, aero corners, underline baseline.
   static Widget inputField({
@@ -230,8 +203,7 @@ class DSWidgets {
       keyboardType: keyboardType,
       validator: validator,
       underlineColor: underlineColor ?? DS.red,
-      onChanged: onChanged,
-    );
+      onChanged: onChanged);
   }
 }
 
@@ -278,14 +250,12 @@ class _DSInputField extends StatelessWidget {
             if (rightLabel != null)
               Text(rightLabel!,
                   style: DS.telemetry(size: 9, color: DS.textMuted)),
-          ],
-        ),
+          ]),
         const SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
             color: DS.surface2,
-            borderRadius: DS.aeroCorner,
-          ),
+            borderRadius: DS.aeroCorner),
           child: TextFormField(
             controller: controller,
             obscureText: isPassword && obscureText,
@@ -306,37 +276,26 @@ class _DSInputField extends StatelessWidget {
                             ? Icons.visibility_outlined
                             : Icons.visibility_off_outlined,
                         color: DS.textMuted,
-                        size: 18,
-                      ),
-                      onPressed: onToggleObscure,
-                    )
+                        size: 18),
+                      onPressed: onToggleObscure)
                   : suffixWidget,
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
                   horizontal: 12, vertical: 12),
-              errorStyle: DS.bodySm(size: 10, color: DS.red),
-            ),
-          ),
-        ),
+              errorStyle: DS.bodySm(size: 10, color: DS.red)))),
         const SizedBox(height: 4),
         Container(
           height: 2,
           decoration: BoxDecoration(
             color: DS.surface4,
-            borderRadius: BorderRadius.circular(1),
-          ),
+            borderRadius: BorderRadius.circular(1)),
           child: FractionallySizedBox(
             alignment: Alignment.centerLeft,
             widthFactor: 0.3,
             child: Container(
               decoration: BoxDecoration(
                 color: underlineColor,
-                borderRadius: BorderRadius.circular(1),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+                borderRadius: BorderRadius.circular(1))))),
+      ]);
   }
 }

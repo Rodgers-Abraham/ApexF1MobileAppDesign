@@ -32,18 +32,14 @@ class RacePulseWidget extends ConsumerWidget {
             Expanded(
               child: Text(
                 'RACE PULSE',
-                style: const TextStyle(fontFamily: 'Formula1Wide', fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 0.8),
+                style: const TextStyle( fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 0.8),
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+                overflow: TextOverflow.ellipsis)),
             const SizedBox(width: 8),
             Text(
               leader != null ? 'LIVE DATA' : 'AWAITING DATA',
-              style: DS.labelCaps(size: 9, color: DS.textMuted),
-            ),
-          ],
-        ),
+              style: DS.labelCaps(size: 9, color: DS.textMuted)),
+          ]),
         const SizedBox(height: 10),
         Material(
           color: Colors.transparent,
@@ -58,10 +54,8 @@ class RacePulseWidget extends ConsumerWidget {
                   topLeft: Radius.circular(3),
                   topRight: Radius.circular(12),
                   bottomLeft: Radius.circular(3),
-                  bottomRight: Radius.circular(12),
-                ),
-                border: Border.all(color: const Color(0xFF202028)),
-              ),
+                  bottomRight: Radius.circular(12)),
+                border: Border.all(color: const Color(0xFF202028))),
               child: telemetryAsync.when(
                 loading: () => const SkeletonBox(height: 40, borderRadius: 8),
                 error: (_, __) => const Text('Live telemetry unavailable', style: TextStyle(color: Colors.grey, fontSize: 12)),
@@ -71,7 +65,7 @@ class RacePulseWidget extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('LEADER', style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 7.5, color: Color(0xFF8F909A), fontWeight: FontWeight.bold)),
+                          const Text('LEADER', style: TextStyle( fontSize: 7.5, color: Color(0xFF8F909A), fontWeight: FontWeight.bold)),
                           const SizedBox(height: 3),
                           Row(
                             children: [
@@ -82,50 +76,34 @@ class RacePulseWidget extends ConsumerWidget {
                                   leader?.name.split(' ').last.toUpperCase() ?? '---',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: DS.headlineMd(size: 13, color: Colors.white),
-                                ),
-                              ),
-                            ],
-                          ),
+                                  style: DS.headlineMd(size: 13, color: Colors.white))),
+                            ]),
                           const SizedBox(height: 2),
                           Text(
                             leader != null ? '${leader.team.toUpperCase()} · ${leader.tyre} ${leader.tyreLife}' : '---',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: DS.labelCaps(size: 8.5, color: DS.textMuted),
-                          ),
-                        ],
-                      ),
-                    ),
+                            style: DS.labelCaps(size: 8.5, color: DS.textMuted)),
+                        ])),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('FASTEST LAP', style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 7.5, color: Color(0xFF8F909A), fontWeight: FontWeight.bold)),
+                          const Text('FASTEST LAP', style: TextStyle( fontSize: 7.5, color: Color(0xFF8F909A), fontWeight: FontWeight.bold)),
                           const SizedBox(height: 3),
                           Text(
                             fastestLap?.bestLap ?? '---',
-                            style: DS.telemetry(size: 13, color: const Color(0xFFB388FF)),
-                          ),
+                            style: DS.telemetry(size: 13, color: const Color(0xFFB388FF))),
                           const SizedBox(height: 2),
                           Text(
                             fastestLap != null ? '${fastestLap.name.split(' ').last.toUpperCase()} · ${fastestLap.team}' : '---',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: DS.labelCaps(size: 8.5, color: DS.textMuted),
-                          ),
-                        ],
-                      ),
-                    ),
+                            style: DS.labelCaps(size: 8.5, color: DS.textMuted)),
+                        ])),
                     const Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey, size: 16),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+                  ]))))),
+      ]);
   }
 
   Color _parseHex(String hex) {

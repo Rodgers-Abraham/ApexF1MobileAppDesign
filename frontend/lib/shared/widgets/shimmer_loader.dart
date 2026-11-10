@@ -26,11 +26,7 @@ class ShimmerLoader extends StatelessWidget {
           height: height,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
-    );
+            borderRadius: BorderRadius.circular(12)))));
   }
 }
 
@@ -56,9 +52,6 @@ class ShimmerCard extends StatelessWidget {
         height: height,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: borderRadius,
-        ),
-      ),
-    );
+          borderRadius: borderRadius)));
   }
 }

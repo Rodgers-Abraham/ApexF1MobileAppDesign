@@ -49,8 +49,7 @@ class AuthState {
       favouriteDriver: favouriteDriver ?? this.favouriteDriver,
       country: country ?? this.country,
       isLoading: isLoading ?? this.isLoading,
-      errorMessage: errorMessage,
-    );
+      errorMessage: errorMessage);
   }
 }
 
@@ -79,8 +78,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
             name: userData['name'],
             favouriteTeam: userData['favourite_team'],
             favouriteDriver: userData['favourite_driver'],
-            country: userData['country'],
-          );
+            country: userData['country']);
           _updateAppTheme(userData['favourite_team']);
         } catch (_) {}
       }
@@ -108,8 +106,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
             name: userData['name'],
             favouriteTeam: userData['favourite_team'],
             favouriteDriver: userData['favourite_driver'],
-            country: userData['country'],
-          );
+            country: userData['country']);
           _updateAppTheme(userData['favourite_team']);
         } catch (_) {}
       }
@@ -120,8 +117,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (teamName == null) return;
     try {
       final team = F1Team.values.firstWhere(
-        (t) => t.name.toLowerCase() == teamName.toLowerCase(),
-      );
+        (t) => t.name.toLowerCase() == teamName.toLowerCase());
       _ref.read(themeProvider.notifier).selectTeam(team);
     } catch (_) {}
   }
@@ -138,8 +134,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       name: data['name'],
       favouriteTeam: data['favourite_team'],
       favouriteDriver: data['favourite_driver'],
-      country: data['country'],
-    );
+      country: data['country']);
     _updateAppTheme(data['favourite_team']);
   }
 
@@ -186,8 +181,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // 1. Create Firebase user
       final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email.trim(),
-        password: password,
-      );
+        password: password);
       final user = cred.user!;
 
       // 2. Get Firebase ID token
@@ -217,8 +211,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // 1. Sign in with Firebase
       final cred = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email.trim(),
-        password: password,
-      );
+        password: password);
       final user = cred.user!;
 
       // 2. Get Firebase ID token
@@ -262,8 +255,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           if (favouriteDriver != null) 'favourite_driver': favouriteDriver,
           if (country != null) 'country': country,
         },
-        options: Options(headers: {'Authorization': 'Bearer $idToken'}),
-      );
+        options: Options(headers: {'Authorization': 'Bearer $idToken'}));
 
       final data = response.data as Map<String, dynamic>;
       await _persistAndSetState(firebaseUser.uid, {
@@ -289,8 +281,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _dio.put(
         '/api/auth/theme',
         data: {'favourite_team': teamName},
-        options: Options(headers: {'Authorization': 'Bearer $idToken'}),
-      );
+        options: Options(headers: {'Authorization': 'Bearer $idToken'}));
       state = state.copyWith(favouriteTeam: teamName);
       final prefs = await SharedPreferences.getInstance();
       final userJson = prefs.getString(_userKey);
@@ -318,8 +309,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         final idToken = await firebaseUser.getIdToken();
         await _dio.delete(
           '/api/auth/delete',
-          options: Options(headers: {'Authorization': 'Bearer $idToken'}),
-        );
+          options: Options(headers: {'Authorization': 'Bearer $idToken'}));
       } catch (backendErr) {
         debugPrint('Backend delete notice (proceeding): $backendErr');
       }

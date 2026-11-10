@@ -53,27 +53,21 @@ class FigmaSessionFlagBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: bannerColor.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: bannerColor.withValues(alpha: 0.7), width: 1.2),
-      ),
+        border: Border.all(color: bannerColor.withValues(alpha: 0.7), width: 1.2)),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(color: bannerColor, shape: BoxShape.circle),
-            child: Icon(icon, color: textColor, size: 14),
-          ),
+            child: Icon(icon, color: textColor, size: 14)),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 10, fontWeight: FontWeight.w900, color: bannerColor, letterSpacing: 0.5)),
+                Text(title, style: TextStyle( fontSize: 10, fontWeight: FontWeight.w900, color: bannerColor, letterSpacing: 0.5)),
                 Text(subtitle, style: const TextStyle(fontSize: 10.5, color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+              ])),
+        ]));
   }
 }

@@ -60,8 +60,7 @@ const Map<String, TeamData2026> kTeams2026 = {
     secondaryColor: Color(0xFF004E70),
     logoWhiteAsset: 'assets/teams/alpine_white.svg',
     logoColorAsset: 'assets/teams/alpine_color.svg',
-    carFrontAsset: 'assets/teams/alpine_car_front.png',
-  ),
+    carFrontAsset: 'assets/teams/alpine_car_front.png'),
   'Aston Martin': TeamData2026(
     name: 'Aston Martin',
     slug: 'astonmartin',
@@ -72,8 +71,7 @@ const Map<String, TeamData2026> kTeams2026 = {
     secondaryColor: Color(0xFF0F4331),
     logoWhiteAsset: 'assets/teams/astonmartin_white.svg',
     logoColorAsset: 'assets/teams/astonmartin_color.svg',
-    carFrontAsset: 'assets/teams/astonmartin_car_front.png',
-  ),
+    carFrontAsset: 'assets/teams/astonmartin_car_front.png'),
   'Audi': TeamData2026(
     name: 'Audi',
     slug: 'audi',
@@ -84,8 +82,7 @@ const Map<String, TeamData2026> kTeams2026 = {
     secondaryColor: Color(0xFF751500),
     logoWhiteAsset: 'assets/teams/audi_white.svg',
     logoColorAsset: 'assets/teams/audi_color.svg',
-    carFrontAsset: 'assets/teams/audi_car_front.png',
-  ),
+    carFrontAsset: 'assets/teams/audi_car_front.png'),
   'Cadillac': TeamData2026(
     name: 'Cadillac',
     slug: 'cadillac',
@@ -96,8 +93,7 @@ const Map<String, TeamData2026> kTeams2026 = {
     secondaryColor: Color(0xFF58585B),
     logoWhiteAsset: 'assets/teams/cadillac_white.svg',
     logoColorAsset: 'assets/teams/cadillac_color.svg',
-    carFrontAsset: 'assets/teams/cadillac_car_front.png',
-  ),
+    carFrontAsset: 'assets/teams/cadillac_car_front.png'),
   'Ferrari': TeamData2026(
     name: 'Ferrari',
     slug: 'ferrari',
@@ -108,8 +104,7 @@ const Map<String, TeamData2026> kTeams2026 = {
     secondaryColor: Color(0xFF750017),
     logoWhiteAsset: 'assets/teams/ferrari_white.svg',
     logoColorAsset: 'assets/teams/ferrari_color.svg',
-    carFrontAsset: 'assets/teams/ferrari_car_front.png',
-  ),
+    carFrontAsset: 'assets/teams/ferrari_car_front.png'),
   'Haas': TeamData2026(
     name: 'Haas',
     slug: 'haasf1team',
@@ -120,8 +115,7 @@ const Map<String, TeamData2026> kTeams2026 = {
     secondaryColor: Color(0xFF6F7071),
     logoWhiteAsset: 'assets/teams/haasf1team_white.svg',
     logoColorAsset: 'assets/teams/haasf1team_color.svg',
-    carFrontAsset: 'assets/teams/haasf1team_car_front.png',
-  ),
+    carFrontAsset: 'assets/teams/haasf1team_car_front.png'),
   'Haas F1 Team': TeamData2026(
     name: 'Haas',
     slug: 'haasf1team',
@@ -132,8 +126,7 @@ const Map<String, TeamData2026> kTeams2026 = {
     secondaryColor: Color(0xFF6F7071),
     logoWhiteAsset: 'assets/teams/haasf1team_white.svg',
     logoColorAsset: 'assets/teams/haasf1team_color.svg',
-    carFrontAsset: 'assets/teams/haasf1team_car_front.png',
-  ),
+    carFrontAsset: 'assets/teams/haasf1team_car_front.png'),
   'McLaren': TeamData2026(
     name: 'McLaren',
     slug: 'mclaren',
@@ -144,8 +137,7 @@ const Map<String, TeamData2026> kTeams2026 = {
     secondaryColor: Color(0xFF804000),
     logoWhiteAsset: 'assets/teams/mclaren_white.svg',
     logoColorAsset: 'assets/teams/mclaren_color.svg',
-    carFrontAsset: 'assets/teams/mclaren_car_front.png',
-  ),
+    carFrontAsset: 'assets/teams/mclaren_car_front.png'),
   'Mercedes': TeamData2026(
     name: 'Mercedes',
     slug: 'mercedes',
@@ -156,8 +148,7 @@ const Map<String, TeamData2026> kTeams2026 = {
     secondaryColor: Color(0xFF147A69),
     logoWhiteAsset: 'assets/teams/mercedes_white.svg',
     logoColorAsset: 'assets/teams/mercedes_color.svg',
-    carFrontAsset: 'assets/teams/mercedes_car_front.png',
-  ),
+    carFrontAsset: 'assets/teams/mercedes_car_front.png'),
   'Racing Bulls': TeamData2026(
     name: 'Racing Bulls',
     slug: 'racingbulls',
@@ -168,8 +159,7 @@ const Map<String, TeamData2026> kTeams2026 = {
     secondaryColor: Color(0xFF334980),
     logoWhiteAsset: 'assets/teams/racingbulls_white.svg',
     logoColorAsset: 'assets/teams/racingbulls_color.svg',
-    carFrontAsset: 'assets/teams/racingbulls_car_front.png',
-  ),
+    carFrontAsset: 'assets/teams/racingbulls_car_front.png'),
   'RB': TeamData2026(
     name: 'Racing Bulls',
     slug: 'racingbulls',
@@ -180,8 +170,7 @@ const Map<String, TeamData2026> kTeams2026 = {
     secondaryColor: Color(0xFF334980),
     logoWhiteAsset: 'assets/teams/racingbulls_white.svg',
     logoColorAsset: 'assets/teams/racingbulls_color.svg',
-    carFrontAsset: 'assets/teams/racingbulls_car_front.png',
-  ),
+    carFrontAsset: 'assets/teams/racingbulls_car_front.png'),
   'Red Bull': TeamData2026(
     name: 'Red Bull Racing',
     slug: 'redbullracing',
@@ -192,8 +181,7 @@ const Map<String, TeamData2026> kTeams2026 = {
     secondaryColor: Color(0xFF1B3963),
     logoWhiteAsset: 'assets/teams/redbullracing_white.svg',
     logoColorAsset: 'assets/teams/redbullracing_color.svg',
-    carFrontAsset: 'assets/teams/redbullracing_car_front.png',
-  ),
+    carFrontAsset: 'assets/teams/redbullracing_car_front.png'),
   'Red Bull Racing': TeamData2026(
     name: 'Red Bull Racing',
     slug: 'redbullracing',
@@ -204,8 +192,7 @@ const Map<String, TeamData2026> kTeams2026 = {
     secondaryColor: Color(0xFF1B3963),
     logoWhiteAsset: 'assets/teams/redbullracing_white.svg',
     logoColorAsset: 'assets/teams/redbullracing_color.svg',
-    carFrontAsset: 'assets/teams/redbullracing_car_front.png',
-  ),
+    carFrontAsset: 'assets/teams/redbullracing_car_front.png'),
   'Williams': TeamData2026(
     name: 'Williams',
     slug: 'williams',
@@ -216,8 +203,7 @@ const Map<String, TeamData2026> kTeams2026 = {
     secondaryColor: Color(0xFF0C346E),
     logoWhiteAsset: 'assets/teams/williams_white.svg',
     logoColorAsset: 'assets/teams/williams_color.svg',
-    carFrontAsset: 'assets/teams/williams_car_front.png',
-  ),
+    carFrontAsset: 'assets/teams/williams_car_front.png'),
 };
 
 /// 22 Official 2026 Drivers
@@ -229,8 +215,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'Netherlands',
     portraitAsset: 'assets/drivers/max_verstappen_portrait.png',
     helmetAsset: 'assets/helmets/max_verstappen_helmet.png',
-    numberAsset: 'assets/numbers/max_verstappen_number.svg',
-  ),
+    numberAsset: 'assets/numbers/max_verstappen_number.svg'),
   DriverData2026(
     name: 'Isack Hadjar',
     code: 'HAD',
@@ -238,8 +223,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'France',
     portraitAsset: 'assets/drivers/isack_hadjar_portrait.png',
     helmetAsset: 'assets/helmets/isack_hadjar_helmet.png',
-    numberAsset: 'assets/numbers/isack_hadjar_number.svg',
-  ),
+    numberAsset: 'assets/numbers/isack_hadjar_number.svg'),
   DriverData2026(
     name: 'Lewis Hamilton',
     code: 'HAM',
@@ -247,8 +231,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'United Kingdom',
     portraitAsset: 'assets/drivers/lewis_hamilton_portrait.png',
     helmetAsset: 'assets/helmets/lewis_hamilton_helmet.png',
-    numberAsset: 'assets/numbers/lewis_hamilton_number.svg',
-  ),
+    numberAsset: 'assets/numbers/lewis_hamilton_number.svg'),
   DriverData2026(
     name: 'Charles Leclerc',
     code: 'LEC',
@@ -256,8 +239,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'Monaco',
     portraitAsset: 'assets/drivers/charles_leclerc_portrait.png',
     helmetAsset: 'assets/helmets/charles_leclerc_helmet.png',
-    numberAsset: 'assets/numbers/charles_leclerc_number.svg',
-  ),
+    numberAsset: 'assets/numbers/charles_leclerc_number.svg'),
   DriverData2026(
     name: 'Lando Norris',
     code: 'NOR',
@@ -265,8 +247,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'United Kingdom',
     portraitAsset: 'assets/drivers/lando_norris_portrait.png',
     helmetAsset: 'assets/helmets/lando_norris_helmet.png',
-    numberAsset: 'assets/numbers/lando_norris_number.svg',
-  ),
+    numberAsset: 'assets/numbers/lando_norris_number.svg'),
   DriverData2026(
     name: 'Oscar Piastri',
     code: 'PIA',
@@ -274,8 +255,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'Australia',
     portraitAsset: 'assets/drivers/oscar_piastri_portrait.png',
     helmetAsset: 'assets/helmets/oscar_piastri_helmet.png',
-    numberAsset: 'assets/numbers/oscar_piastri_number.svg',
-  ),
+    numberAsset: 'assets/numbers/oscar_piastri_number.svg'),
   DriverData2026(
     name: 'George Russell',
     code: 'RUS',
@@ -283,8 +263,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'United Kingdom',
     portraitAsset: 'assets/drivers/george_russell_portrait.png',
     helmetAsset: 'assets/helmets/george_russell_helmet.png',
-    numberAsset: 'assets/numbers/george_russell_number.svg',
-  ),
+    numberAsset: 'assets/numbers/george_russell_number.svg'),
   DriverData2026(
     name: 'Kimi Antonelli',
     code: 'ANT',
@@ -292,8 +271,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'Italy',
     portraitAsset: 'assets/drivers/kimi_antonelli_portrait.png',
     helmetAsset: 'assets/helmets/kimi_antonelli_helmet.png',
-    numberAsset: 'assets/numbers/kimi_antonelli_number.svg',
-  ),
+    numberAsset: 'assets/numbers/kimi_antonelli_number.svg'),
   DriverData2026(
     name: 'Fernando Alonso',
     code: 'ALO',
@@ -301,8 +279,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'Spain',
     portraitAsset: 'assets/drivers/fernando_alonso_portrait.png',
     helmetAsset: 'assets/helmets/fernando_alonso_helmet.png',
-    numberAsset: 'assets/numbers/fernando_alonso_number.svg',
-  ),
+    numberAsset: 'assets/numbers/fernando_alonso_number.svg'),
   DriverData2026(
     name: 'Lance Stroll',
     code: 'STR',
@@ -310,8 +287,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'Canada',
     portraitAsset: 'assets/drivers/lance_stroll_portrait.png',
     helmetAsset: 'assets/helmets/lance_stroll_helmet.png',
-    numberAsset: 'assets/numbers/lance_stroll_number.svg',
-  ),
+    numberAsset: 'assets/numbers/lance_stroll_number.svg'),
   DriverData2026(
     name: 'Pierre Gasly',
     code: 'GAS',
@@ -319,8 +295,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'France',
     portraitAsset: 'assets/drivers/pierre_gasly_portrait.png',
     helmetAsset: 'assets/helmets/pierre_gasly_helmet.png',
-    numberAsset: 'assets/numbers/pierre_gasly_number.svg',
-  ),
+    numberAsset: 'assets/numbers/pierre_gasly_number.svg'),
   DriverData2026(
     name: 'Franco Colapinto',
     code: 'COL',
@@ -328,8 +303,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'Argentina',
     portraitAsset: 'assets/drivers/franco_colapinto_portrait.png',
     helmetAsset: 'assets/helmets/franco_colapinto_helmet.png',
-    numberAsset: 'assets/numbers/franco_colapinto_number.svg',
-  ),
+    numberAsset: 'assets/numbers/franco_colapinto_number.svg'),
   DriverData2026(
     name: 'Liam Lawson',
     code: 'LAW',
@@ -337,8 +311,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'New Zealand',
     portraitAsset: 'assets/drivers/liam_lawson_portrait.png',
     helmetAsset: 'assets/helmets/liam_lawson_helmet.png',
-    numberAsset: 'assets/numbers/liam_lawson_number.svg',
-  ),
+    numberAsset: 'assets/numbers/liam_lawson_number.svg'),
   DriverData2026(
     name: 'Arvid Lindblad',
     code: 'LIN',
@@ -346,8 +319,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'United Kingdom',
     portraitAsset: 'assets/drivers/arvid_lindblad_portrait.png',
     helmetAsset: 'assets/helmets/arvid_lindblad_helmet.png',
-    numberAsset: 'assets/numbers/arvid_lindblad_number.svg',
-  ),
+    numberAsset: 'assets/numbers/arvid_lindblad_number.svg'),
   DriverData2026(
     name: 'Oliver Bearman',
     code: 'BEA',
@@ -355,8 +327,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'United Kingdom',
     portraitAsset: 'assets/drivers/oliver_bearman_portrait.png',
     helmetAsset: 'assets/helmets/oliver_bearman_helmet.png',
-    numberAsset: 'assets/numbers/oliver_bearman_number.svg',
-  ),
+    numberAsset: 'assets/numbers/oliver_bearman_number.svg'),
   DriverData2026(
     name: 'Esteban Ocon',
     code: 'OCO',
@@ -364,8 +335,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'France',
     portraitAsset: 'assets/drivers/esteban_ocon_portrait.png',
     helmetAsset: 'assets/helmets/esteban_ocon_helmet.png',
-    numberAsset: 'assets/numbers/esteban_ocon_number.svg',
-  ),
+    numberAsset: 'assets/numbers/esteban_ocon_number.svg'),
   DriverData2026(
     name: 'Carlos Sainz',
     code: 'SAI',
@@ -373,8 +343,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'Spain',
     portraitAsset: 'assets/drivers/carlos_sainz_portrait.png',
     helmetAsset: 'assets/helmets/carlos_sainz_helmet.png',
-    numberAsset: 'assets/numbers/carlos_sainz_number.svg',
-  ),
+    numberAsset: 'assets/numbers/carlos_sainz_number.svg'),
   DriverData2026(
     name: 'Alex Albon',
     code: 'ALB',
@@ -382,8 +351,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'Thailand',
     portraitAsset: 'assets/drivers/alexander_albon_portrait.png',
     helmetAsset: 'assets/helmets/alexander_albon_helmet.png',
-    numberAsset: 'assets/numbers/alexander_albon_number.svg',
-  ),
+    numberAsset: 'assets/numbers/alexander_albon_number.svg'),
   DriverData2026(
     name: 'Nico Hülkenberg',
     code: 'HUL',
@@ -391,8 +359,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'Germany',
     portraitAsset: 'assets/drivers/nico_hulkenberg_portrait.png',
     helmetAsset: 'assets/helmets/nico_hulkenberg_helmet.png',
-    numberAsset: 'assets/numbers/nico_hulkenberg_number.svg',
-  ),
+    numberAsset: 'assets/numbers/nico_hulkenberg_number.svg'),
   DriverData2026(
     name: 'Gabriel Bortoleto',
     code: 'BOR',
@@ -400,8 +367,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'Brazil',
     portraitAsset: 'assets/drivers/gabriel_bortoleto_portrait.png',
     helmetAsset: 'assets/helmets/gabriel_bortoleto_helmet.png',
-    numberAsset: 'assets/numbers/gabriel_bortoleto_number.svg',
-  ),
+    numberAsset: 'assets/numbers/gabriel_bortoleto_number.svg'),
   DriverData2026(
     name: 'Sergio Perez',
     code: 'PER',
@@ -409,8 +375,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'Mexico',
     portraitAsset: 'assets/drivers/sergio_perez_portrait.png',
     helmetAsset: 'assets/helmets/sergio_perez_helmet.png',
-    numberAsset: 'assets/numbers/sergio_perez_number.svg',
-  ),
+    numberAsset: 'assets/numbers/sergio_perez_number.svg'),
   DriverData2026(
     name: 'Valtteri Bottas',
     code: 'BOT',
@@ -418,8 +383,7 @@ const List<DriverData2026> kDrivers2026List = [
     country: 'Finland',
     portraitAsset: 'assets/drivers/valtteri_bottas_portrait.png',
     helmetAsset: 'assets/helmets/valtteri_bottas_helmet.png',
-    numberAsset: 'assets/numbers/valtteri_bottas_number.svg',
-  ),
+    numberAsset: 'assets/numbers/valtteri_bottas_number.svg'),
 ];
 
 /// Driver string names list

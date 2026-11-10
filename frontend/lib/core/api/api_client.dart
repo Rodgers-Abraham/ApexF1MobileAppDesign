@@ -11,9 +11,7 @@ class ApiClient {
           BaseOptions(
             baseUrl: ApiConfig.baseUrl,
             connectTimeout: const Duration(seconds: 20),
-            receiveTimeout: const Duration(seconds: 20),
-          ),
-        ) {
+            receiveTimeout: const Duration(seconds: 20))) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -31,9 +29,7 @@ class ApiClient {
         onError: (DioException error, handler) {
           debugPrint('API Error calling ${error.requestOptions.path}: ${error.message}');
           return handler.next(error);
-        },
-      ),
-    );
+        }));
   }
 
   Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {

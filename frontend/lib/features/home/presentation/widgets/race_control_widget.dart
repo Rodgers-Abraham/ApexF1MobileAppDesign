@@ -56,29 +56,24 @@ class _RaceControlWidgetState extends State<RaceControlWidget> {
                 'RACE CONTROL',
                 style: DS.driverCode(size: 11),
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+                overflow: TextOverflow.ellipsis)),
             const SizedBox(width: 8),
             Text('LIVE FEED', style: DS.labelCaps(size: 9, color: DS.textMuted)),
-          ],
-        ),
+          ]),
         const SizedBox(height: 10),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             color: DS.surface1,
             borderRadius: DS.aeroCorner,
-            border: Border.all(color: flagColor.withValues(alpha: 0.3)),
-          ),
+            border: Border.all(color: flagColor.withValues(alpha: 0.3))),
           child: Row(
             children: [
               Container(
                 width: 3.5,
                 height: 28,
                 margin: const EdgeInsets.only(right: 10),
-                decoration: BoxDecoration(color: flagColor, borderRadius: BorderRadius.circular(2)),
-              ),
+                decoration: BoxDecoration(color: flagColor, borderRadius: BorderRadius.circular(2))),
               Icon(Icons.warning_amber_rounded, color: flagColor, size: 20),
               const SizedBox(width: 10),
               Expanded(
@@ -88,13 +83,9 @@ class _RaceControlWidgetState extends State<RaceControlWidget> {
                     Text(statusTitle, style: DS.headline(size: 11, color: flagColor)),
                     const SizedBox(height: 2),
                     Text(statusSubtitle, style: DS.labelCaps(size: 9, color: DS.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
-                  ],
-                ),
-              ),
+                  ])),
               Icon(Icons.flag_rounded, color: flagColor, size: 18),
-            ],
-          ),
-        ),
+            ])),
         const SizedBox(height: 8),
         Row(
           children: ['GREEN', 'YELLOW', 'VSC', 'SC', 'RED'].map((f) {
@@ -108,17 +99,10 @@ class _RaceControlWidgetState extends State<RaceControlWidget> {
                   decoration: BoxDecoration(
                     color: isSelected ? Colors.white.withValues(alpha: 0.1) : Colors.transparent,
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: isSelected ? Colors.white : DS.outline, width: isSelected ? 1.2 : 1.0),
-                  ),
+                    border: Border.all(color: isSelected ? Colors.white : DS.outline, width: isSelected ? 1.2 : 1.0)),
                   child: Center(
-                    child: Text(f, style: DS.labelCaps(size: 8.5, color: isSelected ? Colors.white : DS.textMuted)),
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
+                    child: Text(f, style: DS.labelCaps(size: 8.5, color: isSelected ? Colors.white : DS.textMuted))))));
+          }).toList()),
+      ]);
   }
 }

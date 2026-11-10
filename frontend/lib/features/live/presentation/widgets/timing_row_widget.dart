@@ -74,21 +74,17 @@ class FigmaTimingRowWidget extends StatelessWidget {
             topLeft: Radius.circular(2),
             topRight: Radius.circular(7),
             bottomLeft: Radius.circular(2),
-            bottomRight: Radius.circular(7),
-          ),
+            bottomRight: Radius.circular(7)),
           border: Border.all(
             color: isSelected ? teamColor.withValues(alpha: 0.7) : const Color(0xFF202028),
-            width: isSelected ? 1.2 : 1.0,
-          ),
-        ),
+            width: isSelected ? 1.2 : 1.0)),
         child: Row(
           children: [
             Container(
               width: 3.0,
               height: 20,
               margin: const EdgeInsets.only(right: 4),
-              decoration: BoxDecoration(color: teamColor, borderRadius: BorderRadius.circular(1.5)),
-            ),
+              decoration: BoxDecoration(color: teamColor, borderRadius: BorderRadius.circular(1.5))),
             SizedBox(
               width: 24,
               child: Column(
@@ -96,19 +92,16 @@ class FigmaTimingRowWidget extends StatelessWidget {
                 children: [
                   FittedBox(
                     fit: BoxFit.scaleDown,
-                    child: Text(pos, style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 11, fontWeight: FontWeight.w900, color: isDnf ? const Color(0xFFFF5252) : Colors.white)),
-                  ),
+                    child: Text(pos, style: TextStyle( fontSize: 11, fontWeight: FontWeight.w900, color: isDnf ? const Color(0xFFFF5252) : Colors.white))),
                   const SizedBox(height: 1),
                   if (!isDnf)
                     if (positionsGained > 0)
-                      FittedBox(fit: BoxFit.scaleDown, child: Text('▲$positionsGained', style: const TextStyle(fontFamily: 'Formula1', color: Color(0xFF00E676), fontSize: 7, fontWeight: FontWeight.bold)))
+                      FittedBox(fit: BoxFit.scaleDown, child: Text('▲$positionsGained', style: const TextStyle( color: Color(0xFF00E676), fontSize: 7, fontWeight: FontWeight.bold)))
                     else if (positionsGained < 0)
-                      FittedBox(fit: BoxFit.scaleDown, child: Text('▼${positionsGained.abs()}', style: const TextStyle(fontFamily: 'Formula1', color: Color(0xFFFF5252), fontSize: 7, fontWeight: FontWeight.bold)))
+                      FittedBox(fit: BoxFit.scaleDown, child: Text('▼${positionsGained.abs()}', style: const TextStyle( color: Color(0xFFFF5252), fontSize: 7, fontWeight: FontWeight.bold)))
                     else
                       const Text('—', style: TextStyle(color: Colors.grey, fontSize: 7)),
-                ],
-              ),
-            ),
+                ])),
             const SizedBox(width: 3),
             Container(
               width: 26,
@@ -116,13 +109,11 @@ class FigmaTimingRowWidget extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: const Color(0xFF222228),
-                border: Border.all(color: teamColor.withValues(alpha: 0.6), width: 1.0),
-              ),
+                border: Border.all(color: teamColor.withValues(alpha: 0.6), width: 1.0)),
               clipBehavior: Clip.antiAlias,
               child: portraitAsset.isNotEmpty
-                  ? Image.asset(portraitAsset, fit: BoxFit.cover, alignment: Alignment.topCenter, errorBuilder: (context, error, stackTrace) => Center(child: Text(code, style: TextStyle(fontFamily: 'Formula1', fontSize: 8, fontWeight: FontWeight.w900, color: teamColor))))
-                  : Center(child: Text(code, style: TextStyle(fontFamily: 'Formula1', fontSize: 8, fontWeight: FontWeight.w900, color: teamColor))),
-            ),
+                  ? Image.asset(portraitAsset, fit: BoxFit.cover, alignment: Alignment.topCenter, errorBuilder: (context, error, stackTrace) => Center(child: Text(code, style: TextStyle( fontSize: 8, fontWeight: FontWeight.w900, color: teamColor))))
+                  : Center(child: Text(code, style: TextStyle( fontSize: 8, fontWeight: FontWeight.w900, color: teamColor)))),
             const SizedBox(width: 5),
             Expanded(
               flex: 3,
@@ -131,15 +122,13 @@ class FigmaTimingRowWidget extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Row(children: [
-                    Text(code, style: const TextStyle(fontFamily: 'Formula1', fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white)),
+                    Text(code, style: const TextStyle( fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white)),
                     const SizedBox(width: 3),
-                    Text('#$driverNumber', style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 7.5, color: teamColor, fontWeight: FontWeight.bold)),
+                    Text('#$driverNumber', style: TextStyle( fontSize: 7.5, color: teamColor, fontWeight: FontWeight.bold)),
                   ]),
                   const SizedBox(height: 1),
-                  Text(team, style: const TextStyle(fontFamily: 'Formula1', fontSize: 8, color: Color(0xFF8F909A)), maxLines: 1, overflow: TextOverflow.ellipsis),
-                ],
-              ),
-            ),
+                  Text(team, style: const TextStyle( fontSize: 8, color: Color(0xFF8F909A)), maxLines: 1, overflow: TextOverflow.ellipsis),
+                ])),
             const SizedBox(width: 4),
             Expanded(
               flex: 2,
@@ -148,16 +137,14 @@ class FigmaTimingRowWidget extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (isDnf)
-                    const FittedBox(fit: BoxFit.scaleDown, child: Text('OUT', style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFFFF1744))))
+                    const FittedBox(fit: BoxFit.scaleDown, child: Text('OUT', style: TextStyle( fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFFFF1744))))
                   else if (isPit)
-                    const FittedBox(fit: BoxFit.scaleDown, child: Text('IN PIT', style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFFFF9100))))
+                    const FittedBox(fit: BoxFit.scaleDown, child: Text('IN PIT', style: TextStyle( fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFFFF9100))))
                   else
-                    FittedBox(fit: BoxFit.scaleDown, child: Text(gap, style: TextStyle(fontFamily: 'Formula1', fontSize: 9.5, fontWeight: FontWeight.w900, color: gap == 'LEADER' ? const Color(0xFF00E676) : Colors.white), maxLines: 1)),
+                    FittedBox(fit: BoxFit.scaleDown, child: Text(gap, style: TextStyle( fontSize: 9.5, fontWeight: FontWeight.w900, color: gap == 'LEADER' ? const Color(0xFF00E676) : Colors.white), maxLines: 1)),
                   const SizedBox(height: 1),
-                  FittedBox(fit: BoxFit.scaleDown, child: Text(isDnf ? (dnfReason.isNotEmpty ? dnfReason : 'CRASH') : isPit ? 'STOP $pitStops' : 'INT $interval', style: const TextStyle(fontFamily: 'Formula1', fontSize: 7.5, color: Color(0xFF8F909A)), maxLines: 1)),
-                ],
-              ),
-            ),
+                  FittedBox(fit: BoxFit.scaleDown, child: Text(isDnf ? (dnfReason.isNotEmpty ? dnfReason : 'CRASH') : isPit ? 'STOP $pitStops' : 'INT $interval', style: const TextStyle( fontSize: 7.5, color: Color(0xFF8F909A)), maxLines: 1)),
+                ])),
             const SizedBox(width: 5),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -166,8 +153,7 @@ class FigmaTimingRowWidget extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 2.5, vertical: 1),
                     decoration: BoxDecoration(color: const Color(0xFF00E676).withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2.5), border: Border.all(color: const Color(0xFF00E676), width: 0.8)),
-                    child: const Text('DRS', style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 6, fontWeight: FontWeight.w900, color: Color(0xFF00E676))),
-                  ),
+                    child: const Text('DRS', style: TextStyle( fontSize: 6, fontWeight: FontWeight.w900, color: Color(0xFF00E676)))),
                   const SizedBox(width: 3),
                 ],
                 Container(
@@ -176,14 +162,11 @@ class FigmaTimingRowWidget extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(tyre, style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 8, fontWeight: FontWeight.w900, color: tyreColor)),
+                      Text(tyre, style: TextStyle( fontSize: 8, fontWeight: FontWeight.w900, color: tyreColor)),
                       const SizedBox(width: 2),
-                      Text(tyreLife.replaceAll(' laps', '').replaceAll('L', ''), style: TextStyle(fontFamily: 'Formula1', fontSize: 7, fontWeight: FontWeight.bold, color: tyreColor.withValues(alpha: 0.8))),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+                      Text(tyreLife.replaceAll(' laps', '').replaceAll('L', ''), style: TextStyle( fontSize: 7, fontWeight: FontWeight.bold, color: tyreColor.withValues(alpha: 0.8))),
+                    ])),
+              ]),
             const SizedBox(width: 5),
             SizedBox(
               width: 48,
@@ -191,15 +174,10 @@ class FigmaTimingRowWidget extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  FittedBox(fit: BoxFit.scaleDown, child: Text(lastLap, style: TextStyle(fontFamily: 'Formula1', fontSize: 9, fontWeight: FontWeight.w900, color: isFastestLap ? const Color(0xFFB388FF) : Colors.white), maxLines: 1)),
+                  FittedBox(fit: BoxFit.scaleDown, child: Text(lastLap, style: TextStyle( fontSize: 9, fontWeight: FontWeight.w900, color: isFastestLap ? const Color(0xFFB388FF) : Colors.white), maxLines: 1)),
                   const SizedBox(height: 1),
-                  FittedBox(fit: BoxFit.scaleDown, child: Text(isFastestLap ? 'FASTEST' : 'LAST LAP', style: TextStyle(fontFamily: 'Formula1Wide', fontSize: 6, fontWeight: FontWeight.bold, color: isFastestLap ? const Color(0xFFB388FF) : const Color(0xFF5F606B)))),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+                  FittedBox(fit: BoxFit.scaleDown, child: Text(isFastestLap ? 'FASTEST' : 'LAST LAP', style: TextStyle( fontSize: 6, fontWeight: FontWeight.bold, color: isFastestLap ? const Color(0xFFB388FF) : const Color(0xFF5F606B)))),
+                ])),
+          ])));
   }
 }

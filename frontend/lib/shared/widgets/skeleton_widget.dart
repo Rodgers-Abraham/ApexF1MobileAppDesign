@@ -28,8 +28,7 @@ class _SkeletonBoxState extends State<SkeletonBox>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat();
+      duration: const Duration(milliseconds: 1200))..repeat();
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
   }
 
@@ -61,12 +60,8 @@ class _SkeletonBoxState extends State<SkeletonBox>
                 Color(0xFF1A1A22),
                 Color(0xFF2A2A35),
                 Color(0xFF1A1A22),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+              ])));
+      });
   }
 }
 
@@ -91,14 +86,10 @@ class SkeletonStandingsRow extends StatelessWidget {
                 const SkeletonBox(height: 12),
                 const SizedBox(height: 5),
                 SkeletonBox(width: MediaQuery.of(context).size.width * 0.3, height: 10),
-              ],
-            ),
-          ),
+              ])),
           const SizedBox(width: 10),
           const SkeletonBox(width: 44, height: 20, borderRadius: 4),
-        ],
-      ),
-    );
+        ]));
   }
 }
 
@@ -111,8 +102,7 @@ class SkeletonStandingsList extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       itemCount: count,
-      itemBuilder: (_, __) => const SkeletonStandingsRow(),
-    );
+      itemBuilder: (_, __) => const SkeletonStandingsRow());
   }
 }
 
@@ -130,10 +120,8 @@ class SkeletonHeroCard extends StatelessWidget {
           topLeft: Radius.circular(4),
           topRight: Radius.circular(18),
           bottomLeft: Radius.circular(4),
-          bottomRight: Radius.circular(18),
-        ),
-        border: Border.all(color: const Color(0xFF292932)),
-      ),
+          bottomRight: Radius.circular(18)),
+        border: Border.all(color: const Color(0xFF292932))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -147,14 +135,10 @@ class SkeletonHeroCard extends StatelessWidget {
           Row(children: List.generate(4, (i) => Expanded(
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 4),
-              child: const SkeletonBox(height: 44),
-            ),
-          ))),
+              child: const SkeletonBox(height: 44))))),
           const SizedBox(height: 16),
           const SkeletonBox(height: 100),
-        ],
-      ),
-    );
+        ]));
   }
 }
 
@@ -182,10 +166,7 @@ class SkeletonCardRow extends StatelessWidget {
         itemBuilder: (_, __) => SkeletonBox(
           width: cardWidth,
           height: cardHeight,
-          borderRadius: 14,
-        ),
-      ),
-    );
+          borderRadius: 14)));
   }
 }
 
@@ -202,10 +183,8 @@ class SkeletonTimingRow extends StatelessWidget {
         color: const Color(0xFF1B1B1F),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(8),
-          bottomRight: Radius.circular(8),
-        ),
-        border: Border.all(color: const Color(0xFF272732)),
-      ),
+          bottomRight: Radius.circular(8)),
+        border: Border.all(color: const Color(0xFF272732))),
       child: const Row(
         children: [
           SkeletonBox(width: 24, height: 24, borderRadius: 4),
@@ -217,9 +196,7 @@ class SkeletonTimingRow extends StatelessWidget {
           SkeletonBox(width: 60, height: 14, borderRadius: 4),
           SizedBox(width: 8),
           SkeletonBox(width: 40, height: 12, borderRadius: 4),
-        ],
-      ),
-    );
+        ]));
   }
 }
 
@@ -243,10 +220,8 @@ class SkeletonChatBubble extends StatelessWidget {
                 color: const Color(0xFF1F1F23),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(8),
-                  bottomRight: Radius.circular(8),
-                ),
-                border: Border.all(color: const Color(0xFF272732)),
-              ),
+                  bottomRight: Radius.circular(8)),
+                border: Border.all(color: const Color(0xFF272732))),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -257,15 +232,9 @@ class SkeletonChatBubble extends StatelessWidget {
                   SkeletonBox(
                     width: MediaQuery.of(context).size.width * 0.5,
                     height: 10,
-                    borderRadius: 3,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+                    borderRadius: 3),
+                ]))),
+        ]));
   }
 }
 
@@ -283,9 +252,7 @@ class SkeletonDriverChip extends StatelessWidget {
           SkeletonBox(width: 56, height: 56, borderRadius: 28),
           SizedBox(height: 6),
           SkeletonBox(width: 40, height: 10, borderRadius: 3),
-        ],
-      ),
-    );
+        ]));
   }
 }
 
@@ -297,7 +264,6 @@ class SkeletonTeamPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(right: 8),
-      child: const SkeletonBox(width: 72, height: 52, borderRadius: 8),
-    );
+      child: const SkeletonBox(width: 72, height: 52, borderRadius: 8));
   }
 }
