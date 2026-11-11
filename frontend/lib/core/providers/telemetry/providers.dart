@@ -293,7 +293,9 @@ class RaceReplayState {
 
     return DriverReplaySummary(
       driverName: finalEntry.name,
-      driverCode: finalEntry.team,
+      driverCode: finalEntry.name.length >= 3
+          ? finalEntry.name.substring(finalEntry.name.length - 3).toUpperCase()
+          : finalEntry.name.toUpperCase(),
       team: finalEntry.team,
       finalPosition: int.tryParse(finalEntry.pos) ?? 0,
       fastestLap: fastest,
@@ -423,6 +425,193 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
       color: driverData,
       x: 0.0,
       y: 0.0);
+  }
+
+  /// Load a session from the new TracingInsights-sourced /api/timing/sessions endpoint.
+  Future<void> selectSessionById(String sessionId) async {
+    _playTimer?.cancel();
+    state = state.copyWith(
+      meetingName: '',
+      isLoading: true,
+      isPlaying: false,
+      loadError: null,
+      allLaps: [],
+      telemetry: [],
+      showingGrid: false,
+    );
+    try {
+      final client = _ref.read(apiClientProvider);
+      final resp = await client.get('/api/timing/sessions/$sessionId/data');
+      final data = resp.data as Map<String, dynamic>;
+
+      final rawLapsList = (data['laps'] as Map<String, dynamic>?)?['laps'] as List? ?? [];
+      final totalLaps =
+          ((data['laps'] as Map?)?['total_laps'] as num?)?.toInt() ?? rawLapsList.length;
+      final rawGrid = (data['laps'] as Map<String, dynamic>?)?['grid'] as List? ?? [];
+
+      final entries = rawLapsList.map((lapRaw) {
+        final lap = lapRaw as Map<String, dynamic>;
+        final lapNum = (lap['lap'] as num?)?.toInt() ?? 0;
+        final rawPositions = (lap['positions'] as List?) ?? [];
+        final positions =
+            rawPositions.map((p) => _posFromTracingInsights(p as Map<String, dynamic>)).toList();
+        return ReplayLapEntry(lap: lapNum, phase: '', positions: positions);
+      }).toList();
+
+      // Build grid as lap 0
+      final gridPositions = rawGrid
+          .map((g) => _posFromTracingInsights({
+                ...(g as Map<String, dynamic>),
+                'lap_time': 'Grid',
+                'gap': '',
+                'interval': '',
+                'status': 'RACING',
+              }))
+          .toList();
+      if (gridPositions.isNotEmpty) {
+        entries.insert(0, ReplayLapEntry(lap: 0, phase: 'GRID', positions: gridPositions));
+      }
+
+      // Reconstruct race control events from per-lap flags
+      final rcEvents = <RaceControlEvent>[];
+      for (final lapRaw in rawLapsList) {
+        final lap = lapRaw as Map<String, dynamic>;
+        final lapNum = (lap['lap'] as num?)?.toInt() ?? 0;
+        if (lap['sc_active'] == true) {
+          rcEvents.add(RaceControlEvent(
+              lap: lapNum,
+              category: 'SafetyCar',
+              message: 'SAFETY CAR DEPLOYED',
+              scope: 'Track'));
+        }
+        if (lap['vsc_active'] == true) {
+          rcEvents.add(RaceControlEvent(
+              lap: lapNum,
+              category: 'SafetyCar',
+              message: 'VIRTUAL SAFETY CAR DEPLOYED',
+              scope: 'Track'));
+        }
+        if (lap['red_flag'] == true) {
+          rcEvents.add(RaceControlEvent(
+              lap: lapNum,
+              category: 'Flag',
+              flag: 'RED',
+              message: 'RED FLAG',
+              scope: 'Track'));
+        }
+      }
+
+      final lapEvtMap = <int, List<RaceControlEvent>>{};
+      for (final e in rcEvents) {
+        lapEvtMap.putIfAbsent(e.lap, () => []).add(e);
+      }
+      final flagLaps =
+          lapEvtMap.keys.where((l) => lapEvtMap[l]!.any((e) => e.isNotable)).toSet();
+
+      final incidents = _computeIncidentLaps(entries);
+
+      // Parse final classification from results JSONB
+      final rawResults = (data['results'] as List?) ?? [];
+      final finalClass = rawResults.map((r) {
+        final res = r as Map<String, dynamic>;
+        return LiveTelemetry(
+          pos: res['pos']?.toString() ?? '',
+          name: res['code']?.toString() ?? '',
+          driverNumber: 0,
+          team: '',
+          gap: res['gap']?.toString() ?? '',
+          interval: '',
+          positionsGained: 0,
+          status: res['status']?.toString() ?? 'Finished',
+          dnfReason: '',
+          tyre: '',
+          tyreLife: '',
+          lastLap: res['lap_time']?.toString() ?? '',
+          bestLap: '',
+          isFastestLap: res['fastest_lap'] == true,
+          pitStops: 0,
+          drs: false,
+          speed: '',
+          gear: '',
+          color: '#FFFFFF',
+          x: 0.0,
+          y: 0.0,
+        );
+      }).toList();
+
+      final gridEntry =
+          entries.firstWhere((e) => e.lap == 0, orElse: () => entries.first);
+
+      if (mounted) {
+        state = state.copyWith(
+          meetingName:
+              (data['event']?.toString() ?? '').replaceAll('_', ' '),
+          circuitName:
+              (data['meta'] as Map?)?['circuit']?.toString() ?? '',
+          sessionType:
+              (data['session_type']?.toString() ?? 'race').toLowerCase(),
+          totalLaps: totalLaps,
+          currentLap: 0,
+          allLaps: entries,
+          finalClassification: finalClass,
+          raceControlEvents: rcEvents,
+          lapEventMap: lapEvtMap,
+          incidentLaps: ({...incidents, ...flagLaps}.toList()..sort()),
+          isLoading: false,
+          showingGrid: true,
+          telemetry: gridEntry.positions,
+        );
+      }
+    } catch (e) {
+      debugPrint('selectSessionById error: $e');
+      if (mounted) {
+        state = state.copyWith(
+          isLoading: false,
+          loadError: 'Could not load session. Try again.');
+      }
+    }
+  }
+
+  LiveTelemetry _posFromTracingInsights(Map<String, dynamic> p) {
+    final posStr = p['pos']?.toString() ?? '';
+    // lap_time: float seconds → "M:SS.mmm" string
+    final ltRaw = p['lap_time'];
+    String lapTimeStr = '';
+    if (ltRaw is num && ltRaw > 0) {
+      final secs = ltRaw.toDouble();
+      final mins = (secs ~/ 60);
+      final remaining = secs - mins * 60;
+      lapTimeStr = '$mins:${remaining.toStringAsFixed(3).padLeft(6, '0')}';
+    } else if (ltRaw is String) {
+      lapTimeStr = ltRaw;
+    }
+    // color: hex without # → store without # (existing tower uses _hexToColor)
+    final rawColor = p['color']?.toString() ?? 'FFFFFF';
+    final colorNoHash = rawColor.startsWith('#') ? rawColor.substring(1) : rawColor;
+
+    return LiveTelemetry(
+      pos: posStr,
+      name: p['code']?.toString() ?? '',
+      driverNumber: (p['number'] as num?)?.toInt() ?? 0,
+      team: p['team']?.toString() ?? '',
+      gap: p['gap']?.toString() ?? '',
+      interval: p['interval']?.toString() ?? '',
+      positionsGained: 0,
+      status: p['status']?.toString() ?? 'RACING',
+      dnfReason: '',
+      tyre: p['compound']?.toString() ?? '',
+      tyreLife: p['life']?.toString() ?? '',
+      lastLap: lapTimeStr,
+      bestLap: '',
+      isFastestLap: p['is_fastest_lap_of_race'] == true,
+      pitStops: (p['stint'] as num?)?.toInt() ?? 1,
+      drs: false,
+      speed: '',
+      gear: '',
+      color: colorNoHash,
+      x: 0.0,
+      y: 0.0,
+    );
   }
 
   String _colorForTeam(String team) {
