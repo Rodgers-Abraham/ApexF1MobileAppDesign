@@ -1101,6 +1101,20 @@ class F1ApiClient:
             lap_counts = {}  # valid laps per driver (ms > 0)
             all_laps = []
 
+            # Seed last_known with ALL drivers so they always appear even if Jolpica
+            # timing data is incomplete. DNS drivers (never get timing) stay at cum_ms=inf
+            # so they sort last. DNF/retired drivers freeze at their last known state.
+            last_known = {}
+            for ge in grid_entries:
+                did = ge["driver_id"]
+                last_known[did] = {
+                    "driver_id": did,
+                    "lap_time": "",
+                    "cum_ms": float('inf'),
+                    "lap_count": 0,
+                    "status": "DNS",
+                }
+
             for lap in all_lap_data:
                 lap_num = int(lap["number"])
                 entries = {}
@@ -1108,30 +1122,35 @@ class F1ApiClient:
                     did = t["driverId"]
                     ms = self._lap_ms(t.get("time", ""))
                     if ms <= 0:
-                        # Skip invalid/missing lap times — including this entry with
-                        # stale cumulative would make the driver appear artificially
-                        # fast (their cumulative didn't increase this lap) causing
-                        # phantom overtakes in the replay.
                         continue
                     cumulative[did] = cumulative.get(did, 0) + ms
                     lap_counts[did] = lap_counts.get(did, 0) + 1
-                    entries[did] = {
-                        "pos": int(t.get("position", 99)),
+                    entry = {
                         "driver_id": did,
                         "lap_time": t.get("time", ""),
                         "cum_ms": cumulative[did],
                         "lap_count": lap_counts[did],
+                        "status": "RACING",
                     }
+                    entries[did] = entry
+                    last_known[did] = {**entry}
 
-                # Sort by (laps completed DESC, cumulative time ASC) — this is exactly
-                # how F1 classifies a race. Lead-lap cars always outrank lapped cars
-                # regardless of raw cumulative time. Among cars on the same lap,
-                # the one with less total elapsed time is ahead.
+                # Carry forward ALL drivers not seen this lap (DNF, missing timing, DNS)
+                # Their lap_count stays frozen → they sort behind active racing drivers
+                for did, prev in last_known.items():
+                    if did not in entries:
+                        entries[did] = {**prev, "lap_time": ""}
+                        # status stays as "DNS" or last-set value
+
+                # Sort: more laps completed = further front; tie-break by cumulative time
+                # DNS drivers (lap_count=0, cum_ms=inf) always sort last
                 sorted_e = sorted(
-                    [e for e in entries.values() if e["cum_ms"] > 0],
-                    key=lambda x: (-x["lap_count"], x["cum_ms"])
+                    entries.values(),
+                    key=lambda x: (-x["lap_count"], x["cum_ms"] if x["cum_ms"] != float('inf') else 1e15)
                 )
-                leader_ms = sorted_e[0]["cum_ms"] if sorted_e else 0
+                # Reference leader as first RACING driver (ignore DNS/DNF leaders)
+                racing = [e for e in sorted_e if e.get("status") == "RACING"]
+                leader_ms = racing[0]["cum_ms"] if racing else (sorted_e[0]["cum_ms"] if sorted_e else 0)
 
                 positions = []
                 for i, e in enumerate(sorted_e):
@@ -1140,10 +1159,13 @@ class F1ApiClient:
                         "code": e["driver_id"][:3].upper(),
                         "team": "",
                     })
-                    race_pos = i + 1  # 1-based position from cumulative time rank
-                    gap_ms = e["cum_ms"] - leader_ms
-                    gap = "LEADER" if gap_ms == 0 else f"+{gap_ms/1000:.3f}s"
-                    interval = "LEADER" if i == 0 else f"+{(e['cum_ms'] - sorted_e[i-1]['cum_ms'])/1000:.3f}s"
+                    race_pos = i + 1
+                    cum = e["cum_ms"]
+                    is_dns = e.get("status") == "DNS"
+                    is_out = e.get("status") not in ("RACING",) and not is_dns
+                    gap_ms = (cum - leader_ms) if cum != float('inf') and leader_ms > 0 else 0
+                    gap = "DNS" if is_dns else ("OUT" if is_out else ("LEADER" if gap_ms == 0 else f"+{gap_ms/1000:.3f}s"))
+                    interval = "—" if is_dns or is_out else ("LEADER" if i == 0 else f"+{(cum - sorted_e[i-1]['cum_ms'])/1000:.3f}s")
 
                     positions.append({
                         "pos": race_pos,
@@ -1154,6 +1176,7 @@ class F1ApiClient:
                         "lap_time": e["lap_time"],
                         "gap": gap,
                         "interval": interval,
+                        "status": e.get("status", "RACING"),
                     })
 
                 all_laps.append({"lap": lap_num, "phase": "", "positions": positions})
@@ -1206,6 +1229,61 @@ class F1ApiClient:
             except Exception as e:
                 print(f"OpenF1 enrichment skipped: {e}")
 
+            # Update OUT driver statuses with their actual retirement reason
+            # (Engine, Accident, etc.) from the official race results
+            driver_final_status = {p["driver_id"]: p["status"] for p in final_classification}
+            for lap_data in result_laps:
+                for p in lap_data.get("positions", []):
+                    did = p.get("driver_id", "")
+                    if p.get("status") not in ("RACING", "DNS", "GRID") and did in driver_final_status:
+                        final_st = driver_final_status[did]
+                        if final_st and final_st != "Finished" and not final_st.startswith("+"):
+                            p["status"] = final_st
+
+            # Compute race summary
+            overtake_counts = {}
+            for i in range(1, len(all_laps)):
+                prev_map = {pos["driver_id"]: pos["pos"] for pos in all_laps[i-1]["positions"]
+                            if pos.get("status") == "RACING"}
+                for pos in all_laps[i]["positions"]:
+                    if pos.get("status") != "RACING":
+                        continue
+                    did = pos["driver_id"]
+                    pp = prev_map.get(did, pos["pos"])
+                    if pos["pos"] < pp:
+                        overtake_counts[did] = overtake_counts.get(did, 0) + (pp - pos["pos"])
+
+            most_overtakes = None
+            if overtake_counts:
+                best_did = max(overtake_counts, key=lambda x: overtake_counts[x])
+                info = driver_info.get(best_did, {"name": best_did, "code": best_did[:3].upper()})
+                most_overtakes = {
+                    "name": info.get("name", best_did),
+                    "code": info.get("code", best_did[:3].upper()),
+                    "count": overtake_counts[best_did],
+                }
+
+            sc_laps = sorted(set(e["lap"] for e in race_control_events
+                if "SAFETY CAR DEPLOYED" in e.get("message", "") and "VIRTUAL" not in e.get("message", "")))
+            vsc_laps = sorted(set(e["lap"] for e in race_control_events
+                if "VIRTUAL SAFETY CAR DEPLOYED" in e.get("message", "")))
+            red_flag_laps = sorted(set(e["lap"] for e in race_control_events
+                if e.get("flag") == "RED"))
+
+            non_finishers = [
+                {"code": p["code"], "name": p["name"], "status": p["status"], "laps": p["total_laps_completed"]}
+                for p in final_classification
+                if p["status"] not in ("Finished",) and not p["status"].startswith("+")
+            ]
+
+            race_summary = {
+                "sc_laps": sc_laps,
+                "vsc_laps": vsc_laps,
+                "red_flag_laps": red_flag_laps,
+                "most_overtakes": most_overtakes,
+                "non_finishers": non_finishers,
+            }
+
             return {
                 "session_type": "race",
                 "race_name": race_name,
@@ -1216,6 +1294,7 @@ class F1ApiClient:
                 "laps": result_laps,
                 "final_classification": final_classification,
                 "race_control_events": race_control_events,
+                "race_summary": race_summary,
             }
         except (KeyError, IndexError, ValueError) as e:
             print(f"Race replay parse error: {e}")

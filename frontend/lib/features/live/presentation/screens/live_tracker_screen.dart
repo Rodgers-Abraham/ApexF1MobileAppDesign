@@ -44,6 +44,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   Timer? _overtakeTimer;
   // Tracks which lap each driver most recently GAINED a position — drives the pulse
   Map<String, int> _driverGainedLap = {};
+  bool _hasSummaryBeenShown = false;
 
   @override
   void initState() {
@@ -148,6 +149,29 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
     final effectiveFlagStatus = isLive
         ? flagStatusAsync.value
         : replayState.flagStatus;
+
+    // Reset summary flag when new session loads (currentLap goes back to 0)
+    if (!isLive && replayState.currentLap == 0 && _hasSummaryBeenShown) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() {
+          _hasSummaryBeenShown = false;
+          _driverGainedLap = {};
+        });
+      });
+    }
+
+    // Auto-show race summary when replay completes
+    if (!isLive &&
+        replayState.isAtEnd &&
+        replayState.raceSummary != null &&
+        !_hasSummaryBeenShown) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_hasSummaryBeenShown) {
+          setState(() => _hasSummaryBeenShown = true);
+          _showRaceSummarySheet(context, replayState);
+        }
+      });
+    }
 
     // Update position-change map when lap advances + detect overtakes
     if (!isLive && replayState.currentLap != _lastReplayLap && replayState.currentLap > 1) {
@@ -701,6 +725,21 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
             child: Text('${replayState.speedMultiplier}×', style: DS.labelCaps(size: 10, color: DS.textPrimary)),
           ),
         ),
+        if (replayState.raceSummary != null) ...[
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () => _showRaceSummarySheet(context, replayState),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                color: DS.teal.withValues(alpha: 0.12),
+                borderRadius: DS.aeroCornerSm,
+                border: Border.all(color: DS.teal.withValues(alpha: 0.4)),
+              ),
+              child: Text('SUMMARY', style: DS.labelCaps(size: 8, color: DS.teal)),
+            ),
+          ),
+        ],
       ]),
     ]);
   }
@@ -824,25 +863,44 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               final lapTime = d.lastLap.isNotEmpty ? d.lastLap : '—';
               final isFocused = replayState.focusedDriverName == d.name;
 
+              // DNS/DNF status
+              final isActive = d.status == 'RACING' || d.status == 'ON TRACK' || d.status.isEmpty;
+              final isDns = d.status == 'DNS';
+              final dnfLabel = isDns ? 'DNS' : (isActive ? null : d.status);
+
               final gainedLap = _driverGainedLap[d.name];
-              final isGaining = gainedLap == replayState.currentLap;
+              final isGaining = gainedLap == replayState.currentLap && isActive;
 
               final rowContent = Row(children: [
                 SizedBox(
                   width: 28,
-                  child: Text('P${d.pos}', style: DS.telemetry(size: 11, color: DS.textPrimary))),
+                  child: Text(isDns ? '—' : 'P${d.pos}',
+                      style: DS.telemetry(size: 11, color: isActive ? DS.textPrimary : DS.textMuted))),
                 const SizedBox(width: 6),
                 SizedBox(
                   width: 36,
-                  child: Text(code, style: DS.driverCode(size: 12, color: DS.textPrimary))),
+                  child: Text(code, style: DS.driverCode(size: 12, color: isActive ? DS.textPrimary : DS.textMuted))),
+                if (dnfLabel != null) ...[
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: isDns ? DS.surface3 : DS.red.withValues(alpha: 0.15),
+                      borderRadius: DS.aeroCornerSm,
+                    ),
+                    child: Text(dnfLabel.length > 8 ? '${dnfLabel.substring(0,8)}…' : dnfLabel,
+                        style: DS.labelCaps(size: 7, color: isDns ? DS.textMuted : DS.red)),
+                  ),
+                ],
                 Expanded(
                   child: Text(d.team, style: DS.labelCaps(size: 7, color: DS.textMuted),
                     overflow: TextOverflow.ellipsis)),
-                Text(lapTime, style: DS.telemetry(size: 11, color: DS.textPrimary)),
+                Text(isActive ? lapTime : '—',
+                    style: DS.telemetry(size: 11, color: isActive ? DS.textPrimary : DS.textMuted)),
                 const SizedBox(width: 10),
                 SizedBox(
                   width: 32,
-                  child: posChange == 0 || arrowIcon == null
+                  child: (!isActive || posChange == 0 || arrowIcon == null)
                       ? Text('—', textAlign: TextAlign.center, style: DS.labelCaps(size: 10, color: DS.textMuted))
                       : Row(mainAxisSize: MainAxisSize.min, children: [
                           Icon(arrowIcon, size: 12, color: arrowColor),
@@ -860,7 +918,6 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                 right: 0,
                 height: 52.0,
                 child: TweenAnimationBuilder<double>(
-                  // Key resets the animation each time this driver overtakes on a new lap
                   key: ValueKey('${d.name}_${gainedLap ?? 0}'),
                   tween: isGaining
                       ? Tween<double>(begin: 0.40, end: 0.0)
@@ -875,13 +932,15 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                         margin: const EdgeInsets.symmetric(vertical: 2),
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: pulseOpacity > 0.01
-                              ? teamColor.withValues(alpha: pulseOpacity)
-                              : (isFocused ? teamColor.withValues(alpha: 0.1) : DS.surface1),
+                          color: !isActive
+                              ? DS.surface0
+                              : (pulseOpacity > 0.01
+                                  ? teamColor.withValues(alpha: pulseOpacity)
+                                  : (isFocused ? teamColor.withValues(alpha: 0.1) : DS.surface1)),
                           borderRadius: DS.aeroCornerSm,
                           border: Border(left: BorderSide(
-                            color: teamColor,
-                            width: pulseOpacity > 0.1 ? 5 : 3,
+                            color: isActive ? teamColor : teamColor.withValues(alpha: 0.25),
+                            width: (isActive && pulseOpacity > 0.1) ? 5 : 3,
                           )),
                         ),
                         child: child,
@@ -897,6 +956,135 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
       ],
     );
   }
+
+  // ─────────────────────────────────────────────────────
+  // REPLAY: Race summary bottom sheet
+  // ─────────────────────────────────────────────────────
+
+  void _showRaceSummarySheet(BuildContext context, RaceReplayState replayState) {
+    final summary = replayState.raceSummary;
+    if (summary == null) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      barrierColor: Colors.black.withValues(alpha: 0.75),
+      backgroundColor: DS.surface1,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.65,
+        maxChildSize: 0.92,
+        minChildSize: 0.4,
+        expand: false,
+        builder: (ctx, scrollCtrl) => SingleChildScrollView(
+          controller: scrollCtrl,
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(child: Container(width: 40, height: 4,
+                  decoration: BoxDecoration(color: DS.surface4,
+                      borderRadius: BorderRadius.circular(2)))),
+              const SizedBox(height: 16),
+              Row(children: [
+                Container(width: 3, height: 20, color: DS.teal),
+                const SizedBox(width: 10),
+                Text('RACE SUMMARY', style: DS.headline(size: 16)),
+                const Spacer(),
+                GestureDetector(onTap: () => Navigator.pop(ctx),
+                    child: Icon(Icons.close, size: 18, color: DS.textMuted)),
+              ]),
+              const SizedBox(height: 4),
+              Text(
+                '${replayState.meetingName.toUpperCase()} // ${replayState.circuitName.toUpperCase()}',
+                style: DS.labelCaps(size: 8, color: DS.textMuted),
+              ),
+              const SizedBox(height: 16),
+              if (summary.hasEvents) ...[
+                _summarySection('FLAG EVENTS', DS.yellow),
+                const SizedBox(height: 8),
+                if (summary.scLaps.isNotEmpty)
+                  _summaryRow(Icons.directions_car_rounded, 'SAFETY CAR',
+                      'Laps ${summary.scLaps.join(', ')}', DS.yellow),
+                if (summary.vscLaps.isNotEmpty)
+                  _summaryRow(Icons.speed_rounded, 'VIRTUAL SC',
+                      'Laps ${summary.vscLaps.join(', ')}', DS.teal),
+                if (summary.redFlagLaps.isNotEmpty)
+                  _summaryRow(Icons.flag_rounded, 'RED FLAG',
+                      'Lap${summary.redFlagLaps.length > 1 ? 's' : ''} ${summary.redFlagLaps.join(', ')}',
+                      DS.red),
+                const SizedBox(height: 14),
+              ],
+              if (summary.mostOvertakesCode != null) ...[
+                _summarySection('MOST OVERTAKES', DS.orange),
+                const SizedBox(height: 8),
+                _summaryRow(Icons.bolt_rounded, summary.mostOvertakesCode!,
+                    '${summary.mostOvertakesCount} position${summary.mostOvertakesCount != 1 ? 's' : ''} gained  •  ${summary.mostOvertakesName ?? ''}',
+                    DS.orange),
+                const SizedBox(height: 14),
+              ],
+              if (summary.nonFinishers.isNotEmpty) ...[
+                _summarySection('NON-FINISHERS', DS.red),
+                const SizedBox(height: 8),
+                ...summary.nonFinishers.map((nf) {
+                  final status = nf['status'] ?? '';
+                  final isDsq = status == 'Disqualified';
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: DS.surface2,
+                      borderRadius: DS.aeroCornerSm,
+                      border: Border(left: BorderSide(
+                          color: isDsq ? DS.red : DS.orange, width: 3)),
+                    ),
+                    child: Row(children: [
+                      Text(nf['code'] ?? '', style: DS.driverCode(size: 12)),
+                      const SizedBox(width: 10),
+                      Expanded(child: Text(nf['name'] ?? '',
+                          style: DS.body(size: 12, color: DS.textMuted),
+                          maxLines: 1, overflow: TextOverflow.ellipsis)),
+                      Text(status,
+                          style: DS.labelCaps(size: 8, color: isDsq ? DS.red : DS.orange)),
+                      const SizedBox(width: 8),
+                      Text('L${nf['laps']}',
+                          style: DS.telemetry(size: 10, color: DS.textMuted)),
+                    ]),
+                  );
+                }),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _summarySection(String label, Color color) => Row(children: [
+    Container(width: 3, height: 14, color: color),
+    const SizedBox(width: 8),
+    Text(label, style: DS.labelCaps(size: 9, color: color)),
+  ]);
+
+  Widget _summaryRow(IconData icon, String title, String detail, Color color) =>
+      Container(
+        margin: const EdgeInsets.only(bottom: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: DS.aeroCornerSm,
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Row(children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 10),
+          Text(title, style: DS.driverCode(size: 12, color: color)),
+          const SizedBox(width: 10),
+          Expanded(child: Text(detail,
+              style: DS.body(size: 11, color: DS.textMuted),
+              overflow: TextOverflow.ellipsis)),
+        ]),
+      );
 
   // ─────────────────────────────────────────────────────
   // REPLAY: Podium card shown at race end

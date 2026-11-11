@@ -161,6 +161,7 @@ class RaceReplayState {
   final bool showingGrid; // show starting grid before playback
   final List<RaceControlEvent> raceControlEvents;
   final Map<int, List<RaceControlEvent>> lapEventMap;
+  final RaceSummary? raceSummary;
 
   const RaceReplayState({
     this.meetingName = '',
@@ -181,6 +182,7 @@ class RaceReplayState {
     this.showingGrid = false,
     this.raceControlEvents = const [],
     this.lapEventMap = const {},
+    this.raceSummary,
   });
 
   RaceReplayState copyWith({
@@ -203,6 +205,8 @@ class RaceReplayState {
     bool? showingGrid,
     List<RaceControlEvent>? raceControlEvents,
     Map<int, List<RaceControlEvent>>? lapEventMap,
+    RaceSummary? raceSummary,
+    bool clearRaceSummary = false,
   }) {
     return RaceReplayState(
       meetingName: meetingName ?? this.meetingName,
@@ -222,7 +226,8 @@ class RaceReplayState {
       incidentLaps: incidentLaps ?? this.incidentLaps,
       showingGrid: showingGrid ?? this.showingGrid,
       raceControlEvents: raceControlEvents ?? this.raceControlEvents,
-      lapEventMap: lapEventMap ?? this.lapEventMap);
+      lapEventMap: lapEventMap ?? this.lapEventMap,
+      raceSummary: clearRaceSummary ? null : (raceSummary ?? this.raceSummary));
   }
 
   String get lapLabel {
@@ -356,6 +361,13 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
           .where((l) => lapEvtMap[l]!.any((e) => e.isNotable))
           .toSet();
 
+      // Parse race summary
+      RaceSummary? raceSummary;
+      final rawSummary = data['race_summary'] as Map<String, dynamic>?;
+      if (rawSummary != null) {
+        raceSummary = RaceSummary.fromJson(rawSummary);
+      }
+
       if (mounted) {
         // Show grid (lap 0) first; compute incident laps for ⚡ skip button
         final gridEntry = entries.firstWhere((e) => e.lap == 0, orElse: () => entries.first);
@@ -373,6 +385,7 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
           incidentLaps: ({...incidents, ...flagLaps}.toList()..sort()),
           raceControlEvents: rcEvents,
           lapEventMap: lapEvtMap,
+          raceSummary: raceSummary,
           telemetry: gridEntry.positions);
       }
     } catch (e) {
@@ -396,7 +409,7 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
       gap: p['gap']?.toString() ?? '',
       interval: p['interval']?.toString() ?? '',
       positionsGained: 0,
-      status: 'ON TRACK',
+      status: p['status']?.toString() ?? 'RACING',
       dnfReason: '',
       tyre: '',
       tyreLife: '',

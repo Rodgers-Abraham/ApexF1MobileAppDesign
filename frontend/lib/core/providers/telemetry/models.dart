@@ -475,3 +475,43 @@ class RaceControlEvent {
     return Icons.warning_amber_rounded;
   }
 }
+
+/// Race summary data from the backend (SC laps, most overtakes, non-finishers)
+class RaceSummary {
+  final List<int> scLaps;
+  final List<int> vscLaps;
+  final List<int> redFlagLaps;
+  final String? mostOvertakesName;
+  final String? mostOvertakesCode;
+  final int mostOvertakesCount;
+  final List<Map<String, String>> nonFinishers;
+
+  const RaceSummary({
+    this.scLaps = const [],
+    this.vscLaps = const [],
+    this.redFlagLaps = const [],
+    this.mostOvertakesName,
+    this.mostOvertakesCode,
+    this.mostOvertakesCount = 0,
+    this.nonFinishers = const [],
+  });
+
+  factory RaceSummary.fromJson(Map<String, dynamic> j) {
+    final mo = j['most_overtakes'] as Map<String, dynamic>?;
+    return RaceSummary(
+      scLaps: (j['sc_laps'] as List?)?.map((e) => (e as num).toInt()).toList() ?? [],
+      vscLaps: (j['vsc_laps'] as List?)?.map((e) => (e as num).toInt()).toList() ?? [],
+      redFlagLaps: (j['red_flag_laps'] as List?)?.map((e) => (e as num).toInt()).toList() ?? [],
+      mostOvertakesName: mo?['name']?.toString(),
+      mostOvertakesCode: mo?['code']?.toString(),
+      mostOvertakesCount: (mo?['count'] as num?)?.toInt() ?? 0,
+      nonFinishers: (j['non_finishers'] as List?)
+              ?.map((e) => Map<String, String>.from(
+                  (e as Map).map((k, v) => MapEntry(k.toString(), v.toString()))))
+              .toList() ??
+          [],
+    );
+  }
+
+  bool get hasEvents => scLaps.isNotEmpty || vscLaps.isNotEmpty || redFlagLaps.isNotEmpty;
+}
