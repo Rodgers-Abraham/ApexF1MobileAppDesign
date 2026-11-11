@@ -16,6 +16,7 @@ import '../widgets/radio_card.dart';
 import '../widgets/session_flag_banner.dart';
 import '../widgets/track_painter.dart';
 import '../../../sessions/presentation/screens/sessions_list_screen.dart' show selectedReplaySessionProvider;
+import '../../../sessions/data/sessions_provider.dart' show allSessionsProvider, EventSessions;
 
 enum LiveMode { timing, map, radio, tyres }
 
@@ -1413,32 +1414,18 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   }
 
   void _showReplayRaceSelector(BuildContext context) {
-    final calendarAsync = ref.read(calendarProvider);
-    final pastRaces = calendarAsync.whenOrNull(
-      data: (races) => races.where((r) => r.date.isBefore(DateTime.now())).toList()) ?? [];
-
-    if (pastRaces.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No completed races available for replay.')));
-      return;
-    }
-
+    // Use TracingInsights sessions from the new backend (/api/timing/sessions)
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF141419),
+      backgroundColor: DS.surface1,
       isScrollControlled: true,
+      barrierColor: Colors.black.withValues(alpha: 0.75),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => _ReplaySessionPicker(
-        pastRaces: pastRaces,
-        selectedMeeting: _selectedReplayMeeting,
-        onSelected: (race, sessionType) {
-          setState(() => _selectedReplayMeeting = race.name);
-          ref.read(raceReplayProvider.notifier).selectSession(
-            year: race.date.year,
-            round: int.tryParse(race.round) ?? 1,
-            meetingName: race.name,
-            sessionType: sessionType);
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (ctx) => _TracingInsightsSessionPicker(
+        onSelected: (sessionId, eventName) {
+          setState(() => _selectedReplayMeeting = eventName);
+          ref.read(raceReplayProvider.notifier).selectSessionById(sessionId);
           Navigator.pop(ctx);
         }));
   }
@@ -2207,5 +2194,143 @@ class _AnimatedTimingStack extends StatelessWidget {
               portraitAsset: driverMeta?.portraitAsset ?? '',
               onTap: () => onDriverTap(code)));
         }).toList()));
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TracingInsights session picker — replaces Jolpica-based _ReplaySessionPicker
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _TracingInsightsSessionPicker extends ConsumerStatefulWidget {
+  final void Function(String sessionId, String eventName) onSelected;
+  const _TracingInsightsSessionPicker({required this.onSelected});
+
+  @override
+  ConsumerState<_TracingInsightsSessionPicker> createState() =>
+      _TracingInsightsSessionPickerState();
+}
+
+class _TracingInsightsSessionPickerState
+    extends ConsumerState<_TracingInsightsSessionPicker> {
+  static const _typeColors = {
+    'Race': Color(0xFFE10600),
+    'Sprint': Color(0xFFFF8000),
+    'Q': Color(0xFFFFD000),
+    'SQ': Color(0xFFFFD000),
+    'P1': Color(0xFF29DEC9),
+    'P2': Color(0xFF29DEC9),
+    'P3': Color(0xFF29DEC9),
+  };
+
+  static const _typeLabels = {
+    'P1': 'FP1', 'P2': 'FP2', 'P3': 'FP3',
+    'Q': 'QUALI', 'SQ': 'SQ', 'Sprint': 'SPRINT', 'Race': 'RACE',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final sessionsAsync = ref.watch(allSessionsProvider);
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.65,
+      maxChildSize: 0.92,
+      minChildSize: 0.4,
+      expand: false,
+      builder: (ctx, scrollCtrl) {
+        return Column(children: [
+          // Handle + header
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+            decoration: BoxDecoration(
+              color: DS.surface1,
+              border: Border(bottom: BorderSide(color: DS.outline)),
+            ),
+            child: Row(children: [
+              Container(width: 3, height: 18, color: DS.red),
+              const SizedBox(width: 10),
+              Text('SELECT REPLAY SESSION', style: DS.headline(size: 15)),
+              const Spacer(),
+              GestureDetector(
+                onTap: () => Navigator.pop(ctx),
+                child: Icon(Icons.close, size: 18, color: DS.textMuted)),
+            ]),
+          ),
+          Expanded(
+            child: sessionsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (_, __) => Center(
+                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.wifi_off, size: 32, color: DS.textMuted),
+                  const SizedBox(height: 8),
+                  Text('No sessions available.\nRun the ingest job first.',
+                      textAlign: TextAlign.center,
+                      style: DS.body(size: 12, color: DS.textMuted)),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () => ref.invalidate(allSessionsProvider),
+                    child: Text('RETRY', style: DS.labelCaps(size: 9, color: DS.teal))),
+                ]),
+              ),
+              data: (events) {
+                if (events.isEmpty) {
+                  return Center(
+                    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      Icon(Icons.timer_outlined, size: 40, color: DS.textMuted),
+                      const SizedBox(height: 10),
+                      Text('NO SESSIONS READY', style: DS.labelCaps(size: 11, color: DS.textMuted)),
+                      const SizedBox(height: 4),
+                      Text('Sessions appear ~30 min after each race', style: DS.body(size: 11)),
+                    ]),
+                  );
+                }
+                return ListView.builder(
+                  controller: scrollCtrl,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  itemCount: events.length,
+                  itemBuilder: (_, i) {
+                    final ev = events[i];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: DS.surface2,
+                        borderRadius: DS.aeroCorner,
+                        border: Border.all(color: DS.outline),
+                      ),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Row(children: [
+                          Expanded(child: Text(
+                            ev.eventName.toUpperCase(),
+                            style: DS.driverCode(size: 13),
+                            maxLines: 1, overflow: TextOverflow.ellipsis)),
+                          Text('${ev.year}', style: DS.labelCaps(size: 8, color: DS.textMuted)),
+                        ]),
+                        const SizedBox(height: 8),
+                        Wrap(spacing: 6, runSpacing: 6, children: ev.sessions.map((sess) {
+                          final label = _typeLabels[sess.sessionType] ?? sess.sessionType;
+                          final color = _typeColors[sess.sessionType] ?? DS.teal;
+                          return GestureDetector(
+                            onTap: () => widget.onSelected(sess.id, ev.eventName),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.12),
+                                borderRadius: DS.aeroCornerSm,
+                                border: Border.all(color: color.withValues(alpha: 0.5)),
+                              ),
+                              child: Text(label, style: DS.labelCaps(size: 9, color: color)),
+                            ),
+                          );
+                        }).toList()),
+                      ]),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ]);
+      },
+    );
   }
 }
