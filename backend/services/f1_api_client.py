@@ -1098,6 +1098,7 @@ class F1ApiClient:
             grid_entries.sort(key=lambda x: x["pos"])
 
             cumulative = {}
+            lap_counts = {}  # valid laps per driver (ms > 0)
             all_laps = []
 
             for lap in all_lap_data:
@@ -1113,19 +1114,22 @@ class F1ApiClient:
                         # phantom overtakes in the replay.
                         continue
                     cumulative[did] = cumulative.get(did, 0) + ms
+                    lap_counts[did] = lap_counts.get(did, 0) + 1
                     entries[did] = {
                         "pos": int(t.get("position", 99)),
                         "driver_id": did,
                         "lap_time": t.get("time", ""),
                         "cum_ms": cumulative[did],
+                        "lap_count": lap_counts[did],
                     }
 
-                # Sort by cumulative time — always correct (reflects actual race position
-                # including pits, overtakes, DNFs). Jolpica's 'position' field is unreliable
-                # for many races (often all=99), so we derive position from time ranking.
+                # Sort by (laps completed DESC, cumulative time ASC) — this is exactly
+                # how F1 classifies a race. Lead-lap cars always outrank lapped cars
+                # regardless of raw cumulative time. Among cars on the same lap,
+                # the one with less total elapsed time is ahead.
                 sorted_e = sorted(
                     [e for e in entries.values() if e["cum_ms"] > 0],
-                    key=lambda x: x["cum_ms"]
+                    key=lambda x: (-x["lap_count"], x["cum_ms"])
                 )
                 leader_ms = sorted_e[0]["cum_ms"] if sorted_e else 0
 
