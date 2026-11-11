@@ -466,7 +466,7 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
   void play() {
     _playTimer?.cancel();
     state = state.copyWith(isPlaying: true, showingGrid: false);
-    final interval = Duration(milliseconds: 800 ~/ state.speedMultiplier);
+    final interval = Duration(milliseconds: 2000 ~/ state.speedMultiplier);
     _playTimer = Timer.periodic(interval, (_) {
       if (state.currentLap < state.totalLaps) {
         nextLap();
@@ -487,7 +487,7 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
     state = state.copyWith(speedMultiplier: next);
     if (state.isPlaying) {
       _playTimer?.cancel();
-      final interval = Duration(milliseconds: 800 ~/ next);
+      final interval = Duration(milliseconds: 2000 ~/ next);
       _playTimer = Timer.periodic(interval, (_) {
         if (state.currentLap < state.totalLaps) {
           nextLap();

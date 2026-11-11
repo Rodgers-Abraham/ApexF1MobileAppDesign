@@ -42,6 +42,8 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   // Overtake toast
   String? _overtakeToastText;
   Timer? _overtakeTimer;
+  // Tracks which lap each driver most recently GAINED a position — drives the pulse
+  Map<String, int> _driverGainedLap = {};
 
   @override
   void initState() {
@@ -157,20 +159,34 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
         final newPrevPositions = prevLapEntry.positions.isNotEmpty
             ? {for (final p in prevLapEntry.positions) if ((int.tryParse(p.pos) ?? 0) > 0) p.name: int.tryParse(p.pos) ?? 0}
             : _prevReplayPositions;
-        // Detect overtakes (gained 1+ places) — show toast for any position gain
+        // Detect ALL drivers who gained a position — pulse effect + toast
+        final newGainers = <String, int>{};
         if (newPrevPositions.isNotEmpty) {
+          String? toastDriver;
+          int toastFrom = 99, toastTo = 99;
           for (final d in replayState.telemetry) {
             final curr = int.tryParse(d.pos) ?? 99;
             final prev = newPrevPositions[d.name] ?? 99;
-            if (curr < prev && prev - curr >= 1 && curr > 0 && prev < 99) {
-              _showOvertakeToast(d.name, prev, curr, replayState.currentLap);
-              break;
+            if (curr < prev && curr > 0 && prev < 99) {
+              newGainers[d.name] = replayState.currentLap;
+              // Pick biggest gainer for the toast
+              if (toastDriver == null || prev - curr > toastFrom - toastTo) {
+                toastDriver = d.name;
+                toastFrom = prev;
+                toastTo = curr;
+              }
             }
+          }
+          if (toastDriver != null) {
+            _showOvertakeToast(toastDriver, toastFrom, toastTo, replayState.currentLap);
           }
         }
         setState(() {
           _lastReplayLap = replayState.currentLap;
           _prevReplayPositions = newPrevPositions;
+          if (newGainers.isNotEmpty) {
+            _driverGainedLap = {..._driverGainedLap, ...newGainers};
+          }
         });
       });
     }
@@ -808,48 +824,71 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               final lapTime = d.lastLap.isNotEmpty ? d.lastLap : '—';
               final isFocused = replayState.focusedDriverName == d.name;
 
+              final gainedLap = _driverGainedLap[d.name];
+              final isGaining = gainedLap == replayState.currentLap;
+
+              final rowContent = Row(children: [
+                SizedBox(
+                  width: 28,
+                  child: Text('P${d.pos}', style: DS.telemetry(size: 11, color: DS.textPrimary))),
+                const SizedBox(width: 6),
+                SizedBox(
+                  width: 36,
+                  child: Text(code, style: DS.driverCode(size: 12, color: DS.textPrimary))),
+                Expanded(
+                  child: Text(d.team, style: DS.labelCaps(size: 7, color: DS.textMuted),
+                    overflow: TextOverflow.ellipsis)),
+                Text(lapTime, style: DS.telemetry(size: 11, color: DS.textPrimary)),
+                const SizedBox(width: 10),
+                SizedBox(
+                  width: 32,
+                  child: posChange == 0 || arrowIcon == null
+                      ? Text('—', textAlign: TextAlign.center, style: DS.labelCaps(size: 10, color: DS.textMuted))
+                      : Row(mainAxisSize: MainAxisSize.min, children: [
+                          Icon(arrowIcon, size: 12, color: arrowColor),
+                          Text(posChange.abs().toString(), style: DS.labelCaps(size: 10, color: arrowColor)),
+                        ]),
+                ),
+              ]);
+
               return AnimatedPositioned(
                 key: ValueKey(d.name),
-                duration: const Duration(milliseconds: 700),
-                curve: Curves.easeInOut,
+                duration: const Duration(milliseconds: 800),
+                curve: Curves.easeOutBack,
                 top: index * 52.0,
                 left: 0,
                 right: 0,
                 height: 52.0,
-                child: GestureDetector(
-                  onTap: () => ref.read(raceReplayProvider.notifier).setFocusedDriver(isFocused ? null : d.name),
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 2),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: isFocused ? teamColor.withValues(alpha: 0.1) : DS.surface1,
-                      borderRadius: DS.aeroCornerSm,
-                      border: Border(left: BorderSide(color: teamColor, width: 3)),
-                    ),
-                    child: Row(children: [
-                      SizedBox(
-                        width: 28,
-                        child: Text('P${d.pos}', style: DS.telemetry(size: 11, color: DS.textPrimary))),
-                      const SizedBox(width: 6),
-                      SizedBox(
-                        width: 36,
-                        child: Text(code, style: DS.driverCode(size: 12, color: DS.textPrimary))),
-                      Expanded(
-                        child: Text(d.team, style: DS.labelCaps(size: 7, color: DS.textMuted),
-                          overflow: TextOverflow.ellipsis)),
-                      Text(lapTime, style: DS.telemetry(size: 11, color: DS.textPrimary)),
-                      const SizedBox(width: 10),
-                      SizedBox(
-                        width: 32,
-                        child: posChange == 0 || arrowIcon == null
-                            ? Text('—', textAlign: TextAlign.center, style: DS.labelCaps(size: 10, color: DS.textMuted))
-                            : Row(mainAxisSize: MainAxisSize.min, children: [
-                                Icon(arrowIcon, size: 12, color: arrowColor),
-                                Text(posChange.abs().toString(), style: DS.labelCaps(size: 10, color: arrowColor)),
-                              ]),
+                child: TweenAnimationBuilder<double>(
+                  // Key resets the animation each time this driver overtakes on a new lap
+                  key: ValueKey('${d.name}_${gainedLap ?? 0}'),
+                  tween: isGaining
+                      ? Tween<double>(begin: 0.40, end: 0.0)
+                      : Tween<double>(begin: 0.0, end: 0.0),
+                  duration: const Duration(milliseconds: 1500),
+                  curve: Curves.easeOut,
+                  builder: (context, pulseOpacity, child) {
+                    return GestureDetector(
+                      onTap: () => ref.read(raceReplayProvider.notifier)
+                          .setFocusedDriver(isFocused ? null : d.name),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: pulseOpacity > 0.01
+                              ? teamColor.withValues(alpha: pulseOpacity)
+                              : (isFocused ? teamColor.withValues(alpha: 0.1) : DS.surface1),
+                          borderRadius: DS.aeroCornerSm,
+                          border: Border(left: BorderSide(
+                            color: teamColor,
+                            width: pulseOpacity > 0.1 ? 5 : 3,
+                          )),
+                        ),
+                        child: child,
                       ),
-                    ]),
-                  ),
+                    );
+                  },
+                  child: rowContent,
                 ),
               );
             }).toList(),
