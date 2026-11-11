@@ -54,6 +54,7 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
     final accentColor = themeState.selectedTeam.primaryColor;
 
     final items = [
+      _DrawerItem(icon: Icons.timer_outlined, label: 'REPLAY', sublabel: 'Session Timing Replay', route: '/sessions', color: DS.red),
       _DrawerItem(icon: Icons.psychology_rounded, label: 'APEX AI', sublabel: 'Chief Strategist v1.5', route: '/chat', color: DS.orange),
       _DrawerItem(icon: Icons.archive_outlined, label: 'F1 ARCHIVE', sublabel: 'History 2010–2026', route: '/history', color: DS.teal),
       _DrawerItem(icon: Icons.tune_rounded, label: 'PIT LANE', sublabel: 'Settings & Profile', route: '/settings', color: DS.textMuted),
