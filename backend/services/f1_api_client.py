@@ -1114,7 +1114,13 @@ class F1ApiClient:
                         "cum_ms": cumulative[did],
                     }
 
-                sorted_e = sorted(entries.values(), key=lambda x: x["pos"])
+                # Sort by cumulative time — always correct (reflects actual race position
+                # including pits, overtakes, DNFs). Jolpica's 'position' field is unreliable
+                # for many races (often all=99), so we derive position from time ranking.
+                sorted_e = sorted(
+                    [e for e in entries.values() if e["cum_ms"] > 0],
+                    key=lambda x: x["cum_ms"]
+                )
                 leader_ms = sorted_e[0]["cum_ms"] if sorted_e else 0
 
                 positions = []
@@ -1124,12 +1130,13 @@ class F1ApiClient:
                         "code": e["driver_id"][:3].upper(),
                         "team": "",
                     })
+                    race_pos = i + 1  # 1-based position from cumulative time rank
                     gap_ms = e["cum_ms"] - leader_ms
                     gap = "LEADER" if gap_ms == 0 else f"+{gap_ms/1000:.3f}s"
                     interval = "LEADER" if i == 0 else f"+{(e['cum_ms'] - sorted_e[i-1]['cum_ms'])/1000:.3f}s"
 
                     positions.append({
-                        "pos": e["pos"],
+                        "pos": race_pos,
                         "driver_id": e["driver_id"],
                         "name": info["name"],
                         "code": info["code"],

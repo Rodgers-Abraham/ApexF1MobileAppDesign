@@ -761,7 +761,10 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   // ─────────────────────────────────────────────────────
 
   Widget _buildReplayTimingTower(RaceReplayState replayState) {
-    final drivers = replayState.telemetry;
+    // Sort by pos (int) so the tower always reflects race order,
+    // even if the backend list arrives in a different order.
+    final drivers = [...replayState.telemetry]
+      ..sort((a, b) => (int.tryParse(a.pos) ?? 99).compareTo(int.tryParse(b.pos) ?? 99));
     if (replayState.isLoading && drivers.isEmpty) {
       return Column(children: List.generate(10, (_) => const SkeletonTimingRow()));
     }
