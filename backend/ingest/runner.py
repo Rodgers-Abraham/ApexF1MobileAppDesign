@@ -134,8 +134,9 @@ def run_check(github_token: str, years=None):
 
 
 def run_single(year: int, event: str, session_type: str, github_token: str):
-    """Re-ingest a single session by force."""
+    """Re-ingest a single session, always overwriting existing data."""
     from services.tracing_insights import TracingInsightsFetcher
+    from core.database import get_db_connection
     fetcher = TracingInsightsFetcher(github_token)
     try:
         sessions = fetcher.list_sessions(year)
@@ -143,6 +144,13 @@ def run_single(year: int, event: str, session_type: str, github_token: str):
         source_hash = ref.last_commit_sha if ref else "manual"
     except Exception:
         source_hash = "manual"
+    # Force re-process: clear status so upsert won't skip on matching hash
+    with get_db_connection() as conn:
+        conn.execute(
+            "UPDATE sessions SET status='pending' WHERE year=? AND event=? AND session_type=?",
+            (year, event, session_type),
+        )
+        conn.commit()
     _process_session(fetcher, year, event, session_type, source_hash)
 
 

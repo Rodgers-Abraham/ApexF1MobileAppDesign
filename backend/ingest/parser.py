@@ -160,6 +160,9 @@ def parse_race(files: dict) -> dict:
                 break
         return status
 
+    # last_known_pos[code] = last position entry for carry-forward after retirement
+    last_known_pos: dict = {}
+
     laps_out = []
     for lap_num in sorted(laps_dict.keys()):
         rows = laps_dict[lap_num]
@@ -196,8 +199,26 @@ def parse_race(files: dict) -> dict:
                 "deleted": bool(r.get("del", False)),
             })
 
+        # Update last_known_pos for all RACING drivers seen this lap
+        seen_this_lap = set()
+        for r in racing_rows:
+            d_code = r.get("drv", "")
+            seen_this_lap.add(d_code)
+            d_info = next((d for d in drivers if d["code"] == d_code), {})
+            last_known_pos[d_code] = {
+                "pos": _safe_int(r.get("pos")) or 0,
+                "code": d_code,
+                "team": r.get("team", d_info.get("team", "")),
+                "color": d_info.get("color", "FFFFFF"),
+                "compound": r.get("compound", "UNKNOWN"),
+                "life": _safe_int(r.get("life")),
+                "stint": _safe_int(r.get("stint")),
+            }
+
+        # ff1G rows — mark DNF at their last-seen position
         for r in out_rows:
             d_code = r.get("drv", "")
+            seen_this_lap.add(d_code)
             d_info = next((d for d in drivers if d["code"] == d_code), {})
             positions.append({
                 "pos": 99, "code": d_code,
@@ -210,6 +231,42 @@ def parse_race(files: dict) -> dict:
                 "is_fastest_lap_of_race": False, "is_fastest_this_lap": False,
                 "status": "DNF", "deleted": False,
             })
+            # Keep their last known position
+            if d_code not in last_known_pos:
+                last_known_pos[d_code] = {"pos": 99, "code": d_code,
+                    "team": r.get("team", d_info.get("team", "")),
+                    "color": d_info.get("color", "FFFFFF"),
+                    "compound": r.get("compound", "UNKNOWN"),
+                    "life": _safe_int(r.get("life")), "stint": _safe_int(r.get("stint"))}
+
+        # Carry forward any driver NOT seen this lap (they retired in a prior lap)
+        for d_code, prev in last_known_pos.items():
+            if d_code not in seen_this_lap:
+                d_info = next((d for d in drivers if d["code"] == d_code), {})
+                positions.append({
+                    "pos": 99, "code": d_code,
+                    "team": prev.get("team", d_info.get("team", "")),
+                    "color": prev.get("color", d_info.get("color", "FFFFFF")),
+                    "lap_time": None, "s1": None, "s2": None, "s3": None,
+                    "compound": prev.get("compound", "UNKNOWN"),
+                    "life": prev.get("life"), "stint": prev.get("stint"),
+                    "is_pit_in": False, "pin_s": None, "pout_s": None,
+                    "is_fastest_lap_of_race": False, "is_fastest_this_lap": False,
+                    "status": "DNF", "deleted": False,
+                })
+
+        # DNS drivers: in drivers list but never appeared in any lap data
+        for d in drivers:
+            if d["code"] not in last_known_pos and d["code"] not in seen_this_lap:
+                positions.append({
+                    "pos": 99, "code": d["code"],
+                    "team": d.get("team", ""), "color": d.get("color", "FFFFFF"),
+                    "lap_time": None, "s1": None, "s2": None, "s3": None,
+                    "compound": "UNKNOWN", "life": None, "stint": None,
+                    "is_pit_in": False, "pin_s": None, "pout_s": None,
+                    "is_fastest_lap_of_race": False, "is_fastest_this_lap": False,
+                    "status": "DNS", "deleted": False,
+                })
 
         lap_start_s = _safe_float(rows[0].get("lST")) if rows else 0
         track_status = get_track_status_at(lap_start_s or 0) if lap_start_s else "1"
