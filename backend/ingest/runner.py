@@ -173,7 +173,9 @@ def main():
         if len(parts) != 3:
             log.error("--session must be 'year/event/session_type'")
             sys.exit(1)
-        run_single(int(parts[0]), parts[1], parts[2], github_token)
+        # Accept both "Australian_Grand_Prix" and "Australian Grand Prix"
+        event_name = parts[1].replace("_", " ")
+        run_single(int(parts[0]), event_name, parts[2], github_token)
     elif args.check or args.backfill:
         years = [args.year] if args.year else None
         run_check(github_token, years)

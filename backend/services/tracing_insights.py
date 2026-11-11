@@ -126,7 +126,9 @@ class TracingInsightsFetcher:
         session_type is our DB enum (P1/Q/Race/etc.).
         """
         raw_type = self._raw_session_type(session_type)
-        base = f"{year}/{event}/{raw_type}"
+        # event may come in with underscores (CLI input) but the repo uses spaces
+        event_folder = event.replace("_", " ")
+        base = f"{event_folder}/{raw_type}"
 
         def fetch(filename: str, required: bool = True):
             url = RAW_BASE.format(year=year, path=f"{base}/{filename}")
