@@ -1106,6 +1106,12 @@ class F1ApiClient:
                 for t in lap.get("Timings", []):
                     did = t["driverId"]
                     ms = self._lap_ms(t.get("time", ""))
+                    if ms <= 0:
+                        # Skip invalid/missing lap times — including this entry with
+                        # stale cumulative would make the driver appear artificially
+                        # fast (their cumulative didn't increase this lap) causing
+                        # phantom overtakes in the replay.
+                        continue
                     cumulative[did] = cumulative.get(did, 0) + ms
                     entries[did] = {
                         "pos": int(t.get("position", 99)),

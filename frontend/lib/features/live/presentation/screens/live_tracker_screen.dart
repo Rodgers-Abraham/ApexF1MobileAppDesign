@@ -157,12 +157,12 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
         final newPrevPositions = prevLapEntry.positions.isNotEmpty
             ? {for (final p in prevLapEntry.positions) if ((int.tryParse(p.pos) ?? 0) > 0) p.name: int.tryParse(p.pos) ?? 0}
             : _prevReplayPositions;
-        // Detect overtakes (gained 2+ places)
+        // Detect overtakes (gained 1+ places) — show toast for any position gain
         if (newPrevPositions.isNotEmpty) {
           for (final d in replayState.telemetry) {
             final curr = int.tryParse(d.pos) ?? 99;
             final prev = newPrevPositions[d.name] ?? 99;
-            if (curr < prev && prev - curr >= 2 && curr > 0) {
+            if (curr < prev && prev - curr >= 1 && curr > 0 && prev < 99) {
               _showOvertakeToast(d.name, prev, curr, replayState.currentLap);
               break;
             }
