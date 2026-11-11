@@ -15,6 +15,7 @@ import '../widgets/telemetry_strip.dart';
 import '../widgets/radio_card.dart';
 import '../widgets/session_flag_banner.dart';
 import '../widgets/track_painter.dart';
+import '../../../sessions/presentation/screens/sessions_list_screen.dart' show selectedReplaySessionProvider;
 
 enum LiveMode { timing, map, radio, tyres }
 
@@ -137,6 +138,20 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
     final replayState = ref.watch(raceReplayProvider);
     // Watch calendar so the replay picker always has fresh data
     ref.watch(calendarProvider);
+
+    // Auto-load session when selectedReplaySessionProvider is set (from /sessions screen)
+    final selectedSessionId = ref.watch(selectedReplaySessionProvider);
+    if (selectedSessionId != null &&
+        !replayState.isLoading &&
+        replayState.allLaps.isEmpty &&
+        replayState.loadError == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(raceReplayProvider.notifier).selectSessionById(selectedSessionId);
+          ref.read(selectedReplaySessionProvider.notifier).state = null;
+        }
+      });
+    }
 
     final sessionStatus = sessionStatusAsync.value;
     final isLive = sessionStatus?.isLive ?? false;

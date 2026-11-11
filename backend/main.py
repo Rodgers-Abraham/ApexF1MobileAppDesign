@@ -13,6 +13,7 @@ load_dotenv()
 
 # Import routes
 from api.routes import auth, chatbot, predictor, sessions, telemetry, history, picks
+from api.routes import recap_sessions  # Live Timing / Race Recap feature
 
 # Import config & database
 from core.config import get_settings
@@ -69,6 +70,7 @@ app.include_router(sessions.router, prefix="/api/sessions", tags=["Race Sessions
 app.include_router(telemetry.router, prefix="/api/f1", tags=["F1 Dynamic Data"])
 app.include_router(history.router, prefix="/api/f1/history", tags=["F1 Historical Archive"])
 app.include_router(picks.router, prefix="/api/user", tags=["User Predictions"])
+app.include_router(recap_sessions.router, prefix="/api/timing", tags=["Live Timing / Race Recap"])
 
 @app.get("/")
 @app.get("/health")

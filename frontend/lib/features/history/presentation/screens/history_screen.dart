@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/providers/session_provider.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../shared/theme/app_design_system.dart';
@@ -178,7 +179,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     final winnerName = winner['driver']?.toString() ?? 'Winner';
                     final winnerConstructor = winner['constructor']?.toString() ?? 'F1 Team';
 
-                    return Container(
+                    return GestureDetector(
+                      onTap: () => context.go('/sessions'),
+                      child: Container(
                       margin: const EdgeInsets.only(bottom: 10),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -225,7 +228,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                                 winnerConstructor,
                                 style: DS.body(size: 10, color: Colors.grey[500]!)),
                             ]),
-                        ]));
+                        ])));
                   });
               }),
             const SizedBox(height: 40),

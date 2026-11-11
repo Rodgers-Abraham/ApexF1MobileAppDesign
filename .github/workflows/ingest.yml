@@ -1,0 +1,74 @@
+name: F1 Session Ingest
+
+on:
+  schedule:
+    # Race weekends (Fri–Mon): every 15 minutes
+    - cron: '*/15 * * * 5'   # Friday
+    - cron: '*/15 * * * 6'   # Saturday
+    - cron: '*/15 * * * 0'   # Sunday
+    - cron: '*/15 * * * 1'   # Monday
+    # Off-weekends (Tue–Thu): once daily at 06:00 UTC
+    - cron: '0 6 * * 2'      # Tuesday
+    - cron: '0 6 * * 3'      # Wednesday
+    - cron: '0 6 * * 4'      # Thursday
+  workflow_dispatch:
+    inputs:
+      session:
+        description: 'Single session to ingest (year/event/session_type) — leave blank to run --check'
+        required: false
+        type: string
+      backfill:
+        description: 'Run full backfill of all available seasons'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  ingest:
+    name: Ingest F1 Sessions
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run ingest (single session)
+        if: ${{ github.event.inputs.session != '' }}
+        run: |
+          cd backend
+          python -m ingest.runner --session "${{ github.event.inputs.session }}"
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run ingest (backfill)
+        if: ${{ github.event.inputs.backfill == 'true' }}
+        run: |
+          cd backend
+          python -m ingest.runner --backfill
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run ingest (check for new sessions)
+        if: ${{ github.event.inputs.session == '' && github.event.inputs.backfill != 'true' }}
+        run: |
+          cd backend
+          python -m ingest.runner --check
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

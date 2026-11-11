@@ -216,6 +216,28 @@ CREATE TABLE IF NOT EXISTS user_race_picks (
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, race_name)
 );
+
+CREATE TABLE IF NOT EXISTS sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    year INTEGER NOT NULL,
+    event TEXT NOT NULL,
+    session_type TEXT NOT NULL,
+    session_date DATE,
+    status TEXT NOT NULL DEFAULT 'pending',
+    error TEXT,
+    source TEXT NOT NULL DEFAULT 'tracing_insights',
+    source_hash TEXT,
+    ingested_at TIMESTAMPTZ,
+    meta JSONB,
+    laps JSONB,
+    events JSONB,
+    weather JSONB,
+    results JSONB,
+    radio JSONB,
+    UNIQUE (year, event, session_type)
+);
+CREATE INDEX IF NOT EXISTS sessions_year_status ON sessions (year, status);
+CREATE INDEX IF NOT EXISTS sessions_status ON sessions (status);
 """
 
 SQLITE_SCHEMA_SQL = """
@@ -285,6 +307,26 @@ CREATE TABLE IF NOT EXISTS user_race_picks (
     submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(user_id) REFERENCES users(id),
     UNIQUE(user_id, race_name)
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+    year INTEGER NOT NULL,
+    event TEXT NOT NULL,
+    session_type TEXT NOT NULL,
+    session_date TEXT,
+    status TEXT NOT NULL DEFAULT 'pending',
+    error TEXT,
+    source TEXT NOT NULL DEFAULT 'tracing_insights',
+    source_hash TEXT,
+    ingested_at DATETIME,
+    meta TEXT,
+    laps TEXT,
+    events TEXT,
+    weather TEXT,
+    results TEXT,
+    radio TEXT,
+    UNIQUE (year, event, session_type)
 );
 """
 
