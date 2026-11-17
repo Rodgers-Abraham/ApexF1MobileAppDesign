@@ -170,6 +170,8 @@ class RaceReplayState {
   final List<RaceControlEvent> raceControlEvents;
   final Map<int, List<RaceControlEvent>> lapEventMap;
   final RaceSummary? raceSummary;
+  final int availableLaps; // actual lap entries with lap > 0
+  final int? truncatedAt; // last available lap when race ended before totalLaps; null = complete
 
   const RaceReplayState({
     this.meetingName = '',
@@ -191,6 +193,8 @@ class RaceReplayState {
     this.raceControlEvents = const [],
     this.lapEventMap = const {},
     this.raceSummary,
+    this.availableLaps = 0,
+    this.truncatedAt,
   });
 
   RaceReplayState copyWith({
@@ -215,6 +219,9 @@ class RaceReplayState {
     Map<int, List<RaceControlEvent>>? lapEventMap,
     RaceSummary? raceSummary,
     bool clearRaceSummary = false,
+    int? availableLaps,
+    int? truncatedAt,
+    bool clearTruncatedAt = false,
   }) {
     return RaceReplayState(
       meetingName: meetingName ?? this.meetingName,
@@ -235,16 +242,22 @@ class RaceReplayState {
       showingGrid: showingGrid ?? this.showingGrid,
       raceControlEvents: raceControlEvents ?? this.raceControlEvents,
       lapEventMap: lapEventMap ?? this.lapEventMap,
-      raceSummary: clearRaceSummary ? null : (raceSummary ?? this.raceSummary));
+      raceSummary: clearRaceSummary ? null : (raceSummary ?? this.raceSummary),
+      availableLaps: availableLaps ?? this.availableLaps,
+      truncatedAt: clearTruncatedAt ? null : (truncatedAt ?? this.truncatedAt));
   }
 
   String get lapLabel {
+    if (truncatedAt != null) return 'LAP $currentLap';
     if (allLaps.isEmpty) return 'LAP $currentLap';
     final entry = allLaps.firstWhere((l) => l.lap == currentLap, orElse: () => allLaps.first);
     return entry.phase.isNotEmpty ? entry.phase : 'LAP $currentLap';
   }
 
-  bool get isAtEnd => totalLaps > 0 && currentLap >= totalLaps;
+  bool get isAtEnd {
+    final maxLap = truncatedAt ?? totalLaps;
+    return maxLap > 0 && currentLap >= maxLap;
+  }
 
   /// Events for the current lap from OpenF1 (empty for pre-2023 races)
   List<RaceControlEvent> get currentLapEvents =>
@@ -382,6 +395,8 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
         // Show grid (lap 0) first; compute incident laps for ⚡ skip button
         final gridEntry = entries.firstWhere((e) => e.lap == 0, orElse: () => entries.first);
         final incidents = _computeIncidentLaps(entries);
+        final actualLaps = entries.where((e) => e.lap > 0).length;
+        final truncatedAt = (actualLaps < totalLaps && actualLaps > 0) ? actualLaps : null;
         state = state.copyWith(
           meetingName: data['race_name']?.toString() ?? meetingName,
           circuitName: data['circuit']?.toString() ?? '',
@@ -396,7 +411,9 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
           raceControlEvents: rcEvents,
           lapEventMap: lapEvtMap,
           raceSummary: raceSummary,
-          telemetry: gridEntry.positions);
+          telemetry: gridEntry.positions,
+          availableLaps: actualLaps,
+          truncatedAt: truncatedAt);
       }
     } catch (e) {
       debugPrint('Session replay error: $e');
@@ -577,6 +594,8 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
 
       final gridEntry =
           entries.firstWhere((e) => e.lap == 0, orElse: () => entries.first);
+      final actualLaps = entries.where((e) => e.lap > 0).length;
+      final truncatedAt = (actualLaps < totalLaps && actualLaps > 0) ? actualLaps : null;
 
       if (mounted) {
         state = state.copyWith(
@@ -596,6 +615,8 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
           isLoading: false,
           showingGrid: true,
           telemetry: gridEntry.positions,
+          availableLaps: actualLaps,
+          truncatedAt: truncatedAt,
         );
       }
     } catch (e) {
@@ -682,7 +703,10 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
   }
 
   void nextLap() {
-    if (state.currentLap < state.totalLaps) {
+    // Advance only to the last AVAILABLE lap, not the SCHEDULED total.
+    // For races that ended early, truncatedAt holds the last real lap number.
+    final maxLap = state.truncatedAt ?? state.totalLaps;
+    if (state.currentLap < maxLap) {
       setLap(state.currentLap + 1);
     } else {
       pause();
@@ -725,7 +749,8 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
     state = state.copyWith(isPlaying: true, showingGrid: false);
     final delayMs = _lapDelayMs();
     _playTimer = Timer.periodic(Duration(milliseconds: delayMs), (_) {
-      if (state.currentLap < state.totalLaps) {
+      final maxLap = state.truncatedAt ?? state.totalLaps;
+      if (state.currentLap < maxLap) {
         nextLap();
       } else {
         pause();
@@ -747,7 +772,8 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
       _playTimer?.cancel();
       final delayMs = _lapDelayMs();
       _playTimer = Timer.periodic(Duration(milliseconds: delayMs), (_) {
-        if (state.currentLap < state.totalLaps) {
+        final maxLap = state.truncatedAt ?? state.totalLaps;
+        if (state.currentLap < maxLap) {
           nextLap();
         } else {
           pause();

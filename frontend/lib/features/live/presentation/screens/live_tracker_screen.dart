@@ -178,9 +178,10 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
       });
     }
 
-    // Auto-show race summary when replay completes
+    // Auto-show race summary when replay completes — never for truncated sessions
     if (!isLive &&
         replayState.isAtEnd &&
+        replayState.truncatedAt == null &&
         replayState.raceSummary != null &&
         !_hasSummaryBeenShown) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -513,6 +514,30 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               if (_selectedMode == LiveMode.timing) ...[
                 // Replay: overtake toast + race control event banner
                 if (!isLive && replayState.allLaps.isNotEmpty) ...[
+                  // Truncation banner: shown when the race ended before totalLaps
+                  if (replayState.truncatedAt != null &&
+                      replayState.currentLap >= (replayState.truncatedAt ?? 0)) ...[
+                    Container(
+                      key: const Key('replay_truncation_banner'),
+                      margin: const EdgeInsets.only(bottom: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: DS.yellow.withValues(alpha: 0.12),
+                        borderRadius: DS.aeroCornerSm,
+                        border: Border(left: BorderSide(color: DS.yellow, width: 3)),
+                      ),
+                      child: Row(children: [
+                        Icon(Icons.info_outline_rounded, size: 13, color: DS.yellow),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'TIMING DATA ENDS AT LAP ${replayState.truncatedAt} · ${replayState.totalLaps} LAPS SCHEDULED',
+                            style: DS.labelCaps(size: 8, color: DS.yellow),
+                          ),
+                        ),
+                      ]),
+                    ),
+                  ],
                   if (_overtakeToastText != null)
                     AnimatedOpacity(
                       opacity: 1.0,

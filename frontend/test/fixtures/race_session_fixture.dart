@@ -320,3 +320,73 @@ Map<String, dynamic> raceSessionFixture() => {
   'weather': null,
   'radio': null,
 };
+
+/// Fixture modelling a race ended early (red-flagged after 3 laps).
+/// total_laps = 39 (scheduled), laps array has only 3 entries.
+/// Models the 2021 Belgian Grand Prix.
+Map<String, dynamic> truncatedRaceFixture() => {
+  'id': 'fixture-truncated-001',
+  'year': 2021,
+  'event': 'Belgian Grand Prix',
+  'session_type': 'Race',
+  'session_date': '2021-08-29',
+  'meta': {
+    'circuit': 'Spa-Francorchamps',
+    'drivers': [
+      {'code': 'VER', 'team': 'Red Bull Racing', 'color': '3671C6', 'dn': 33, 'fn': 'Max', 'ln': 'Verstappen'},
+      {'code': 'HAM', 'team': 'Mercedes', 'color': '27F4D2', 'dn': 44, 'fn': 'Lewis', 'ln': 'Hamilton'},
+      {'code': 'BOT', 'team': 'Mercedes', 'color': '27F4D2', 'dn': 77, 'fn': 'Valtteri', 'ln': 'Bottas'},
+    ],
+  },
+  'laps': {
+    'total_laps': 39,
+    'grid': [
+      {'code': 'VER', 'pos': '1', 'team': 'Red Bull Racing', 'color': '3671C6'},
+      {'code': 'HAM', 'pos': '2', 'team': 'Mercedes', 'color': '27F4D2'},
+      {'code': 'BOT', 'pos': '3', 'team': 'Mercedes', 'color': '27F4D2'},
+    ],
+    'laps': [
+      {
+        'lap': 1, 'lap_start_s': 0.0, 'track_status': '5',
+        'sc_active': false, 'vsc_active': false, 'red_flag': true,
+        'fastest_code': 'VER', 'fastest_lap_time': 108.5,
+        'positions': [
+          {'code': 'VER', 'pos': '1', 'team': 'Red Bull Racing', 'color': '3671C6', 'lap_time': 108.5, 'status': 'RACING', 'compound': 'INTERMEDIATE', 'life': 1, 'is_fastest_this_lap': true, 'is_fastest_lap_of_race': false},
+          {'code': 'HAM', 'pos': '2', 'team': 'Mercedes', 'color': '27F4D2', 'lap_time': 109.0, 'status': 'RACING', 'compound': 'INTERMEDIATE', 'life': 1, 'is_fastest_this_lap': false, 'is_fastest_lap_of_race': false},
+          {'code': 'BOT', 'pos': '3', 'team': 'Mercedes', 'color': '27F4D2', 'lap_time': 110.0, 'status': 'RACING', 'compound': 'INTERMEDIATE', 'life': 1, 'is_fastest_this_lap': false, 'is_fastest_lap_of_race': false},
+        ],
+      },
+      {
+        'lap': 2, 'lap_start_s': 108.5, 'track_status': '5',
+        'sc_active': false, 'vsc_active': false, 'red_flag': true,
+        'fastest_code': 'VER', 'fastest_lap_time': 107.9,
+        'positions': [
+          {'code': 'VER', 'pos': '1', 'team': 'Red Bull Racing', 'color': '3671C6', 'lap_time': 107.9, 'status': 'RACING', 'compound': 'INTERMEDIATE', 'life': 2, 'is_fastest_this_lap': true, 'is_fastest_lap_of_race': true},
+          {'code': 'HAM', 'pos': '2', 'team': 'Mercedes', 'color': '27F4D2', 'lap_time': 108.5, 'status': 'RACING', 'compound': 'INTERMEDIATE', 'life': 2, 'is_fastest_this_lap': false, 'is_fastest_lap_of_race': false},
+          {'code': 'BOT', 'pos': '3', 'team': 'Mercedes', 'color': '27F4D2', 'lap_time': 109.5, 'status': 'RACING', 'compound': 'INTERMEDIATE', 'life': 2, 'is_fastest_this_lap': false, 'is_fastest_lap_of_race': false},
+        ],
+      },
+      {
+        'lap': 3, 'lap_start_s': 216.4, 'track_status': '5',
+        'sc_active': false, 'vsc_active': false, 'red_flag': true,
+        'fastest_code': 'HAM', 'fastest_lap_time': 107.5,
+        'positions': [
+          {'code': 'VER', 'pos': '1', 'team': 'Red Bull Racing', 'color': '3671C6', 'lap_time': 108.0, 'status': 'RACING', 'compound': 'INTERMEDIATE', 'life': 3, 'is_fastest_this_lap': false, 'is_fastest_lap_of_race': true},
+          {'code': 'HAM', 'pos': '2', 'team': 'Mercedes', 'color': '27F4D2', 'lap_time': 107.5, 'status': 'RACING', 'compound': 'INTERMEDIATE', 'life': 3, 'is_fastest_this_lap': true, 'is_fastest_lap_of_race': false},
+          {'code': 'BOT', 'pos': '3', 'team': 'Mercedes', 'color': '27F4D2', 'lap_time': 109.0, 'status': 'RACING', 'compound': 'INTERMEDIATE', 'life': 3, 'is_fastest_this_lap': false, 'is_fastest_lap_of_race': false},
+        ],
+      },
+    ],
+    'dns_drivers': [],
+  },
+  'events': [
+    {'type': 'RED_FLAG', 'lap': 1, 'drivers': [], 'label': 'RED FLAG — race suspended'},
+  ],
+  'results': [
+    {'code': 'VER', 'pos': '1', 'gap': 'WINNER', 'status': 'Classified', 'fastest_lap': true},
+    {'code': 'HAM', 'pos': '2', 'gap': '+0.5', 'status': 'Classified', 'fastest_lap': false},
+    {'code': 'BOT', 'pos': '3', 'gap': '+2.0', 'status': 'Classified', 'fastest_lap': false},
+  ],
+  'weather': null,
+  'radio': null,
+};

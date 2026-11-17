@@ -115,4 +115,73 @@ void main() {
     expect(find.byKey(const Key('replay_dnf_badge_HAM')), findsOneWidget);
     expect(find.byKey(const Key('replay_dnf_badge_VER')), findsNothing);
   });
+
+  test('truncated race: isAtEnd uses truncatedAt not totalLaps', () {
+    // State after all 3 laps: currentLap=3, totalLaps=39, truncatedAt=3
+    final state = const RaceReplayState().copyWith(
+      currentLap: 3,
+      totalLaps: 39,
+      availableLaps: 3,
+      truncatedAt: 3,
+    );
+    // isAtEnd must be true (currentLap >= truncatedAt), not wait for lap 39
+    expect(state.isAtEnd, isTrue);
+    // truncatedAt must be set so the UI can suppress the summary sheet
+    expect(state.truncatedAt, equals(3));
+  });
+
+  test('complete race: isAtEnd uses totalLaps when not truncated', () {
+    final state = const RaceReplayState().copyWith(
+      currentLap: 57,
+      totalLaps: 58,
+      availableLaps: 58,
+    );
+    expect(state.isAtEnd, isFalse); // lap 57 < 58, not at end yet
+    final atEnd = state.copyWith(currentLap: 58);
+    expect(atEnd.isAtEnd, isTrue);
+    expect(atEnd.truncatedAt, isNull); // complete session
+  });
+
+  testWidgets('tower shows all laps in correct order for full race fixture', (tester) async {
+    final fixture = raceSessionFixture();
+    final laps = fixture['laps']['laps'] as List;
+
+    for (int lapIdx = 0; lapIdx < laps.length; lapIdx++) {
+      final lapData = laps[lapIdx] as Map<String, dynamic>;
+      final expectedCodes = (lapData['positions'] as List)
+          .map((p) => (p as Map<String, dynamic>)['code']?.toString() ?? '')
+          .toList();
+
+      final positions = (lapData['positions'] as List)
+          .map((p) => _posToTelemetry(p as Map<String, dynamic>))
+          .toList();
+
+      final state = const RaceReplayState().copyWith(
+        currentLap: lapIdx + 1,
+        totalLaps: laps.length,
+        availableLaps: laps.length,
+        telemetry: positions,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ReplayTimingTowerWidget(
+              replayState: state,
+              penaltyLaps: const {},
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      for (final code in expectedCodes) {
+        expect(
+          find.byKey(Key('replay_timing_row_$code')),
+          findsOneWidget,
+          reason: 'Lap ${lapIdx + 1}: driver $code should have a row',
+        );
+      }
+    }
+  });
 }
