@@ -20,6 +20,10 @@ import '../widgets/replay_timing_tower_widget.dart';
 
 enum LiveMode { timing, map, radio, tyres }
 
+/// Set to true and rebuild to show the replay debug strip on device.
+/// MUST be false before merging.
+const bool _kReplayDebug = false;
+
 class LiveTrackerScreen extends ConsumerStatefulWidget {
   const LiveTrackerScreen({super.key});
 
@@ -902,10 +906,53 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   // ─────────────────────────────────────────────────────
 
   Widget _buildReplayTimingTower(RaceReplayState replayState) {
-    return ReplayTimingTowerWidget(
+    final tower = ReplayTimingTowerWidget(
       key: const Key('replay_timing_tower'),
       replayState: replayState,
       penaltyLaps: _penaltyLaps,
+    );
+    if (!_kReplayDebug) return tower;
+
+    // Debug strip: visible only when _kReplayDebug == true.
+    // Shows the lap actually used, top-3 from telemetry, and allLaps range.
+    final top3 = [...replayState.telemetry]
+      ..sort((a, b) => (int.tryParse(a.pos) ?? 99).compareTo(int.tryParse(b.pos) ?? 99));
+    final top3Str = top3.take(3).map((d) => '${d.pos}:${d.name}').join(' ');
+    final allNums = replayState.allLaps.map((l) => l.lap).toList()..sort();
+    final hasLap = allNums.contains(replayState.currentLap);
+    final first5 = allNums.take(5).toList();
+    final last3 = allNums.length > 3 ? allNums.sublist(allNums.length - 3) : allNums;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: const EdgeInsets.only(bottom: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          color: const Color(0xFF1A0A00),
+          child: DefaultTextStyle(
+            style: const TextStyle(fontSize: 9, fontFamily: 'monospace'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'DBG LAP:${replayState.currentLap}/${replayState.totalLaps} '
+                  'avail:${replayState.availableLaps} trunc:${replayState.truncatedAt} '
+                  'miss:${replayState.missingLapAt} has:$hasLap',
+                  style: const TextStyle(color: Color(0xFFFF8C00)),
+                ),
+                Text('TOP3 $top3Str',
+                    style: const TextStyle(color: Color(0xFF00FF88))),
+                Text(
+                  'allLaps[${allNums.length}] first5:$first5 last3:$last3',
+                  style: const TextStyle(color: Color(0xFF88CCFF)),
+                ),
+              ],
+            ),
+          ),
+        ),
+        tower,
+      ],
     );
   }
 
