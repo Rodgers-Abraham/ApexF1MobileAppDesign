@@ -13,11 +13,6 @@ class Settings(BaseSettings):
     app_version: str = "1.0.0"
     debug: bool = False
 
-    # Security
-    jwt_secret: str = "f1_apex_default_jwt_secret_key_change_in_production"
-    jwt_algorithm: str = "HS256"
-    access_token_expire_minutes: int = 60 * 24 * 7
-
     # Database
     database_url: str = "sqlite:///./f1_app.db"
 

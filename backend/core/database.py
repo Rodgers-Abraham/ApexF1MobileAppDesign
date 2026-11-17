@@ -166,7 +166,8 @@ CREATE TABLE IF NOT EXISTS users (
     favourite_team TEXT DEFAULT 'Ferrari',
     favourite_driver TEXT,
     country TEXT,
-    firebase_uid TEXT
+    firebase_uid TEXT,
+    rival_driver TEXT
 );
 
 CREATE TABLE IF NOT EXISTS predictions (
@@ -255,7 +256,8 @@ CREATE TABLE IF NOT EXISTS users (
     favourite_team TEXT DEFAULT 'Ferrari',
     favourite_driver TEXT,
     country TEXT,
-    firebase_uid TEXT
+    firebase_uid TEXT,
+    rival_driver TEXT
 );
 
 CREATE TABLE IF NOT EXISTS predictions (
@@ -349,9 +351,11 @@ def init_db():
                 for col_sql in [
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS country TEXT;",
                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS firebase_uid TEXT;",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS rival_driver TEXT;",
                     # Make email and password_hash nullable for Firebase-only accounts
                     "ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;",
                     "ALTER TABLE users ALTER COLUMN email DROP NOT NULL;",
+                    "CREATE UNIQUE INDEX IF NOT EXISTS users_firebase_uid_unique ON users(firebase_uid) WHERE firebase_uid IS NOT NULL;",
                 ]:
                     try:
                         cur.execute(col_sql)
@@ -379,11 +383,19 @@ def init_db():
             "ALTER TABLE users ADD COLUMN favourite_driver TEXT;",
             "ALTER TABLE users ADD COLUMN country TEXT;",
             "ALTER TABLE users ADD COLUMN firebase_uid TEXT;",
+            "ALTER TABLE users ADD COLUMN rival_driver TEXT;",
         ]:
             try:
                 cursor.execute(migration)
             except sqlite3.OperationalError:
                 pass
+
+        try:
+            cursor.execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_firebase_uid ON users(firebase_uid)"
+            )
+        except sqlite3.OperationalError:
+            pass
 
         try:
             cursor.execute(

@@ -16,6 +16,7 @@ from api.routes import auth, chatbot, predictor, sessions, telemetry, history, p
 from api.routes import recap_sessions  # Live Timing / Race Recap feature
 
 # Import config & database
+from core.auth import initialize_firebase_admin
 from core.config import get_settings
 from core.database import init_db
 
@@ -28,6 +29,11 @@ try:
     init_db()
 except Exception as e:
     print(f"Startup DB init notice: {e}")
+
+try:
+    initialize_firebase_admin()
+except Exception as e:
+    print(f"Firebase Admin init notice: {e}")
 
 
 def _background_initial_poll():
@@ -56,9 +62,13 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Configure CORS with proper allowlist
-origins = (
-    settings.allowed_origins if isinstance(settings.allowed_origins, list) else ["*"]
-)
+raw_origins = settings.allowed_origins
+if isinstance(raw_origins, list):
+    origins = raw_origins
+elif raw_origins and raw_origins.strip() not in ("*", ""):
+    origins = [o.strip() for o in raw_origins.split(",") if o.strip()]
+else:
+    origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,

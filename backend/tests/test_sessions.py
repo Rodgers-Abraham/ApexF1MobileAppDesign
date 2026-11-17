@@ -81,31 +81,36 @@ def test_simulation_workflow():
     assert res_sim2.json()["session_name"] == "Qualifying"
 
 
-def test_predictions_endpoint():
-    # Generate a user session
-    import random
+def test_predictions_endpoint(monkeypatch):
+    import firebase_admin.auth as fb_auth
+    from core.database import get_db_connection
 
-    rand_id = random.randint(1000, 9999)
-    email = f"session_tester_{rand_id}@f1apex.com"
-    password = "testpassword"
+    uid = "test-uid-predictions"
+    with get_db_connection() as conn:
+        conn.execute(
+            "INSERT INTO users (firebase_uid, email, name, favourite_team) VALUES (?, ?, ?, ?)",
+            (uid, "predictor_tester@f1apex.com", "Predictor Tester", "Ferrari"),
+        )
+        conn.commit()
 
-    # Register and get token
-    reg_res = client.post(
-        "/api/auth/register", json={"email": email, "password": password}
-    )
-    token = reg_res.json()["token"]
-    headers = {"Authorization": f"Bearer {token}"}
+    monkeypatch.setattr(fb_auth, "verify_id_token", lambda token, **kw: {"uid": uid})
+    headers = {"Authorization": "Bearer fake-token"}
 
-    # 1. Fetch latest session to ensure DB is populated
-    client.get("/api/sessions/latest")
+    try:
+        # 1. Fetch latest session to ensure DB is populated
+        client.get("/api/sessions/latest")
 
-    # 2. Query /predictions -> 200
-    res_pro = client.get("/api/sessions/predictions", headers=headers)
-    assert res_pro.status_code == 200
-    pred_data = res_pro.json()
-    assert "predictions" in pred_data
-    assert len(pred_data["predictions"]) == 21
-    assert pred_data["predictions"][0]["probability"] > 0.0
+        # 2. Query /predictions -> 200
+        res_pro = client.get("/api/sessions/predictions", headers=headers)
+        assert res_pro.status_code == 200
+        pred_data = res_pro.json()
+        assert "predictions" in pred_data
+        assert len(pred_data["predictions"]) == 21
+        assert pred_data["predictions"][0]["probability"] > 0.0
+    finally:
+        with get_db_connection() as conn:
+            conn.execute("DELETE FROM users WHERE firebase_uid = ?", (uid,))
+            conn.commit()
 
 
 def test_race_details_endpoint_with_data(monkeypatch):

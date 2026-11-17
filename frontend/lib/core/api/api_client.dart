@@ -26,7 +26,22 @@ class ApiClient {
           }
           return handler.next(options);
         },
-        onError: (DioException error, handler) {
+        onError: (DioException error, handler) async {
+          if (error.response?.statusCode == 401) {
+            try {
+              final user = FirebaseAuth.instance.currentUser;
+              if (user != null) {
+                final freshToken = await user.getIdToken(true);
+                final opts = error.requestOptions;
+                opts.headers['Authorization'] = 'Bearer $freshToken';
+                final retryResponse = await _dio.fetch(opts);
+                return handler.resolve(retryResponse);
+              }
+            } catch (_) {
+              await FirebaseAuth.instance.signOut();
+            }
+            await FirebaseAuth.instance.signOut();
+          }
           debugPrint('API Error calling ${error.requestOptions.path}: ${error.message}');
           return handler.next(error);
         }));
