@@ -65,6 +65,20 @@ def _process_session(
             parsed["rcm_events"] = race_events
         except Exception as e:
             log.warning(f"  Event engine warning: {e}")
+    elif session_type in ("P1", "P2", "P3"):
+        try:
+            from ingest.event_engine import build_practice_events
+
+            parsed["rcm_events"] = build_practice_events(parsed)
+        except Exception as e:
+            log.warning(f"  Practice event engine warning: {e}")
+    elif session_type in ("Q", "SQ"):
+        try:
+            from ingest.event_engine import build_qualifying_events
+
+            parsed["rcm_events"] = build_qualifying_events(parsed)
+        except Exception as e:
+            log.warning(f"  Qualifying event engine warning: {e}")
 
     try:
         passed, jolpica_results, err_msg = cross_check(
