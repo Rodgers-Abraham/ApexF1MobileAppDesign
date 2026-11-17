@@ -3,8 +3,16 @@ name: CI
 on:
   push:
     branches: [main, master]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/ci.yml'
   pull_request:
     branches: [main, master]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/ci.yml'
 
 jobs:
   backend:
@@ -34,15 +42,16 @@ jobs:
 
       - name: Run tests
         env:
-          JWT_SECRET: test-secret-key-for-ci
+          JWT_SECRET: test-secret-key-for-ci-do-not-use-in-prod
           GEMINI_KEYS: test-key
+          TESTING: '1'
           SPORTRADAR_API_KEY: ${{ secrets.SPORTRADAR_API_KEY }}
         run: pytest tests/ -v --tb=short
 
       - name: Check formatting (black)
         run: |
           pip install black
-          black --check .
+          black --check . --exclude venv
 
   frontend:
     runs-on: ubuntu-latest
@@ -61,7 +70,9 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.47.9'
           channel: 'stable'
+          cache: true
 
       - name: Cache Flutter dependencies
         uses: actions/cache@v4
@@ -72,11 +83,8 @@ jobs:
           key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.lock') }}
           restore-keys: ${{ runner.os }}-flutter-
 
-      - name: Ensure environment file exists
-        run: |
-          if [ ! -f .env ]; then
-            echo "API_URL=https://f1-backend-41t9.onrender.com" > .env
-          fi
+      - name: Write environment file
+        run: echo "API_URL=${{ vars.BACKEND_URL || 'https://f1-backend-41t9.onrender.com' }}" > .env
 
       - name: Get dependencies
         run: flutter pub get
