@@ -62,6 +62,10 @@ class LiveTelemetry {
   final String lastLap;
   final String bestLap;
   final bool isFastestLap;
+
+  /// True when this driver set the fastest lap of the specific replay lap just
+  /// shown — resets every lap. Distinct from [isFastestLap] (overall race FL).
+  final bool isFastestThisLap;
   final int pitStops;
   final bool drs;
   final String speed;
@@ -85,6 +89,7 @@ class LiveTelemetry {
     this.lastLap = '',
     this.bestLap = '',
     this.isFastestLap = false,
+    this.isFastestThisLap = false,
     this.pitStops = 0,
     this.drs = false,
     required this.speed,
@@ -110,6 +115,7 @@ class LiveTelemetry {
       lastLap: json['last_lap']?.toString() ?? '',
       bestLap: json['best_lap']?.toString() ?? '',
       isFastestLap: json['is_fastest_lap'] as bool? ?? false,
+      isFastestThisLap: json['is_fastest_this_lap'] as bool? ?? false,
       pitStops: (json['pit_stops'] as num?)?.toInt() ?? 0,
       drs: json['drs'] as bool? ?? false,
       speed: json['speed']?.toString() ?? '300 km/h',
