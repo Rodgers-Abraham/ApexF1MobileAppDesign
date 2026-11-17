@@ -112,7 +112,7 @@ def classify_lap_events(lap_n: dict, lap_n1: dict) -> list:
             }
         )
 
-    # Track status events
+    # Track status events — SC, VSC, RED are mutually exclusive (elif chain)
     if lap_n.get("sc_active"):
         events.append(
             {
@@ -144,6 +144,18 @@ def classify_lap_events(lap_n: dict, lap_n1: dict) -> list:
             }
         )
 
+    # Yellow flag is a plain if — can appear alongside or between SC/VSC/RED
+    if lap_n.get("track_status") == "2":
+        events.append(
+            {
+                "type": "YELLOW_FLAG",
+                "lap": lap_num,
+                "drivers": [],
+                "detail": "YELLOW FLAG",
+                "label": f"Yellow Flag Lap {lap_num}",
+            }
+        )
+
     return events
 
 
@@ -158,6 +170,20 @@ def build_race_events(parsed: dict) -> list:
     for i in range(1, len(laps)):
         lap_events = classify_lap_events(laps[i], laps[i - 1])
         all_events.extend(lap_events)
+
+    # DNS events (lap 0 — driver never started)
+    for driver in parsed.get("laps", {}).get("dns_drivers", []):
+        code = driver.get("code", "") if isinstance(driver, dict) else str(driver)
+        if code:
+            all_events.append(
+                {
+                    "type": "DNS",
+                    "lap": 0,
+                    "drivers": [code],
+                    "detail": "Did Not Start",
+                    "label": f"{code}: DNS",
+                }
+            )
 
     # RCM-sourced penalty events
     for rcm_event in parsed.get("rcm_events", []):
@@ -177,3 +203,136 @@ def build_race_events(parsed: dict) -> list:
             )
 
     return all_events
+
+
+def build_practice_events(parsed: dict) -> list:
+    """
+    Extract flag/red-flag periods for a practice session from rcm_events.
+    Returns a flat list of events shaped like race events.
+    """
+    events = []
+    for rcm in parsed.get("rcm_events", []):
+        flag = rcm.get("flag")
+        sess_t = rcm.get("session_time_s")
+        msg = rcm.get("message", "")
+        if flag == "RED":
+            events.append(
+                {
+                    "type": "RED_FLAG",
+                    "session_time_s": sess_t,
+                    "detail": msg or "Red Flag",
+                    "label": "Red Flag",
+                    "drivers": [],
+                }
+            )
+        elif flag == "YELLOW":
+            events.append(
+                {
+                    "type": "YELLOW_FLAG",
+                    "session_time_s": sess_t,
+                    "detail": msg or "Yellow Flag",
+                    "scope": rcm.get("scope"),
+                    "sector": rcm.get("sector"),
+                    "label": "Yellow Flag",
+                    "drivers": [],
+                }
+            )
+        elif flag in ("CLEAR", "GREEN"):
+            events.append(
+                {
+                    "type": "CLEAR",
+                    "session_time_s": sess_t,
+                    "detail": msg or "Track Clear",
+                    "label": "Track Clear",
+                    "drivers": [],
+                }
+            )
+        cat = rcm.get("category", "")
+        if cat == "CarEvent" and msg and "penalty" in msg.lower():
+            driver_num = rcm.get("driver_number")
+            events.append(
+                {
+                    "type": "PENALTY",
+                    "session_time_s": sess_t,
+                    "drivers": [f"#{driver_num}"] if driver_num else [],
+                    "detail": msg,
+                    "label": f"Penalty: {msg}",
+                }
+            )
+    return events
+
+
+def build_qualifying_events(parsed: dict) -> list:
+    """
+    Extract flag periods, segment boundaries, and eliminations for qualifying.
+    Returns a flat list of events.
+    """
+    events = []
+    laps_data = parsed.get("laps", {})
+    for seg_name in laps_data.get("segment_order", []):
+        seg_data = laps_data.get("segments", {}).get(seg_name, {})
+        events.append(
+            {
+                "type": "SEGMENT_START",
+                "segment": seg_name,
+                "detail": f"{seg_name} start",
+                "label": f"{seg_name} start",
+                "drivers": [],
+            }
+        )
+        for code in seg_data.get("eliminated", []):
+            events.append(
+                {
+                    "type": "ELIMINATED",
+                    "segment": seg_name,
+                    "drivers": [code],
+                    "detail": f"{code} eliminated in {seg_name}",
+                    "label": f"{code}: eliminated in {seg_name}",
+                }
+            )
+        events.append(
+            {
+                "type": "SEGMENT_END",
+                "segment": seg_name,
+                "detail": f"{seg_name} end",
+                "label": f"{seg_name} end",
+                "drivers": [],
+            }
+        )
+    for rcm in parsed.get("rcm_events", []):
+        flag = rcm.get("flag")
+        sess_t = rcm.get("session_time_s")
+        msg = rcm.get("message", "")
+        if flag == "RED":
+            events.append(
+                {
+                    "type": "RED_FLAG",
+                    "session_time_s": sess_t,
+                    "detail": msg or "Red Flag",
+                    "label": "Red Flag",
+                    "drivers": [],
+                }
+            )
+        elif flag == "YELLOW":
+            events.append(
+                {
+                    "type": "YELLOW_FLAG",
+                    "session_time_s": sess_t,
+                    "detail": msg or "Yellow Flag",
+                    "scope": rcm.get("scope"),
+                    "sector": rcm.get("sector"),
+                    "label": "Yellow Flag",
+                    "drivers": [],
+                }
+            )
+        elif flag in ("CLEAR", "GREEN"):
+            events.append(
+                {
+                    "type": "CLEAR",
+                    "session_time_s": sess_t,
+                    "detail": msg or "Track Clear",
+                    "label": "Track Clear",
+                    "drivers": [],
+                }
+            )
+    return events
