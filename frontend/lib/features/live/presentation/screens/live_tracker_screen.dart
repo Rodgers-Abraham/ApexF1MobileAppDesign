@@ -16,6 +16,7 @@ import '../widgets/radio_card.dart';
 import '../widgets/session_flag_banner.dart';
 import '../widgets/track_painter.dart';
 import '../../../sessions/presentation/screens/sessions_list_screen.dart' show selectedReplaySessionProvider;
+import '../widgets/replay_timing_tower_widget.dart';
 
 enum LiveMode { timing, map, radio, tyres }
 
@@ -40,6 +41,8 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   // Replay position-change tracking
   int _lastReplayLap = -1;
   Map<String, int> _prevReplayPositions = {};
+  // Penalty tracking: driver name → lap the penalty was issued; never cleared
+  Map<String, int> _penaltyLaps = {};
   // Overtake toast
   String? _overtakeToastText;
   Timer? _overtakeTimer;
@@ -220,11 +223,25 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
             _showOvertakeToast(toastDriver, toastFrom, toastTo, replayState.currentLap);
           }
         }
+        // Update penalty map: accumulate drivers who received a penalty this lap.
+        // The icon persists for the rest of the replay session (never cleared).
+        final newPenalties = <String, int>{};
+        for (final ev in replayState.lapEventMap[replayState.currentLap] ?? []) {
+          if (ev.category == 'PENALTY') {
+            final driverCode = ev.flag ?? '';
+            if (driverCode.isNotEmpty && !_penaltyLaps.containsKey(driverCode)) {
+              newPenalties[driverCode] = replayState.currentLap;
+            }
+          }
+        }
         setState(() {
           _lastReplayLap = replayState.currentLap;
           _prevReplayPositions = newPrevPositions;
           if (newGainers.isNotEmpty) {
             _driverGainedLap = {..._driverGainedLap, ...newGainers};
+          }
+          if (newPenalties.isNotEmpty) {
+            _penaltyLaps = {..._penaltyLaps, ...newPenalties};
           }
         });
       });
@@ -359,6 +376,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                           textBaseline: TextBaseline.alphabetic,
                           children: [
                             Text(
+                              key: isLive ? null : const Key('replay_lap_counter'),
                               isLive
                                   ? ((sessionStatus?.sessionName.toLowerCase().contains('practice') == true ||
                                           sessionStatus?.sessionName.toLowerCase().contains('qualifying') == true ||
@@ -426,7 +444,9 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               const SizedBox(height: 10),
 
               // Live Flag / Race Control Banner
-              FigmaSessionFlagBanner(status: effectiveFlagStatus),
+              FigmaSessionFlagBanner(
+                  key: const Key('replay_flag_banner'),
+                  status: effectiveFlagStatus),
               const SizedBox(height: 12),
 
               // Figma Mode Switcher (TIMING, MAP, RADIO, TYRES)
@@ -646,6 +666,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               thumbColor: DS.teal,
             ),
             child: Slider(
+              key: const Key('replay_scrubber'),
               value: replayState.totalLaps > 0
                   ? replayState.currentLap.toDouble().clamp(0.0, replayState.totalLaps.toDouble())
                   : 0.0,
@@ -697,6 +718,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
         _ctrlBtn(Icons.replay_10_rounded, () => notifier.setLap(replayState.currentLap - 10)),
         const SizedBox(width: 6),
         GestureDetector(
+          key: const Key('replay_play_pause'),
           onTap: () => notifier.togglePlay(),
           child: Container(
             width: 48, height: 48,
@@ -729,6 +751,7 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
           ),
         const SizedBox(width: 8),
         GestureDetector(
+          key: const Key('replay_speed_btn'),
           onTap: () => notifier.cycleSpeed(),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -737,7 +760,9 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
               borderRadius: DS.aeroCornerSm,
               border: Border.all(color: DS.outline),
             ),
-            child: Text('${replayState.speedMultiplier}×', style: DS.labelCaps(size: 10, color: DS.textPrimary)),
+            child: Text(
+              replayState.speedMultiplier == -1 ? 'RT' : '${replayState.speedMultiplier}×',
+              style: DS.labelCaps(size: 10, color: DS.textPrimary)),
           ),
         ),
         if (replayState.raceSummary != null) ...[
@@ -831,144 +856,10 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   // ─────────────────────────────────────────────────────
 
   Widget _buildReplayTimingTower(RaceReplayState replayState) {
-    // Sort by pos (int) so the tower always reflects race order,
-    // even if the backend list arrives in a different order.
-    final drivers = [...replayState.telemetry]
-      ..sort((a, b) => (int.tryParse(a.pos) ?? 99).compareTo(int.tryParse(b.pos) ?? 99));
-    if (replayState.isLoading && drivers.isEmpty) {
-      return Column(children: List.generate(10, (_) => const SkeletonTimingRow()));
-    }
-    if (drivers.isEmpty) {
-      return _buildTimingFallbackTower();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Column headers
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Row(children: [
-            SizedBox(width: 60, child: Text('POS / DRIVER', style: DS.labelCaps(size: 8, color: DS.textMuted))),
-            const Spacer(),
-            Text('LAP TIME', style: DS.labelCaps(size: 8, color: DS.textMuted)),
-            const SizedBox(width: 14),
-            SizedBox(width: 32, child: Text('ΔPOS', textAlign: TextAlign.center, style: DS.labelCaps(size: 8, color: DS.textMuted))),
-          ]),
-        ),
-        SizedBox(
-          height: drivers.length * 52.0,
-          child: Stack(
-            children: drivers.asMap().entries.map((entry) {
-              final index = entry.key;
-              final d = entry.value;
-              final driverMeta = getDriverData(d.name);
-              final lastName = d.name.split(' ').lastOrNull ?? d.name;
-              final code = driverMeta?.code ??
-                  lastName.substring(0, lastName.length.clamp(0, 3)).toUpperCase();
-              final teamColor = _hexToColor(d.color);
-
-              // Position change
-              final prevPos = _prevReplayPositions[d.name];
-              final currPos = int.tryParse(d.pos) ?? 0;
-              final posChange = (prevPos != null && currPos > 0) ? prevPos - currPos : 0;
-              final arrowIcon = posChange > 0 ? Icons.arrow_upward_rounded : posChange < 0 ? Icons.arrow_downward_rounded : null;
-              final arrowColor = posChange > 0 ? DS.green : posChange < 0 ? DS.red : DS.textMuted;
-
-              final lapTime = d.lastLap.isNotEmpty ? d.lastLap : '—';
-              final isFocused = replayState.focusedDriverName == d.name;
-
-              // DNS/DNF status
-              final isActive = d.status == 'RACING' || d.status == 'ON TRACK' || d.status.isEmpty;
-              final isDns = d.status == 'DNS';
-              final dnfLabel = isDns ? 'DNS' : (isActive ? null : d.status);
-
-              final gainedLap = _driverGainedLap[d.name];
-              final isGaining = gainedLap == replayState.currentLap && isActive;
-
-              final rowContent = Row(children: [
-                SizedBox(
-                  width: 28,
-                  child: Text(isDns ? '—' : 'P${d.pos}',
-                      style: DS.telemetry(size: 11, color: isActive ? DS.textPrimary : DS.textMuted))),
-                const SizedBox(width: 6),
-                SizedBox(
-                  width: 36,
-                  child: Text(code, style: DS.driverCode(size: 12, color: isActive ? DS.textPrimary : DS.textMuted))),
-                if (dnfLabel != null) ...[
-                  const SizedBox(width: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: isDns ? DS.surface3 : DS.red.withValues(alpha: 0.15),
-                      borderRadius: DS.aeroCornerSm,
-                    ),
-                    child: Text(dnfLabel.length > 8 ? '${dnfLabel.substring(0,8)}…' : dnfLabel,
-                        style: DS.labelCaps(size: 7, color: isDns ? DS.textMuted : DS.red)),
-                  ),
-                ],
-                Expanded(
-                  child: Text(d.team, style: DS.labelCaps(size: 7, color: DS.textMuted),
-                    overflow: TextOverflow.ellipsis)),
-                Text(isActive ? lapTime : '—',
-                    style: DS.telemetry(size: 11, color: isActive ? DS.textPrimary : DS.textMuted)),
-                const SizedBox(width: 10),
-                SizedBox(
-                  width: 32,
-                  child: (!isActive || posChange == 0 || arrowIcon == null)
-                      ? Text('—', textAlign: TextAlign.center, style: DS.labelCaps(size: 10, color: DS.textMuted))
-                      : Row(mainAxisSize: MainAxisSize.min, children: [
-                          Icon(arrowIcon, size: 12, color: arrowColor),
-                          Text(posChange.abs().toString(), style: DS.labelCaps(size: 10, color: arrowColor)),
-                        ]),
-                ),
-              ]);
-
-              return AnimatedPositioned(
-                key: ValueKey(d.name),
-                duration: const Duration(milliseconds: 800),
-                curve: Curves.easeOutBack,
-                top: index * 52.0,
-                left: 0,
-                right: 0,
-                height: 52.0,
-                child: TweenAnimationBuilder<double>(
-                  key: ValueKey('${d.name}_${gainedLap ?? 0}'),
-                  tween: isGaining
-                      ? Tween<double>(begin: 0.40, end: 0.0)
-                      : Tween<double>(begin: 0.0, end: 0.0),
-                  duration: const Duration(milliseconds: 1500),
-                  curve: Curves.easeOut,
-                  builder: (context, pulseOpacity, child) {
-                    return GestureDetector(
-                      onTap: () => ref.read(raceReplayProvider.notifier)
-                          .setFocusedDriver(isFocused ? null : d.name),
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 2),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: !isActive
-                              ? DS.surface0
-                              : (pulseOpacity > 0.01
-                                  ? teamColor.withValues(alpha: pulseOpacity)
-                                  : (isFocused ? teamColor.withValues(alpha: 0.1) : DS.surface1)),
-                          borderRadius: DS.aeroCornerSm,
-                          border: Border(left: BorderSide(
-                            color: isActive ? teamColor : teamColor.withValues(alpha: 0.25),
-                            width: (isActive && pulseOpacity > 0.1) ? 5 : 3,
-                          )),
-                        ),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: rowContent,
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
+    return ReplayTimingTowerWidget(
+      key: const Key('replay_timing_tower'),
+      replayState: replayState,
+      penaltyLaps: _penaltyLaps,
     );
   }
 
