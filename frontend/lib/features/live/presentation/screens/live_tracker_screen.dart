@@ -22,7 +22,7 @@ enum LiveMode { timing, map, radio, tyres }
 
 /// Set to true and rebuild to show the replay debug strip on device.
 /// MUST be false before merging.
-const bool _kReplayDebug = false;
+const bool _kReplayDebug = true;
 
 class LiveTrackerScreen extends ConsumerStatefulWidget {
   const LiveTrackerScreen({super.key});
