@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Optional
 
 from pydantic import BaseModel, Field
+
+log = logging.getLogger("ingest")
 
 
 class DriverInfo(BaseModel):
@@ -71,6 +74,96 @@ class WeatherEntry(BaseModel):
     wWS: Optional[float] = None
 
     model_config = {"extra": "ignore"}
+
+
+class IngestValidationError(Exception):
+    """Raised when critical session data is missing or malformed."""
+
+    pass
+
+
+def validate_critical_laptimes(raw: list, session_type: str = "") -> list:
+    """
+    Critical validation for session_laptimes.json.
+
+    Critical fields: drv and lap must be present on every row. Rows missing
+    either are dropped with a warning.
+
+    Raises IngestValidationError if:
+    - No valid rows remain after filtering.
+    - session_type is 'Race' or 'Sprint' and no row has a pos value.
+
+    Optional fields (s1/s2/s3, compound, lST, etc.) are not checked here.
+    Returns the list of raw dicts that passed the critical check.
+    """
+    valid_rows = []
+    skipped = []
+    for i, entry in enumerate(raw):
+        drv = entry.get("drv") if isinstance(entry, dict) else None
+        lap = entry.get("lap") if isinstance(entry, dict) else None
+        if not drv or lap is None:
+            skipped.append(i)
+        else:
+            valid_rows.append(entry)
+
+    if skipped:
+        log.warning(
+            f"session_laptimes critical check: skipped {len(skipped)} rows missing drv/lap "
+            f"(first 3 indices: {skipped[:3]})"
+        )
+
+    if not valid_rows:
+        raise IngestValidationError(
+            f"session_laptimes.json: 0 valid rows out of {len(raw)} — "
+            f"all entries are missing drv or lap. Session cannot be ingested."
+        )
+
+    if session_type in ("Race", "Sprint"):
+        rows_with_pos = [r for r in valid_rows if r.get("pos") not in (None, "None")]
+        if not rows_with_pos:
+            raise IngestValidationError(
+                f"session_laptimes.json: Race/Sprint session has {len(valid_rows)} lap entries "
+                f"but none have a pos (position) field. Cannot determine race order."
+            )
+
+    return valid_rows
+
+
+def validate_critical_drivers(raw: list) -> list:
+    """
+    Critical validation for drivers.json.
+
+    Critical fields: driver (3-letter code), team, tc (team colour hex).
+    Rows missing any are dropped with a warning.
+
+    Raises IngestValidationError if no valid driver entries remain.
+    Returns the list of raw dicts that passed the critical check.
+    """
+    valid_rows = []
+    skipped = []
+    for i, entry in enumerate(raw):
+        if not isinstance(entry, dict):
+            skipped.append(f"Row {i}: not a dict")
+            continue
+        if not entry.get("driver") or not entry.get("team") or not entry.get("tc"):
+            skipped.append(
+                f"Row {i}: missing driver/team/tc (got {list(entry.keys())})"
+            )
+        else:
+            valid_rows.append(entry)
+
+    if skipped:
+        log.warning(
+            f"drivers.json critical check: skipped {len(skipped)} entries: {skipped[:3]}"
+        )
+
+    if not valid_rows:
+        raise IngestValidationError(
+            f"drivers.json: 0 valid driver entries out of {len(raw)} — "
+            f"all missing driver, team, or tc."
+        )
+
+    return valid_rows
 
 
 def validate_session_laptimes(raw: list) -> tuple[list[LapEntry], list[str]]:
