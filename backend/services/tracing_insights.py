@@ -35,8 +35,15 @@ class SessionRef:
     last_commit_at: datetime  # UTC
 
 
-def normalize_session_type(raw: str) -> Optional[str]:
-    """Map TracingInsights folder name to our DB session_type enum."""
+def normalize_session_type(raw: str, year: int = 0) -> Optional[str]:
+    """Map TracingInsights folder name to our DB session_type enum.
+
+    For year ≤ 2021, "Sprint Qualifying" was the sprint race itself (set the
+    Sunday grid). From 2022 onward it became a true qualifying session that
+    sets the sprint grid. Map accordingly so the correct parser is used.
+    """
+    if raw == "Sprint Qualifying" and 0 < year <= 2021:
+        return "Sprint"
     mapping = {
         "Practice 1": "P1",
         "Practice 2": "P2",
@@ -70,7 +77,7 @@ class TracingInsightsFetcher:
             m = re.match(r"^(\d{4})$", r.get("name", ""))
             if m:
                 years.append(int(m.group(1)))
-        return sorted(years)
+        return sorted(years, reverse=True)
 
     def list_sessions(self, year: int) -> list:
         """List all session folders available for a year with their last commit info."""
@@ -99,7 +106,7 @@ class TracingInsightsFetcher:
                 if sess_item["type"] != "dir":
                     continue
                 raw_type = sess_item["name"]
-                normalized = normalize_session_type(raw_type)
+                normalized = normalize_session_type(raw_type, year=year)
                 if not normalized:
                     continue
                 commit_url = (

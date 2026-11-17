@@ -22,6 +22,10 @@ on:
         required: false
         type: boolean
         default: false
+      years:
+        description: 'Comma-separated list of years to ingest (e.g. 2026,2025,2024). Leave blank to ingest all years newest-first.'
+        required: false
+        type: string
 
 jobs:
   ingest:
@@ -46,6 +50,15 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Run ingest (specific years)
+        if: ${{ github.event.inputs.years != '' && github.event.inputs.session == '' && github.event.inputs.backfill != 'true' }}
+        run: |
+          cd backend
+          python -m ingest.runner --check --years "${{ github.event.inputs.years }}"
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Run ingest (single session)
         if: ${{ github.event.inputs.session != '' }}
         run: |
@@ -65,7 +78,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run ingest (check for new sessions)
-        if: ${{ github.event.inputs.session == '' && github.event.inputs.backfill != 'true' }}
+        if: ${{ github.event.inputs.session == '' && github.event.inputs.backfill != 'true' && (github.event.inputs.years == '' || github.event.inputs.years == null) }}
         run: |
           cd backend
           python -m ingest.runner --check
