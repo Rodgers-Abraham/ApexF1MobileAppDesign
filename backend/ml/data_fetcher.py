@@ -2,6 +2,7 @@
 Real F1 historical data fetcher using the Ergast / Jolpica API.
 Builds a proper dataset of race outcomes with realistic features.
 """
+
 import time
 import requests
 import pandas as pd
@@ -38,7 +39,9 @@ def fetch_driver_standings(year: int) -> Dict[str, Dict]:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         data = response.json()
-        standings = data.get("MRData", {}).get("StandingsTable", {}).get("StandingsLists", [])
+        standings = (
+            data.get("MRData", {}).get("StandingsTable", {}).get("StandingsLists", [])
+        )
         if not standings:
             return {}
 
@@ -64,7 +67,9 @@ def fetch_constructor_standings(year: int) -> Dict[str, int]:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         data = response.json()
-        standings = data.get("MRData", {}).get("StandingsTable", {}).get("StandingsLists", [])
+        standings = (
+            data.get("MRData", {}).get("StandingsTable", {}).get("StandingsLists", [])
+        )
         if not standings:
             return {}
 
@@ -116,7 +121,9 @@ def driver_is_home_race(race_country: str, driver_nationality: str) -> int:
     return 1 if race_country in driver_nationality else 0
 
 
-def process_race_data(races: List[Dict], standings: Dict, constructor_standings: Dict) -> pd.DataFrame:
+def process_race_data(
+    races: List[Dict], standings: Dict, constructor_standings: Dict
+) -> pd.DataFrame:
     """Process raw race data into a structured DataFrame for ML training."""
     records = {
         "grid_position": [],
@@ -175,7 +182,9 @@ def process_race_data(races: List[Dict], standings: Dict, constructor_standings:
     return df.dropna()
 
 
-def build_dataset(start_year: int = 1950, end_year: Optional[int] = None) -> pd.DataFrame:
+def build_dataset(
+    start_year: int = 1950, end_year: Optional[int] = None
+) -> pd.DataFrame:
     """Build a comprehensive dataset of historical F1 race results for ML training."""
     years = fetch_seasons(start_year, end_year)
     all_data = []
@@ -195,7 +204,9 @@ def build_dataset(start_year: int = 1950, end_year: Optional[int] = None) -> pd.
         time.sleep(0.5)
 
     if not all_data:
-        raise ValueError("Failed to fetch any F1 data from the API. Please check your network connection.")
+        raise ValueError(
+            "Failed to fetch any F1 data from the API. Please check your network connection."
+        )
 
     return pd.concat(all_data, ignore_index=True)
 

@@ -33,30 +33,252 @@ TEAM_NAME_MAP = {
 
 
 FALLBACK_2026_CALENDAR = [
-    {"name": "Bahrain Grand Prix", "circuit": "Bahrain International Circuit", "country_code": "BHR", "date": "2026-03-01", "round": "1", "length_km": 5.412, "turns": 15, "drs_zones": 3},
-    {"name": "Saudi Arabian Grand Prix", "circuit": "Jeddah Corniche Circuit", "country_code": "SAU", "date": "2026-03-08", "round": "2", "length_km": 6.174, "turns": 27, "drs_zones": 3},
-    {"name": "Australian Grand Prix", "circuit": "Albert Park Circuit", "country_code": "AUS", "date": "2026-03-22", "round": "3", "length_km": 5.278, "turns": 16, "drs_zones": 3},
-    {"name": "Japanese Grand Prix", "circuit": "Suzuka Circuit", "country_code": "JPN", "date": "2026-04-05", "round": "4", "length_km": 5.807, "turns": 18, "drs_zones": 2},
-    {"name": "Chinese Grand Prix", "circuit": "Shanghai International Circuit", "country_code": "CHN", "date": "2026-04-19", "round": "5", "length_km": 5.451, "turns": 16, "drs_zones": 2, "has_sprint": True},
-    {"name": "Miami Grand Prix", "circuit": "Miami International Autodrome", "country_code": "USA", "date": "2026-05-03", "round": "6", "length_km": 5.412, "turns": 19, "drs_zones": 3, "has_sprint": True},
-    {"name": "Emilia Romagna Grand Prix", "circuit": "Autodromo Enzo e Dino Ferrari", "country_code": "ITA", "date": "2026-05-17", "round": "7", "length_km": 4.909, "turns": 19, "drs_zones": 1},
-    {"name": "Monaco Grand Prix", "circuit": "Circuit de Monaco", "country_code": "MCO", "date": "2026-05-24", "round": "8", "length_km": 3.337, "turns": 19, "drs_zones": 1},
-    {"name": "Spanish Grand Prix", "circuit": "Circuit de Barcelona-Catalunya", "country_code": "ESP", "date": "2026-06-07", "round": "9", "length_km": 4.675, "turns": 16, "drs_zones": 2},
-    {"name": "Canadian Grand Prix", "circuit": "Circuit Gilles Villeneuve", "country_code": "CAN", "date": "2026-06-14", "round": "10", "length_km": 4.361, "turns": 14, "drs_zones": 2},
-    {"name": "Austrian Grand Prix", "circuit": "Red Bull Ring", "country_code": "AUT", "date": "2026-06-28", "round": "11", "length_km": 4.318, "turns": 10, "drs_zones": 3},
-    {"name": "British Grand Prix", "circuit": "Silverstone Circuit", "country_code": "GBR", "date": "2026-07-05", "round": "12", "length_km": 5.891, "turns": 18, "drs_zones": 2},
-    {"name": "Belgian Grand Prix", "circuit": "Circuit de Spa-Francorchamps", "country_code": "BEL", "date": "2026-07-26", "round": "13", "length_km": 7.004, "turns": 19, "drs_zones": 2, "has_sprint": True},
-    {"name": "Hungarian Grand Prix", "circuit": "Hungaroring", "country_code": "HUN", "date": "2026-08-02", "round": "14", "length_km": 4.381, "turns": 14, "drs_zones": 2},
-    {"name": "Dutch Grand Prix", "circuit": "Circuit Zandvoort", "country_code": "NLD", "date": "2026-08-30", "round": "15", "length_km": 4.259, "turns": 14, "drs_zones": 2},
-    {"name": "Italian Grand Prix", "circuit": "Autodromo Nazionale di Monza", "country_code": "ITA", "date": "2026-09-06", "round": "16", "length_km": 5.793, "turns": 11, "drs_zones": 2},
-    {"name": "Azerbaijan Grand Prix", "circuit": "Baku City Circuit", "country_code": "AZE", "date": "2026-09-20", "round": "17", "length_km": 6.003, "turns": 20, "drs_zones": 2},
-    {"name": "Singapore Grand Prix", "circuit": "Marina Bay Street Circuit", "country_code": "SGP", "date": "2026-10-04", "round": "18", "length_km": 4.940, "turns": 23, "drs_zones": 3},
-    {"name": "United States Grand Prix", "circuit": "Circuit of The Americas", "country_code": "USA", "date": "2026-10-18", "round": "19", "length_km": 5.513, "turns": 20, "drs_zones": 2, "has_sprint": True},
-    {"name": "Mexico City Grand Prix", "circuit": "Autodromo Hermanos Rodriguez", "country_code": "MEX", "date": "2026-10-25", "round": "20", "length_km": 4.304, "turns": 17, "drs_zones": 3},
-    {"name": "São Paulo Grand Prix", "circuit": "Autodromo Jose Carlos Pace", "country_code": "BRA", "date": "2026-11-08", "round": "21", "length_km": 4.309, "turns": 15, "drs_zones": 2, "has_sprint": True},
-    {"name": "Las Vegas Grand Prix", "circuit": "Las Vegas Strip Circuit", "country_code": "USA", "date": "2026-11-21", "round": "22", "length_km": 6.201, "turns": 17, "drs_zones": 2},
-    {"name": "Qatar Grand Prix", "circuit": "Lusail International Circuit", "country_code": "QAT", "date": "2026-11-29", "round": "23", "length_km": 5.380, "turns": 16, "drs_zones": 2, "has_sprint": True},
-    {"name": "Abu Dhabi Grand Prix", "circuit": "Yas Marina Circuit", "country_code": "UAE", "date": "2026-12-06", "round": "24", "length_km": 5.281, "turns": 16, "drs_zones": 2},
+    {
+        "name": "Bahrain Grand Prix",
+        "circuit": "Bahrain International Circuit",
+        "country_code": "BHR",
+        "date": "2026-03-01",
+        "round": "1",
+        "length_km": 5.412,
+        "turns": 15,
+        "drs_zones": 3,
+    },
+    {
+        "name": "Saudi Arabian Grand Prix",
+        "circuit": "Jeddah Corniche Circuit",
+        "country_code": "SAU",
+        "date": "2026-03-08",
+        "round": "2",
+        "length_km": 6.174,
+        "turns": 27,
+        "drs_zones": 3,
+    },
+    {
+        "name": "Australian Grand Prix",
+        "circuit": "Albert Park Circuit",
+        "country_code": "AUS",
+        "date": "2026-03-22",
+        "round": "3",
+        "length_km": 5.278,
+        "turns": 16,
+        "drs_zones": 3,
+    },
+    {
+        "name": "Japanese Grand Prix",
+        "circuit": "Suzuka Circuit",
+        "country_code": "JPN",
+        "date": "2026-04-05",
+        "round": "4",
+        "length_km": 5.807,
+        "turns": 18,
+        "drs_zones": 2,
+    },
+    {
+        "name": "Chinese Grand Prix",
+        "circuit": "Shanghai International Circuit",
+        "country_code": "CHN",
+        "date": "2026-04-19",
+        "round": "5",
+        "length_km": 5.451,
+        "turns": 16,
+        "drs_zones": 2,
+        "has_sprint": True,
+    },
+    {
+        "name": "Miami Grand Prix",
+        "circuit": "Miami International Autodrome",
+        "country_code": "USA",
+        "date": "2026-05-03",
+        "round": "6",
+        "length_km": 5.412,
+        "turns": 19,
+        "drs_zones": 3,
+        "has_sprint": True,
+    },
+    {
+        "name": "Emilia Romagna Grand Prix",
+        "circuit": "Autodromo Enzo e Dino Ferrari",
+        "country_code": "ITA",
+        "date": "2026-05-17",
+        "round": "7",
+        "length_km": 4.909,
+        "turns": 19,
+        "drs_zones": 1,
+    },
+    {
+        "name": "Monaco Grand Prix",
+        "circuit": "Circuit de Monaco",
+        "country_code": "MCO",
+        "date": "2026-05-24",
+        "round": "8",
+        "length_km": 3.337,
+        "turns": 19,
+        "drs_zones": 1,
+    },
+    {
+        "name": "Spanish Grand Prix",
+        "circuit": "Circuit de Barcelona-Catalunya",
+        "country_code": "ESP",
+        "date": "2026-06-07",
+        "round": "9",
+        "length_km": 4.675,
+        "turns": 16,
+        "drs_zones": 2,
+    },
+    {
+        "name": "Canadian Grand Prix",
+        "circuit": "Circuit Gilles Villeneuve",
+        "country_code": "CAN",
+        "date": "2026-06-14",
+        "round": "10",
+        "length_km": 4.361,
+        "turns": 14,
+        "drs_zones": 2,
+    },
+    {
+        "name": "Austrian Grand Prix",
+        "circuit": "Red Bull Ring",
+        "country_code": "AUT",
+        "date": "2026-06-28",
+        "round": "11",
+        "length_km": 4.318,
+        "turns": 10,
+        "drs_zones": 3,
+    },
+    {
+        "name": "British Grand Prix",
+        "circuit": "Silverstone Circuit",
+        "country_code": "GBR",
+        "date": "2026-07-05",
+        "round": "12",
+        "length_km": 5.891,
+        "turns": 18,
+        "drs_zones": 2,
+    },
+    {
+        "name": "Belgian Grand Prix",
+        "circuit": "Circuit de Spa-Francorchamps",
+        "country_code": "BEL",
+        "date": "2026-07-26",
+        "round": "13",
+        "length_km": 7.004,
+        "turns": 19,
+        "drs_zones": 2,
+        "has_sprint": True,
+    },
+    {
+        "name": "Hungarian Grand Prix",
+        "circuit": "Hungaroring",
+        "country_code": "HUN",
+        "date": "2026-08-02",
+        "round": "14",
+        "length_km": 4.381,
+        "turns": 14,
+        "drs_zones": 2,
+    },
+    {
+        "name": "Dutch Grand Prix",
+        "circuit": "Circuit Zandvoort",
+        "country_code": "NLD",
+        "date": "2026-08-30",
+        "round": "15",
+        "length_km": 4.259,
+        "turns": 14,
+        "drs_zones": 2,
+    },
+    {
+        "name": "Italian Grand Prix",
+        "circuit": "Autodromo Nazionale di Monza",
+        "country_code": "ITA",
+        "date": "2026-09-06",
+        "round": "16",
+        "length_km": 5.793,
+        "turns": 11,
+        "drs_zones": 2,
+    },
+    {
+        "name": "Azerbaijan Grand Prix",
+        "circuit": "Baku City Circuit",
+        "country_code": "AZE",
+        "date": "2026-09-20",
+        "round": "17",
+        "length_km": 6.003,
+        "turns": 20,
+        "drs_zones": 2,
+    },
+    {
+        "name": "Singapore Grand Prix",
+        "circuit": "Marina Bay Street Circuit",
+        "country_code": "SGP",
+        "date": "2026-10-04",
+        "round": "18",
+        "length_km": 4.940,
+        "turns": 23,
+        "drs_zones": 3,
+    },
+    {
+        "name": "United States Grand Prix",
+        "circuit": "Circuit of The Americas",
+        "country_code": "USA",
+        "date": "2026-10-18",
+        "round": "19",
+        "length_km": 5.513,
+        "turns": 20,
+        "drs_zones": 2,
+        "has_sprint": True,
+    },
+    {
+        "name": "Mexico City Grand Prix",
+        "circuit": "Autodromo Hermanos Rodriguez",
+        "country_code": "MEX",
+        "date": "2026-10-25",
+        "round": "20",
+        "length_km": 4.304,
+        "turns": 17,
+        "drs_zones": 3,
+    },
+    {
+        "name": "São Paulo Grand Prix",
+        "circuit": "Autodromo Jose Carlos Pace",
+        "country_code": "BRA",
+        "date": "2026-11-08",
+        "round": "21",
+        "length_km": 4.309,
+        "turns": 15,
+        "drs_zones": 2,
+        "has_sprint": True,
+    },
+    {
+        "name": "Las Vegas Grand Prix",
+        "circuit": "Las Vegas Strip Circuit",
+        "country_code": "USA",
+        "date": "2026-11-21",
+        "round": "22",
+        "length_km": 6.201,
+        "turns": 17,
+        "drs_zones": 2,
+    },
+    {
+        "name": "Qatar Grand Prix",
+        "circuit": "Lusail International Circuit",
+        "country_code": "QAT",
+        "date": "2026-11-29",
+        "round": "23",
+        "length_km": 5.380,
+        "turns": 16,
+        "drs_zones": 2,
+        "has_sprint": True,
+    },
+    {
+        "name": "Abu Dhabi Grand Prix",
+        "circuit": "Yas Marina Circuit",
+        "country_code": "UAE",
+        "date": "2026-12-06",
+        "round": "24",
+        "length_km": 5.281,
+        "turns": 16,
+        "drs_zones": 2,
+    },
 ]
 
 
@@ -85,6 +307,7 @@ class F1ApiClient:
         if self._api_key is None:
             try:
                 from core.config import get_settings
+
                 self._api_key = get_settings().sportradar_api_key or ""
             except Exception:
                 self._api_key = ""
@@ -148,13 +371,15 @@ class F1ApiClient:
             if pos is None:
                 continue
             team = c.get("team", {})
-            formatted.append({
-                "pos": str(pos),
-                "name": _reverse_name(c.get("name", "")),
-                "team": _normalize_team(team.get("name", "")),
-                "pts": str(result.get("points", 0)),
-                "wins": str(result.get("victories", 0)),
-            })
+            formatted.append(
+                {
+                    "pos": str(pos),
+                    "name": _reverse_name(c.get("name", "")),
+                    "team": _normalize_team(team.get("name", "")),
+                    "pts": str(result.get("points", 0)),
+                    "wins": str(result.get("victories", 0)),
+                }
+            )
 
         formatted.sort(key=lambda x: int(x["pos"]))
         self._set_cache(cache_key, formatted, 3600)
@@ -176,12 +401,14 @@ class F1ApiClient:
             pos = result.get("position")
             if pos is None:
                 continue
-            formatted.append({
-                "pos": str(pos),
-                "name": _normalize_team(t.get("name", "")),
-                "pts": str(result.get("points", 0)),
-                "wins": str(result.get("victories", 0)),
-            })
+            formatted.append(
+                {
+                    "pos": str(pos),
+                    "name": _normalize_team(t.get("name", "")),
+                    "pts": str(result.get("points", 0)),
+                    "wins": str(result.get("victories", 0)),
+                }
+            )
 
         formatted.sort(key=lambda x: int(x["pos"]))
         self._set_cache(cache_key, formatted, 3600)
@@ -223,20 +450,24 @@ class F1ApiClient:
             desc = stage.get("description", "")
             gp_name = desc.replace(f" {year}", "").strip()
             length_m = venue.get("length", 0)
-            turns = (venue.get("curves_right", 0) or 0) + (venue.get("curves_left", 0) or 0)
+            turns = (venue.get("curves_right", 0) or 0) + (
+                venue.get("curves_left", 0) or 0
+            )
 
             race_date_str = stage.get("scheduled", "")[:10]
-            races.append({
-                "name": gp_name,
-                "circuit": venue.get("name", ""),
-                "country_code": venue.get("country_code", ""),
-                "date": race_date_str,
-                "round": str(idx + 1),
-                "length_km": round(length_m / 1000, 3) if length_m else 0.0,
-                "turns": turns,
-                "drs_zones": self._estimate_drs_zones(turns),
-                "sessions": self._approx_sessions(race_date_str),
-            })
+            races.append(
+                {
+                    "name": gp_name,
+                    "circuit": venue.get("name", ""),
+                    "country_code": venue.get("country_code", ""),
+                    "date": race_date_str,
+                    "round": str(idx + 1),
+                    "length_km": round(length_m / 1000, 3) if length_m else 0.0,
+                    "turns": turns,
+                    "drs_zones": self._estimate_drs_zones(turns),
+                    "sessions": self._approx_sessions(race_date_str),
+                }
+            )
 
         if year == 2026:
             now_date = datetime.now(timezone.utc).date().isoformat()
@@ -258,15 +489,25 @@ class F1ApiClient:
         """
         try:
             from datetime import timedelta
+
             rd = datetime.strptime(race_date_str, "%Y-%m-%d").replace(
                 hour=14, minute=0, second=0, microsecond=0, tzinfo=timezone.utc
             )
             return [
-                {"name": "FP1",        "datetime": (rd - timedelta(days=2, hours=4)).isoformat()},
-                {"name": "FP2",        "datetime": (rd - timedelta(days=2)).isoformat()},
-                {"name": "FP3",        "datetime": (rd - timedelta(days=1, hours=4)).isoformat()},
-                {"name": "Qualifying", "datetime": (rd - timedelta(days=1)).isoformat()},
-                {"name": "Race",       "datetime": rd.isoformat()},
+                {
+                    "name": "FP1",
+                    "datetime": (rd - timedelta(days=2, hours=4)).isoformat(),
+                },
+                {"name": "FP2", "datetime": (rd - timedelta(days=2)).isoformat()},
+                {
+                    "name": "FP3",
+                    "datetime": (rd - timedelta(days=1, hours=4)).isoformat(),
+                },
+                {
+                    "name": "Qualifying",
+                    "datetime": (rd - timedelta(days=1)).isoformat(),
+                },
+                {"name": "Race", "datetime": rd.isoformat()},
             ]
         except Exception:
             return []
@@ -303,11 +544,13 @@ class F1ApiClient:
         for s in data["stages"]:
             desc = s.get("description", "")
             year_str = desc.replace("Formula 1 ", "").strip()
-            seasons.append({
-                "season": year_str,
-                "url": f"https://sportradar.com/formula1/{year_str}",
-                "_stage_id": s.get("id", ""),
-            })
+            seasons.append(
+                {
+                    "season": year_str,
+                    "url": f"https://sportradar.com/formula1/{year_str}",
+                    "_stage_id": s.get("id", ""),
+                }
+            )
 
         seasons.sort(key=lambda x: x["season"], reverse=True)
         self._set_cache(cache_key, seasons, 86400)
@@ -335,7 +578,9 @@ class F1ApiClient:
             gp_name = desc.replace(f" {year}", "").strip()
             venue = stage.get("venue", {})
 
-            event_data = self._sportradar_get(f"sport_events/{stage['id']}/summary.json")
+            event_data = self._sportradar_get(
+                f"sport_events/{stage['id']}/summary.json"
+            )
             winner = None
             if event_data and "stage" in event_data:
                 competitors = event_data["stage"].get("competitors", [])
@@ -351,15 +596,17 @@ class F1ApiClient:
                         }
                         break
 
-            results.append({
-                "round": str(idx + 1),
-                "race_name": gp_name,
-                "circuit_name": venue.get("name"),
-                "locality": venue.get("city"),
-                "country": venue.get("country"),
-                "date": stage.get("scheduled", "")[:10],
-                "winner": winner,
-            })
+            results.append(
+                {
+                    "round": str(idx + 1),
+                    "race_name": gp_name,
+                    "circuit_name": venue.get("name"),
+                    "locality": venue.get("city"),
+                    "country": venue.get("country"),
+                    "date": stage.get("scheduled", "")[:10],
+                    "winner": winner,
+                }
+            )
 
         self._set_cache(cache_key, results, 3600)
         return results
@@ -377,7 +624,10 @@ class F1ApiClient:
         target = None
         for idx, stage in enumerate(summary["stages"]):
             desc = stage.get("description", "").lower()
-            if race_name.lower() in desc or desc.replace(" 2026", "") in race_name.lower():
+            if (
+                race_name.lower() in desc
+                or desc.replace(" 2026", "") in race_name.lower()
+            ):
                 target = (idx, stage)
                 break
 
@@ -400,7 +650,9 @@ class F1ApiClient:
         winner_name = None
         winner_team = None
         if is_completed:
-            event_data = self._sportradar_get(f"sport_events/{stage['id']}/summary.json")
+            event_data = self._sportradar_get(
+                f"sport_events/{stage['id']}/summary.json"
+            )
             if event_data and "stage" in event_data:
                 for c in event_data["stage"].get("competitors", []):
                     r = c.get("result", {})
@@ -476,18 +728,27 @@ class F1ApiClient:
                     continue
                 desc = stage.get("description", "").lower()
                 venue_name = stage.get("venue", {}).get("name", "").lower()
-                if race_or_circuit_name.lower() not in desc and race_or_circuit_name.lower() not in venue_name:
+                if (
+                    race_or_circuit_name.lower() not in desc
+                    and race_or_circuit_name.lower() not in venue_name
+                ):
                     continue
-                event_data = self._sportradar_get(f"sport_events/{stage['id']}/summary.json")
+                event_data = self._sportradar_get(
+                    f"sport_events/{stage['id']}/summary.json"
+                )
                 if event_data and "stage" in event_data:
                     for c in event_data["stage"].get("competitors", []):
                         r = c.get("result", {})
                         if r.get("position") == 1:
-                            recent_winners.append({
-                                "year": str(year),
-                                "driver": _reverse_name(c.get("name", "")),
-                                "constructor": _normalize_team(c.get("team", {}).get("name", "")),
-                            })
+                            recent_winners.append(
+                                {
+                                    "year": str(year),
+                                    "driver": _reverse_name(c.get("name", "")),
+                                    "constructor": _normalize_team(
+                                        c.get("team", {}).get("name", "")
+                                    ),
+                                }
+                            )
                             break
                 break
 
@@ -495,6 +756,7 @@ class F1ApiClient:
         most_wins_constructor = ""
         if recent_winners:
             from collections import Counter
+
             driver_counts = Counter(w["driver"] for w in recent_winners)
             constructor_counts = Counter(w["constructor"] for w in recent_winners)
             most_wins_driver = driver_counts.most_common(1)[0][0]
@@ -536,15 +798,17 @@ class F1ApiClient:
                     city = venue.get("city", "").lower()
                     country = venue.get("country", "").lower()
                     if q in desc or q in venue_name or q in city or q in country:
-                        results["matches"].append({
-                            "type": "race",
-                            "name": stage.get("description", ""),
-                            "circuit": venue.get("name", ""),
-                            "city": venue.get("city", ""),
-                            "country": venue.get("country", ""),
-                            "date": stage.get("scheduled", "")[:10],
-                            "status": stage.get("status", ""),
-                        })
+                        results["matches"].append(
+                            {
+                                "type": "race",
+                                "name": stage.get("description", ""),
+                                "circuit": venue.get("name", ""),
+                                "city": venue.get("city", ""),
+                                "country": venue.get("country", ""),
+                                "date": stage.get("scheduled", "")[:10],
+                                "status": stage.get("status", ""),
+                            }
+                        )
 
             if summary and "competitors" in summary:
                 for c in summary["competitors"]:
@@ -553,13 +817,15 @@ class F1ApiClient:
                     team_name = _normalize_team(c.get("team", {}).get("name", ""))
                     if q in name.lower() or q == abbr or q in team_name.lower():
                         r = c.get("result", {})
-                        results["matches"].append({
-                            "type": "driver",
-                            "name": name,
-                            "team": team_name,
-                            "position": r.get("position"),
-                            "points": r.get("points", 0),
-                        })
+                        results["matches"].append(
+                            {
+                                "type": "driver",
+                                "name": name,
+                                "team": team_name,
+                                "position": r.get("position"),
+                                "points": r.get("points", 0),
+                            }
+                        )
 
         self._set_cache(cache_key, results, 600)
         return results
@@ -590,8 +856,12 @@ class F1ApiClient:
             if status == "Cancelled":
                 continue
             try:
-                start = datetime.fromisoformat(stage["scheduled"].replace("+00:00", "+00:00"))
-                end = datetime.fromisoformat(stage["scheduled_end"].replace("+00:00", "+00:00"))
+                start = datetime.fromisoformat(
+                    stage["scheduled"].replace("+00:00", "+00:00")
+                )
+                end = datetime.fromisoformat(
+                    stage["scheduled_end"].replace("+00:00", "+00:00")
+                )
                 if not start.tzinfo:
                     start = start.replace(tzinfo=timezone.utc)
                 if not end.tzinfo:
@@ -631,7 +901,9 @@ class F1ApiClient:
             venue = next_race.get("venue", {})
             desc = next_race.get("description", "").replace(" 2026", "")
             try:
-                start = datetime.fromisoformat(next_race["scheduled"].replace("+00:00", "+00:00"))
+                start = datetime.fromisoformat(
+                    next_race["scheduled"].replace("+00:00", "+00:00")
+                )
                 if not start.tzinfo:
                     start = start.replace(tzinfo=timezone.utc)
                 seconds_until = max(0, int((start - now).total_seconds()))
@@ -715,7 +987,9 @@ class F1ApiClient:
 
         for feed_url, source in feeds:
             try:
-                req = urllib.request.Request(feed_url, headers={"User-Agent": "Mozilla/5.0"})
+                req = urllib.request.Request(
+                    feed_url, headers={"User-Agent": "Mozilla/5.0"}
+                )
                 with urllib.request.urlopen(req, timeout=6) as resp:
                     xml_content = resp.read()
 
@@ -726,7 +1000,9 @@ class F1ApiClient:
                 news = []
                 for item in items[:8]:
                     title = (item.findtext("title") or "").strip()
-                    desc = re.sub(r"<[^>]+>", "", item.findtext("description") or "").strip()[:200]
+                    desc = re.sub(
+                        r"<[^>]+>", "", item.findtext("description") or ""
+                    ).strip()[:200]
                     link = (item.findtext("link") or "").strip()
                     pub_date = item.findtext("pubDate") or ""
 
@@ -739,7 +1015,10 @@ class F1ApiClient:
                         enc = item.find("enclosure")
                         if enc is not None:
                             u = enc.get("url", "")
-                            if any(ext in u.lower() for ext in ("jpg", "png", "jpeg", "webp")):
+                            if any(
+                                ext in u.lower()
+                                for ext in ("jpg", "png", "jpeg", "webp")
+                            ):
                                 image_url = u
 
                     time_ago = ""
@@ -756,16 +1035,18 @@ class F1ApiClient:
                         pass
 
                     if title and link:
-                        news.append({
-                            "title": title,
-                            "summary": desc,
-                            "url": link,
-                            "source": source,
-                            "published_at": pub_date,
-                            "image_url": image_url,
-                            "time_ago": time_ago,
-                            "category": "F1",
-                        })
+                        news.append(
+                            {
+                                "title": title,
+                                "summary": desc,
+                                "url": link,
+                                "source": source,
+                                "published_at": pub_date,
+                                "image_url": image_url,
+                                "time_ago": time_ago,
+                                "category": "F1",
+                            }
+                        )
 
                 if news:
                     self._set_cache(cache_key, news, 300)
@@ -808,7 +1089,9 @@ class F1ApiClient:
         url = f"{self.JOLPICA_BASE}/{path}"
         for attempt in range(retries + 1):
             try:
-                resp = requests.get(url, timeout=15, headers={"Accept": "application/json"})
+                resp = requests.get(
+                    url, timeout=15, headers={"Accept": "application/json"}
+                )
                 if resp.status_code == 200:
                     return resp.json()
                 if resp.status_code == 429:
@@ -868,10 +1151,17 @@ class F1ApiClient:
         return None
 
     _GP_PREFIXES = [
-        "grand prix", "gran premio de la", "gran premio de los",
-        "gran premio del", "gran premio de", "gran premio",
-        "grosser preis von", "großer preis von",
-        "prix de la", "prix du", "prix de",
+        "grand prix",
+        "gran premio de la",
+        "gran premio de los",
+        "gran premio del",
+        "gran premio de",
+        "gran premio",
+        "grosser preis von",
+        "großer preis von",
+        "prix de la",
+        "prix du",
+        "prix de",
     ]
 
     @classmethod
@@ -923,17 +1213,20 @@ class F1ApiClient:
             if not isinstance(meetings, list):
                 return None
             race_meetings = sorted(
-                [m for m in meetings
-                 if "pre-season" not in m.get("meeting_name", "").lower()
-                 and "test" not in m.get("meeting_name", "").lower()],
-                key=lambda m: m.get("date_start", "")
+                [
+                    m
+                    for m in meetings
+                    if "pre-season" not in m.get("meeting_name", "").lower()
+                    and "test" not in m.get("meeting_name", "").lower()
+                ],
+                key=lambda m: m.get("date_start", ""),
             )
             if round_num < 1 or round_num > len(race_meetings):
                 return None
             meeting_key = race_meetings[round_num - 1]["meeting_key"]
             resp2 = requests.get(
                 f"{self.OPENF1_BASE}/sessions?meeting_key={meeting_key}&session_name=Race",
-                timeout=10
+                timeout=10,
             )
             sessions = resp2.json()
             if isinstance(sessions, list) and sessions:
@@ -946,8 +1239,7 @@ class F1ApiClient:
         """Fetch SC/VSC/red flag events from OpenF1 for a race session."""
         try:
             resp = requests.get(
-                f"{self.OPENF1_BASE}/race_control?session_key={session_key}",
-                timeout=15
+                f"{self.OPENF1_BASE}/race_control?session_key={session_key}", timeout=15
             )
             raw = resp.json()
             if not isinstance(raw, list):
@@ -957,20 +1249,24 @@ class F1ApiClient:
                 lap = e.get("lap_number")
                 if lap is None:
                     continue
-                result.append({
-                    "lap": int(lap),
-                    "category": e.get("category", ""),
-                    "flag": e.get("flag"),
-                    "message": e.get("message", ""),
-                    "scope": e.get("scope") or "",
-                    "driver_number": e.get("driver_number"),
-                })
+                result.append(
+                    {
+                        "lap": int(lap),
+                        "category": e.get("category", ""),
+                        "flag": e.get("flag"),
+                        "message": e.get("message", ""),
+                        "scope": e.get("scope") or "",
+                        "driver_number": e.get("driver_number"),
+                    }
+                )
             return result
         except Exception as e:
             print(f"OpenF1 race control fetch error: {e}")
         return []
 
-    def get_session_replay(self, year: int, round_num: int, session_type: str = "race", race_name: str = ""):
+    def get_session_replay(
+        self, year: int, round_num: int, session_type: str = "race", race_name: str = ""
+    ):
         # 1. Try Jolpica race list to get the authoritative round number.
         #    If the race list confirms the round, trust it and skip post-fetch check.
         round_verified_by_list = False
@@ -978,7 +1274,9 @@ class F1ApiClient:
             jolpica_round = self._resolve_jolpica_round(year, race_name)
             if jolpica_round:
                 if jolpica_round != round_num:
-                    print(f"Round correction for '{race_name}': {round_num} → {jolpica_round}")
+                    print(
+                        f"Round correction for '{race_name}': {round_num} → {jolpica_round}"
+                    )
                     round_num = jolpica_round
                 round_verified_by_list = True
 
@@ -986,7 +1284,11 @@ class F1ApiClient:
         cached = self._get_cached(cache_key)
         if cached is not None:
             # Accept cached data if round was verified, or names match
-            if round_verified_by_list or not race_name or self._name_matches(cached.get("race_name", ""), race_name):
+            if (
+                round_verified_by_list
+                or not race_name
+                or self._name_matches(cached.get("race_name", ""), race_name)
+            ):
                 return cached
 
         def _do(rnd):
@@ -999,8 +1301,15 @@ class F1ApiClient:
         result = _do(round_num)
 
         # 2. Post-fetch name verification — only needed when race list lookup failed
-        if not round_verified_by_list and result and race_name and not self._name_matches(result.get("race_name", ""), race_name):
-            print(f"Name mismatch: got '{result.get('race_name')}', wanted '{race_name}'. Trying ±1 round.")
+        if (
+            not round_verified_by_list
+            and result
+            and race_name
+            and not self._name_matches(result.get("race_name", ""), race_name)
+        ):
+            print(
+                f"Name mismatch: got '{result.get('race_name')}', wanted '{race_name}'. Trying ±1 round."
+            )
             found = False
             for adj in [round_num + 1, round_num - 1]:
                 if adj < 1 or adj > 30:
@@ -1012,15 +1321,23 @@ class F1ApiClient:
                     print(f"Correct race found at round {adj}")
                     result = adj_result
                     # Cache under the corrected round key
-                    self._set_cache(f"session_replay_{year}_{adj}_{session_type}", result, 86400 * 7)
+                    self._set_cache(
+                        f"session_replay_{year}_{adj}_{session_type}", result, 86400 * 7
+                    )
                     # Also cache the round mapping so next time we hit the right round directly
-                    self._set_cache(f"jolpica_round_{year}_{race_name.lower()[:20]}", adj, 86400 * 30)
+                    self._set_cache(
+                        f"jolpica_round_{year}_{race_name.lower()[:20]}",
+                        adj,
+                        86400 * 30,
+                    )
                     return result
                 # Got a different wrong race — stop immediately to conserve quota
                 break
             if not found:
                 # Return None so frontend shows "not available" rather than wrong race
-                print(f"Could not confirm correct race for '{race_name}' — returning None to avoid wrong data")
+                print(
+                    f"Could not confirm correct race for '{race_name}' — returning None to avoid wrong data"
+                )
                 return None
 
         if result:
@@ -1083,16 +1400,18 @@ class F1ApiClient:
                     "grid": grid_pos,
                 }
                 driver_info[did] = info
-                grid_entries.append({
-                    "pos": grid_pos,
-                    "driver_id": did,
-                    "name": info["name"],
-                    "code": info["code"],
-                    "team": info["team"],
-                    "lap_time": "Grid",
-                    "gap": "",
-                    "interval": "",
-                })
+                grid_entries.append(
+                    {
+                        "pos": grid_pos,
+                        "driver_id": did,
+                        "name": info["name"],
+                        "code": info["code"],
+                        "team": info["team"],
+                        "lap_time": "Grid",
+                        "gap": "",
+                        "interval": "",
+                    }
+                )
 
             # Sort grid by starting position
             grid_entries.sort(key=lambda x: x["pos"])
@@ -1110,7 +1429,7 @@ class F1ApiClient:
                 last_known[did] = {
                     "driver_id": did,
                     "lap_time": "",
-                    "cum_ms": float('inf'),
+                    "cum_ms": float("inf"),
                     "lap_count": 0,
                     "status": "DNS",
                 }
@@ -1146,50 +1465,93 @@ class F1ApiClient:
                 # DNS drivers (lap_count=0, cum_ms=inf) always sort last
                 sorted_e = sorted(
                     entries.values(),
-                    key=lambda x: (-x["lap_count"], x["cum_ms"] if x["cum_ms"] != float('inf') else 1e15)
+                    key=lambda x: (
+                        -x["lap_count"],
+                        x["cum_ms"] if x["cum_ms"] != float("inf") else 1e15,
+                    ),
                 )
                 # Reference leader as first RACING driver (ignore DNS/DNF leaders)
                 racing = [e for e in sorted_e if e.get("status") == "RACING"]
-                leader_ms = racing[0]["cum_ms"] if racing else (sorted_e[0]["cum_ms"] if sorted_e else 0)
+                leader_ms = (
+                    racing[0]["cum_ms"]
+                    if racing
+                    else (sorted_e[0]["cum_ms"] if sorted_e else 0)
+                )
 
                 positions = []
                 for i, e in enumerate(sorted_e):
-                    info = driver_info.get(e["driver_id"], {
-                        "name": e["driver_id"].capitalize(),
-                        "code": e["driver_id"][:3].upper(),
-                        "team": "",
-                    })
+                    info = driver_info.get(
+                        e["driver_id"],
+                        {
+                            "name": e["driver_id"].capitalize(),
+                            "code": e["driver_id"][:3].upper(),
+                            "team": "",
+                        },
+                    )
                     race_pos = i + 1
                     cum = e["cum_ms"]
                     is_dns = e.get("status") == "DNS"
                     is_out = e.get("status") not in ("RACING",) and not is_dns
-                    gap_ms = (cum - leader_ms) if cum != float('inf') and leader_ms > 0 else 0
-                    gap = "DNS" if is_dns else ("OUT" if is_out else ("LEADER" if gap_ms == 0 else f"+{gap_ms/1000:.3f}s"))
-                    interval = "—" if is_dns or is_out else ("LEADER" if i == 0 else f"+{(cum - sorted_e[i-1]['cum_ms'])/1000:.3f}s")
+                    gap_ms = (
+                        (cum - leader_ms)
+                        if cum != float("inf") and leader_ms > 0
+                        else 0
+                    )
+                    gap = (
+                        "DNS"
+                        if is_dns
+                        else (
+                            "OUT"
+                            if is_out
+                            else ("LEADER" if gap_ms == 0 else f"+{gap_ms/1000:.3f}s")
+                        )
+                    )
+                    interval = (
+                        "—"
+                        if is_dns or is_out
+                        else (
+                            "LEADER"
+                            if i == 0
+                            else f"+{(cum - sorted_e[i-1]['cum_ms'])/1000:.3f}s"
+                        )
+                    )
 
-                    positions.append({
-                        "pos": race_pos,
-                        "driver_id": e["driver_id"],
-                        "name": info["name"],
-                        "code": info["code"],
-                        "team": info["team"],
-                        "lap_time": e["lap_time"],
-                        "gap": gap,
-                        "interval": interval,
-                        "status": e.get("status", "RACING"),
-                    })
+                    positions.append(
+                        {
+                            "pos": race_pos,
+                            "driver_id": e["driver_id"],
+                            "name": info["name"],
+                            "code": info["code"],
+                            "team": info["team"],
+                            "lap_time": e["lap_time"],
+                            "gap": gap,
+                            "interval": interval,
+                            "status": e.get("status", "RACING"),
+                        }
+                    )
 
                 all_laps.append({"lap": lap_num, "phase": "", "positions": positions})
 
             # Use winner's lap count from results (always correct, even if timing data is partial)
             race_winner_laps = max(
-                (int(r.get("laps", 0)) for r in results_raw["MRData"]["RaceTable"]["Races"][0].get("Results", [])),
-                default=0
+                (
+                    int(r.get("laps", 0))
+                    for r in results_raw["MRData"]["RaceTable"]["Races"][0].get(
+                        "Results", []
+                    )
+                ),
+                default=0,
             )
-            total_laps = race_winner_laps if race_winner_laps > 0 else (max(l["lap"] for l in all_laps) if all_laps else 0)
+            total_laps = (
+                race_winner_laps
+                if race_winner_laps > 0
+                else (max(l["lap"] for l in all_laps) if all_laps else 0)
+            )
 
             # Prepend grid as lap 0
-            result_laps = [{"lap": 0, "phase": "GRID", "positions": grid_entries}] + all_laps
+            result_laps = [
+                {"lap": 0, "phase": "GRID", "positions": grid_entries}
+            ] + all_laps
 
             # Final classification from race results — always correct regardless of
             # how many laps we managed to fetch from the timing data.
@@ -1197,25 +1559,30 @@ class F1ApiClient:
             for r in results_raw["MRData"]["RaceTable"]["Races"][0].get("Results", []):
                 d, c = r.get("Driver", {}), r.get("Constructor", {})
                 did = d.get("driverId", "")
-                info = driver_info.get(did, {
-                    "name": f"{d.get('givenName','')} {d.get('familyName','')}".strip(),
-                    "code": d.get("code", did[:3].upper()),
-                    "team": _normalize_team(c.get("name", "")),
-                })
+                info = driver_info.get(
+                    did,
+                    {
+                        "name": f"{d.get('givenName','')} {d.get('familyName','')}".strip(),
+                        "code": d.get("code", did[:3].upper()),
+                        "team": _normalize_team(c.get("name", "")),
+                    },
+                )
                 fl = r.get("FastestLap", {})
-                final_classification.append({
-                    "pos": r.get("position", ""),
-                    "driver_id": did,
-                    "name": info["name"],
-                    "code": info["code"],
-                    "team": info["team"],
-                    "gap": r.get("Time", {}).get("time", r.get("status", "")),
-                    "interval": "",
-                    "lap_time": fl.get("Time", {}).get("time", ""),
-                    "is_fastest_lap": fl.get("rank") == "1",
-                    "status": r.get("status", "Finished"),
-                    "total_laps_completed": r.get("laps", ""),
-                })
+                final_classification.append(
+                    {
+                        "pos": r.get("position", ""),
+                        "driver_id": did,
+                        "name": info["name"],
+                        "code": info["code"],
+                        "team": info["team"],
+                        "gap": r.get("Time", {}).get("time", r.get("status", "")),
+                        "interval": "",
+                        "lap_time": fl.get("Time", {}).get("time", ""),
+                        "is_fastest_lap": fl.get("rank") == "1",
+                        "status": r.get("status", "Finished"),
+                        "total_laps_completed": r.get("laps", ""),
+                    }
+                )
 
             race_name = race_meta.get("raceName", "")
             circuit = race_meta.get("Circuit", {}).get("circuitName", "")
@@ -1231,47 +1598,80 @@ class F1ApiClient:
 
             # Update OUT driver statuses with their actual retirement reason
             # (Engine, Accident, etc.) from the official race results
-            driver_final_status = {p["driver_id"]: p["status"] for p in final_classification}
+            driver_final_status = {
+                p["driver_id"]: p["status"] for p in final_classification
+            }
             for lap_data in result_laps:
                 for p in lap_data.get("positions", []):
                     did = p.get("driver_id", "")
-                    if p.get("status") not in ("RACING", "DNS", "GRID") and did in driver_final_status:
+                    if (
+                        p.get("status") not in ("RACING", "DNS", "GRID")
+                        and did in driver_final_status
+                    ):
                         final_st = driver_final_status[did]
-                        if final_st and final_st != "Finished" and not final_st.startswith("+"):
+                        if (
+                            final_st
+                            and final_st != "Finished"
+                            and not final_st.startswith("+")
+                        ):
                             p["status"] = final_st
 
             # Compute race summary
             overtake_counts = {}
             for i in range(1, len(all_laps)):
-                prev_map = {pos["driver_id"]: pos["pos"] for pos in all_laps[i-1]["positions"]
-                            if pos.get("status") == "RACING"}
+                prev_map = {
+                    pos["driver_id"]: pos["pos"]
+                    for pos in all_laps[i - 1]["positions"]
+                    if pos.get("status") == "RACING"
+                }
                 for pos in all_laps[i]["positions"]:
                     if pos.get("status") != "RACING":
                         continue
                     did = pos["driver_id"]
                     pp = prev_map.get(did, pos["pos"])
                     if pos["pos"] < pp:
-                        overtake_counts[did] = overtake_counts.get(did, 0) + (pp - pos["pos"])
+                        overtake_counts[did] = overtake_counts.get(did, 0) + (
+                            pp - pos["pos"]
+                        )
 
             most_overtakes = None
             if overtake_counts:
                 best_did = max(overtake_counts, key=lambda x: overtake_counts[x])
-                info = driver_info.get(best_did, {"name": best_did, "code": best_did[:3].upper()})
+                info = driver_info.get(
+                    best_did, {"name": best_did, "code": best_did[:3].upper()}
+                )
                 most_overtakes = {
                     "name": info.get("name", best_did),
                     "code": info.get("code", best_did[:3].upper()),
                     "count": overtake_counts[best_did],
                 }
 
-            sc_laps = sorted(set(e["lap"] for e in race_control_events
-                if "SAFETY CAR DEPLOYED" in e.get("message", "") and "VIRTUAL" not in e.get("message", "")))
-            vsc_laps = sorted(set(e["lap"] for e in race_control_events
-                if "VIRTUAL SAFETY CAR DEPLOYED" in e.get("message", "")))
-            red_flag_laps = sorted(set(e["lap"] for e in race_control_events
-                if e.get("flag") == "RED"))
+            sc_laps = sorted(
+                set(
+                    e["lap"]
+                    for e in race_control_events
+                    if "SAFETY CAR DEPLOYED" in e.get("message", "")
+                    and "VIRTUAL" not in e.get("message", "")
+                )
+            )
+            vsc_laps = sorted(
+                set(
+                    e["lap"]
+                    for e in race_control_events
+                    if "VIRTUAL SAFETY CAR DEPLOYED" in e.get("message", "")
+                )
+            )
+            red_flag_laps = sorted(
+                set(e["lap"] for e in race_control_events if e.get("flag") == "RED")
+            )
 
             non_finishers = [
-                {"code": p["code"], "name": p["name"], "status": p["status"], "laps": p["total_laps_completed"]}
+                {
+                    "code": p["code"],
+                    "name": p["name"],
+                    "status": p["status"],
+                    "laps": p["total_laps_completed"],
+                }
                 for p in final_classification
                 if p["status"] not in ("Finished",) and not p["status"].startswith("+")
             ]
@@ -1315,17 +1715,23 @@ class F1ApiClient:
             results = []
             for r in raw:
                 d, c = r.get("Driver", {}), r.get("Constructor", {})
-                results.append({
-                    "pos": int(r.get("position", 99)),
-                    "driver_id": d.get("driverId", ""),
-                    "name": f"{d.get('givenName','')} {d.get('familyName','')}".strip(),
-                    "code": d.get("code", ""),
-                    "team": _normalize_team(c.get("name", "")),
-                    "q1": r.get("Q1", ""), "q2": r.get("Q2", ""), "q3": r.get("Q3", ""),
-                })
+                results.append(
+                    {
+                        "pos": int(r.get("position", 99)),
+                        "driver_id": d.get("driverId", ""),
+                        "name": f"{d.get('givenName','')} {d.get('familyName','')}".strip(),
+                        "code": d.get("code", ""),
+                        "team": _normalize_team(c.get("name", "")),
+                        "q1": r.get("Q1", ""),
+                        "q2": r.get("Q2", ""),
+                        "q3": r.get("Q3", ""),
+                    }
+                )
 
             all_laps = []
-            for idx, (phase, key) in enumerate([("Q1", "q1"), ("Q2", "q2"), ("Q3", "q3")], start=1):
+            for idx, (phase, key) in enumerate(
+                [("Q1", "q1"), ("Q2", "q2"), ("Q3", "q3")], start=1
+            ):
                 phase_r = sorted(
                     [r for r in results if r[key]],
                     key=lambda x: self._q_secs(x[key]),
@@ -1342,16 +1748,18 @@ class F1ApiClient:
                     else:
                         prev_secs = self._q_secs(phase_r[i - 1][key])
                         interval = f"+{secs - prev_secs:.3f}s"
-                    positions.append({
-                        "pos": i + 1,
-                        "driver_id": r["driver_id"],
-                        "name": r["name"],
-                        "code": r["code"],
-                        "team": r["team"],
-                        "lap_time": r[key],
-                        "gap": gap,
-                        "interval": interval,
-                    })
+                    positions.append(
+                        {
+                            "pos": i + 1,
+                            "driver_id": r["driver_id"],
+                            "name": r["name"],
+                            "code": r["code"],
+                            "team": r["team"],
+                            "lap_time": r[key],
+                            "gap": gap,
+                            "interval": interval,
+                        }
+                    )
                 all_laps.append({"lap": idx, "phase": phase, "positions": positions})
 
             return {
@@ -1384,16 +1792,20 @@ class F1ApiClient:
             positions = []
             for r in sprint_results:
                 d, c = r.get("Driver", {}), r.get("Constructor", {})
-                positions.append({
-                    "pos": int(r.get("position", 99)),
-                    "driver_id": d.get("driverId", ""),
-                    "name": f"{d.get('givenName','')} {d.get('familyName','')}".strip(),
-                    "code": d.get("code", ""),
-                    "team": _normalize_team(c.get("name", "")),
-                    "lap_time": r.get("FastestLap", {}).get("Time", {}).get("time", ""),
-                    "gap": r.get("Time", {}).get("time", r.get("status", "")),
-                    "interval": "",
-                })
+                positions.append(
+                    {
+                        "pos": int(r.get("position", 99)),
+                        "driver_id": d.get("driverId", ""),
+                        "name": f"{d.get('givenName','')} {d.get('familyName','')}".strip(),
+                        "code": d.get("code", ""),
+                        "team": _normalize_team(c.get("name", "")),
+                        "lap_time": r.get("FastestLap", {})
+                        .get("Time", {})
+                        .get("time", ""),
+                        "gap": r.get("Time", {}).get("time", r.get("status", "")),
+                        "interval": "",
+                    }
+                )
             positions.sort(key=lambda x: x["pos"])
             return {
                 "session_type": "sprint",

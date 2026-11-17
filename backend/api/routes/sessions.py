@@ -7,11 +7,13 @@ from services.f1_api_client import f1_api_client
 
 router = APIRouter()
 
+
 class DriverStandingResponse(BaseModel):
     position: int
     driver_name: str
     team: str
     time_or_gap: str
+
 
 class LatestSessionResponse(BaseModel):
     session_key: int
@@ -22,13 +24,16 @@ class LatestSessionResponse(BaseModel):
     date_start: str
     results: List[DriverStandingResponse]
 
+
 class PredictionProbabilityResponse(BaseModel):
     driver_name: str
     probability: float
 
+
 class SessionPredictionsResponse(BaseModel):
     session_key: int
     predictions: List[PredictionProbabilityResponse]
+
 
 class RaceDetailsResponse(BaseModel):
     race_name: str
@@ -48,6 +53,7 @@ class RaceDetailsResponse(BaseModel):
     circuit_length_km: Optional[float] = None
     turns: Optional[int] = None
     drs_zones: Optional[int] = None
+
 
 @router.get("/latest", response_model=LatestSessionResponse)
 async def get_latest_session_endpoint():
@@ -75,12 +81,14 @@ async def get_latest_session_endpoint():
         session_type=latest.get("session_type", "practice"),
         status=latest.get("status", "completed"),
         date_start=latest.get("date_start", ""),
-        results=[DriverStandingResponse(**r) for r in latest["results"]]
+        results=[DriverStandingResponse(**r) for r in latest["results"]],
     )
 
 
 @router.get("/predictions", response_model=SessionPredictionsResponse)
-async def get_session_predictions_endpoint(session_key: Optional[int] = None, current_user: dict = Depends(get_current_user)):
+async def get_session_predictions_endpoint(
+    session_key: Optional[int] = None, current_user: dict = Depends(get_current_user)
+):
     latest = f1_poller.get_latest_session()
     if not latest:
         latest = f1_poller.advance_simulation()
@@ -90,15 +98,24 @@ async def get_session_predictions_endpoint(session_key: Optional[int] = None, cu
 
     pred_data = f1_poller.get_latest_prediction(session_key)
     if not pred_data:
-        raw_preds = f1_poller.trigger_auto_predictions(session_key, latest["meeting_name"], latest["session_name"], latest["results"])
-        predictions = [{"driver_name": p["driver_name"], "probability": p["probability"]} for p in raw_preds]
+        raw_preds = f1_poller.trigger_auto_predictions(
+            session_key,
+            latest["meeting_name"],
+            latest["session_name"],
+            latest["results"],
+        )
+        predictions = [
+            {"driver_name": p["driver_name"], "probability": p["probability"]}
+            for p in raw_preds
+        ]
     else:
         predictions = pred_data["predictions"]
 
     return SessionPredictionsResponse(
         session_key=session_key,
-        predictions=[PredictionProbabilityResponse(**p) for p in predictions]
+        predictions=[PredictionProbabilityResponse(**p) for p in predictions],
     )
+
 
 @router.post("/simulate", response_model=LatestSessionResponse)
 async def simulate_session_endpoint():
@@ -107,22 +124,29 @@ async def simulate_session_endpoint():
         session_key=new_state["session_key"],
         meeting_name=new_state["meeting_name"],
         session_name=new_state["session_name"],
-        session_type="practice" if "Practice" in new_state["session_name"] else new_state["session_name"].lower(),
+        session_type=(
+            "practice"
+            if "Practice" in new_state["session_name"]
+            else new_state["session_name"].lower()
+        ),
         status="completed",
         date_start="",
-        results=[DriverStandingResponse(**r) for r in new_state["results"]]
+        results=[DriverStandingResponse(**r) for r in new_state["results"]],
     )
+
 
 class OverrideLiveResultsRequest(BaseModel):
     session_key: Optional[int] = None
     session_name: Optional[str] = None
     results: List[DriverStandingResponse]
 
+
 @router.post("/live-results/override")
 async def override_live_results_endpoint(payload: OverrideLiveResultsRequest):
     """Allows manual sync or live update of session classification (e.g. from TV timing)."""
     import json
     from core.database import get_db_connection
+
     s_key = payload.session_key or 1802
     s_name = payload.session_name or "Practice 2"
     res_list = [r.dict() for r in payload.results]
@@ -146,14 +170,21 @@ async def override_live_results_endpoint(payload: OverrideLiveResultsRequest):
                 "practice",
                 "live",
                 "2026-10-23T21:00:00Z",
-                json.dumps(res_list)
-            )
+                json.dumps(res_list),
+            ),
         )
         conn.commit()
 
-    f1_poller.trigger_auto_predictions(s_key, "United States Grand Prix", s_name, res_list)
+    f1_poller.trigger_auto_predictions(
+        s_key, "United States Grand Prix", s_name, res_list
+    )
     f1_api_client.cache.pop("live_telemetry", None)
-    return {"status": "ok", "message": f"Live results for {s_name} updated successfully", "count": len(res_list)}
+    return {
+        "status": "ok",
+        "message": f"Live results for {s_name} updated successfully",
+        "count": len(res_list),
+    }
+
 
 @router.post("/poll")
 async def poll_f1_api_endpoint():
@@ -164,11 +195,18 @@ async def poll_f1_api_endpoint():
         success = f1_poller.poll_openf1_api()
 
     if not success:
-        raise HTTPException(status_code=500, detail="Failed to retrieve live data from F1 APIs (Jolpica and OpenF1).")
-    return {"message": "Successfully synchronized latest session results and triggered automated predictions."}
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to retrieve live data from F1 APIs (Jolpica and OpenF1).",
+        )
+    return {
+        "message": "Successfully synchronized latest session results and triggered automated predictions."
+    }
+
 
 @router.get("/race-details/{race_name}", response_model=RaceDetailsResponse)
 async def get_race_details_endpoint(race_name: str):
     from services.f1_api_client import f1_api_client
+
     details = f1_api_client.get_race_details(race_name)
     return RaceDetailsResponse(**details)

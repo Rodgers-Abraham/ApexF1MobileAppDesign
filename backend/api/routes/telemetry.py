@@ -5,6 +5,7 @@ from services.f1_api_client import f1_api_client
 
 router = APIRouter()
 
+
 class LiveDriverStanding(BaseModel):
     pos: str
     name: str
@@ -12,11 +13,13 @@ class LiveDriverStanding(BaseModel):
     pts: str
     wins: str
 
+
 class LiveConstructorStanding(BaseModel):
     pos: str
     name: str
     pts: str
     wins: str
+
 
 class LiveDriverTelemetry(BaseModel):
     pos: str
@@ -41,6 +44,7 @@ class LiveDriverTelemetry(BaseModel):
     x: float
     y: float
 
+
 class RaceFlagStatus(BaseModel):
     flag: str = "GREEN"
     title: str = "TRACK CLEAR"
@@ -51,6 +55,7 @@ class RaceFlagStatus(BaseModel):
     yellow_flag_active: bool = False
     active_sector: int = 0
 
+
 class TeamRadioItem(BaseModel):
     id: str
     driver_number: int
@@ -60,6 +65,7 @@ class TeamRadioItem(BaseModel):
     timestamp: str
     audio_url: str
     transcript: str
+
 
 class RaceEventItem(BaseModel):
     id: str
@@ -72,6 +78,7 @@ class RaceEventItem(BaseModel):
     lap_number: int
     lap_time: str
 
+
 class LiveNewsItem(BaseModel):
     title: str
     summary: str
@@ -81,6 +88,7 @@ class LiveNewsItem(BaseModel):
     image_url: str = ""
     time_ago: str = ""
     category: str = "F1"
+
 
 class SessionStatusResponse(BaseModel):
     is_live: bool
@@ -98,9 +106,11 @@ class SessionStatusResponse(BaseModel):
     next_session_circuit: str
     seconds_until_next: int
 
+
 class SessionTime(BaseModel):
     name: str
     datetime: str
+
 
 class CalendarRaceEntry(BaseModel):
     name: str
@@ -113,38 +123,54 @@ class CalendarRaceEntry(BaseModel):
     drs_zones: int
     sessions: List[SessionTime] = []
 
+
 @router.get("/calendar", response_model=List[CalendarRaceEntry])
 async def get_calendar_endpoint():
     races = f1_api_client.get_calendar()
     result = []
     for r in races:
         sessions = [SessionTime(**s) for s in r.get("sessions", [])]
-        result.append(CalendarRaceEntry(
-            name=r["name"], circuit=r["circuit"], country_code=r["country_code"],
-            date=r["date"], round=r["round"], length_km=r["length_km"],
-            turns=r["turns"], drs_zones=r["drs_zones"], sessions=sessions,
-        ))
+        result.append(
+            CalendarRaceEntry(
+                name=r["name"],
+                circuit=r["circuit"],
+                country_code=r["country_code"],
+                date=r["date"],
+                round=r["round"],
+                length_km=r["length_km"],
+                turns=r["turns"],
+                drs_zones=r["drs_zones"],
+                sessions=sessions,
+            )
+        )
     return result
+
 
 @router.get("/session-status", response_model=SessionStatusResponse)
 async def get_session_status_endpoint():
     status = f1_api_client.get_session_status()
     return SessionStatusResponse(**status)
 
+
 @router.get("/live-standings/drivers", response_model=List[LiveDriverStanding])
 async def get_live_driver_standings_endpoint():
     standings = f1_api_client.get_driver_standings()
     return [LiveDriverStanding(**s) for s in standings]
 
-@router.get("/live-standings/constructors", response_model=List[LiveConstructorStanding])
+
+@router.get(
+    "/live-standings/constructors", response_model=List[LiveConstructorStanding]
+)
 async def get_live_constructor_standings_endpoint():
     standings = f1_api_client.get_constructor_standings()
     return [LiveConstructorStanding(**s) for s in standings]
+
 
 @router.get("/telemetry/live", response_model=List[LiveDriverTelemetry])
 async def get_live_telemetry_endpoint():
     telemetry = f1_api_client.get_live_telemetry()
     return [LiveDriverTelemetry(**t) for t in telemetry]
+
 
 @router.get("/race-control/status", response_model=RaceFlagStatus)
 @router.get("/race-flags", response_model=RaceFlagStatus)
@@ -152,15 +178,18 @@ async def get_race_flag_status_endpoint():
     status = f1_api_client.get_race_flag_status()
     return RaceFlagStatus(**status)
 
+
 @router.get("/team-radio", response_model=List[TeamRadioItem])
 async def get_team_radio_endpoint():
     radios = f1_api_client.get_team_radio()
     return [TeamRadioItem(**r) for r in radios]
 
+
 @router.get("/race-events", response_model=List[RaceEventItem])
 async def get_race_events_endpoint():
     events = f1_api_client.get_race_events()
     return [RaceEventItem(**e) for e in events]
+
 
 @router.get("/news/live", response_model=List[LiveNewsItem])
 async def get_live_news_endpoint():
@@ -178,9 +207,11 @@ class RaceRecapEntry(BaseModel):
     winner_team: str = ""
     is_completed: bool
 
+
 @router.get("/recaps", response_model=List[RaceRecapEntry])
 async def get_race_recaps():
     from datetime import datetime, timezone
+
     results = f1_api_client.get_season_results(2026)
     calendar = f1_api_client.get_calendar(2026)
     now = datetime.now(timezone.utc).date().isoformat()
@@ -191,44 +222,64 @@ async def get_race_recaps():
     if results:
         recaps = []
         for r in results:
-            recaps.append(RaceRecapEntry(
-                round=r.get("round", ""),
-                race_name=r.get("race_name", ""),
-                circuit_name=r.get("circuit_name") or "",
-                country=r.get("country") or "",
-                date=r.get("date", ""),
-                winner_driver=r.get("winner", {}).get("driver", "") if r.get("winner") else "",
-                winner_team=r.get("winner", {}).get("constructor", "") if r.get("winner") else "",
-                is_completed=True,
-            ))
+            recaps.append(
+                RaceRecapEntry(
+                    round=r.get("round", ""),
+                    race_name=r.get("race_name", ""),
+                    circuit_name=r.get("circuit_name") or "",
+                    country=r.get("country") or "",
+                    date=r.get("date", ""),
+                    winner_driver=(
+                        r.get("winner", {}).get("driver", "") if r.get("winner") else ""
+                    ),
+                    winner_team=(
+                        r.get("winner", {}).get("constructor", "")
+                        if r.get("winner")
+                        else ""
+                    ),
+                    is_completed=True,
+                )
+            )
         return recaps
 
     # Fallback: completed races from calendar (date in past)
     recaps = []
     for idx, r in enumerate(calendar):
         if r["date"] <= now:
-            recaps.append(RaceRecapEntry(
-                round=r["round"],
-                race_name=r["name"],
-                circuit_name=r["circuit"],
-                country=r.get("country_code", ""),
-                date=r["date"],
-                winner_driver="",
-                winner_team="",
-                is_completed=True,
-            ))
+            recaps.append(
+                RaceRecapEntry(
+                    round=r["round"],
+                    race_name=r["name"],
+                    circuit_name=r["circuit"],
+                    country=r.get("country_code", ""),
+                    date=r["date"],
+                    winner_driver="",
+                    winner_team="",
+                    is_completed=True,
+                )
+            )
     return recaps
 
 
 @router.get("/replay/{year}/{round_num}/{session_type}")
-async def get_session_replay_endpoint(year: int, round_num: int, session_type: str, race_name: str = ""):
+async def get_session_replay_endpoint(
+    year: int, round_num: int, session_type: str, race_name: str = ""
+):
     from fastapi import HTTPException
+
     valid_sessions = {"race", "qualifying", "sprint"}
     if session_type not in valid_sessions:
-        raise HTTPException(status_code=400, detail=f"session_type must be one of {valid_sessions}")
-    data = f1_api_client.get_session_replay(year, round_num, session_type, race_name=race_name)
+        raise HTTPException(
+            status_code=400, detail=f"session_type must be one of {valid_sessions}"
+        )
+    data = f1_api_client.get_session_replay(
+        year, round_num, session_type, race_name=race_name
+    )
     if not data:
-        raise HTTPException(status_code=404, detail="Session replay data not yet available for this race.")
+        raise HTTPException(
+            status_code=404,
+            detail="Session replay data not yet available for this race.",
+        )
     return data
 
 
@@ -245,6 +296,7 @@ class TrackConditionsResponse(BaseModel):
     circuit_name: str
     summary: str
 
+
 class CompoundStrategyItem(BaseModel):
     compound: str
     laps: int
@@ -252,10 +304,12 @@ class CompoundStrategyItem(BaseModel):
     stints_count: int
     color: str
 
+
 class TireStrategyResponse(BaseModel):
     session_key: int
     total_stints: int
     strategies: List[CompoundStrategyItem]
+
 
 @router.get("/track-conditions", response_model=TrackConditionsResponse)
 @router.get("/telemetry/track-conditions", response_model=TrackConditionsResponse)
@@ -263,11 +317,13 @@ async def get_track_conditions_endpoint():
     data = f1_api_client.get_track_conditions()
     return TrackConditionsResponse(**data)
 
+
 @router.get("/tire-strategy", response_model=TireStrategyResponse)
 @router.get("/telemetry/tire-strategy", response_model=TireStrategyResponse)
 async def get_tire_strategy_endpoint():
     data = f1_api_client.get_tire_strategy()
     return TireStrategyResponse(**data)
+
 
 class RaceReplayResponse(BaseModel):
     meeting_name: str
@@ -277,6 +333,7 @@ class RaceReplayResponse(BaseModel):
     is_completed: bool
     telemetry: List[LiveDriverTelemetry]
     flag_status: RaceFlagStatus
+
 
 @router.get("/telemetry/replay", response_model=RaceReplayResponse)
 async def get_race_replay_endpoint(meeting: str = "Singapore Grand Prix", lap: int = 1):
@@ -288,9 +345,5 @@ async def get_race_replay_endpoint(meeting: str = "Singapore Grand Prix", lap: i
         total_laps=data.get("total_laps", 60),
         is_completed=data.get("is_completed", False),
         telemetry=[LiveDriverTelemetry(**t) for t in data.get("telemetry", [])],
-        flag_status=RaceFlagStatus(**data.get("flag_status", {}))
+        flag_status=RaceFlagStatus(**data.get("flag_status", {})),
     )
-
-
-
-
