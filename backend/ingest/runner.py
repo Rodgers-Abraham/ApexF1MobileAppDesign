@@ -15,6 +15,8 @@ import sys
 import os
 import time
 
+from ingest.parser import SCHEMA_VERSION
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 logging.basicConfig(
@@ -146,7 +148,8 @@ def run_check(github_token: str, years=None):
 
         for ref in sessions:
             key = (ref.year, ref.event, ref.session_type)
-            if existing.get(key) == ref.last_commit_sha:
+            schema_hash = f"{ref.last_commit_sha}:{SCHEMA_VERSION}"
+            if existing.get(key) == schema_hash:
                 continue
             if not fetcher.is_stable(ref):
                 log.info(
@@ -161,7 +164,7 @@ def run_check(github_token: str, years=None):
                 continue
             for attempt in range(3):
                 success = _process_session(
-                    fetcher, year, ref.event, ref.session_type, ref.last_commit_sha
+                    fetcher, year, ref.event, ref.session_type, schema_hash
                 )
                 if success:
                     break
@@ -185,9 +188,10 @@ def run_single(year: int, event: str, session_type: str, github_token: str):
             ),
             None,
         )
-        source_hash = ref.last_commit_sha if ref else "manual"
+        raw_sha = ref.last_commit_sha if ref else "manual"
+        source_hash = f"{raw_sha}:{SCHEMA_VERSION}"
     except Exception:
-        source_hash = "manual"
+        source_hash = f"manual:{SCHEMA_VERSION}"
     _process_session(fetcher, year, event, session_type, source_hash)
 
 
