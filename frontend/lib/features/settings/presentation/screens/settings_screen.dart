@@ -687,7 +687,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: isSelected ? DS.red : DS.outline,
+                                    color: isSelected
+                                        ? driverTeamColor
+                                        : DS.outline,
                                     width: isSelected ? 2.5 : 1.5),
                                   color: DS.surface2),
                                 child: ClipOval(
@@ -703,7 +705,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 driver.code,
                                 style: DS.labelCaps(
                                     size: 8,
-                                    color: isSelected ? DS.red : DS.textMuted)),
+                                    color: isSelected
+                                        ? driverTeamColor
+                                        : DS.textMuted)),
                               if (isSelected)
                                 Container(
                                   width: 4,
