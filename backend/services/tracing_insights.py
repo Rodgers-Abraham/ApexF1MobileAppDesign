@@ -166,7 +166,8 @@ class TracingInsightsFetcher:
         )
         owner, repo = repo_cfg["owner"], repo_cfg["repo"]
         raw_type = self._raw_session_type(session_type)
-        base = f"{year}/{event}/{raw_type}"
+        # Path within the repo is {event}/{session_type}/ — the year is the repo name, not a folder.
+        base = f"{event}/{raw_type}"
 
         def fetch(filename: str, required: bool = True):
             url = RAW_BASE.format(owner=owner, repo=repo, path=f"{base}/{filename}")
