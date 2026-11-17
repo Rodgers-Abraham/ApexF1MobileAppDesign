@@ -215,7 +215,13 @@ def main():
         "--session", type=str, help="Ingest single session: 'year/event/session_type'"
     )
     parser.add_argument("--migrate", action="store_true", help="Run DB migrations")
-    parser.add_argument("--year", type=int, help="Limit to specific year")
+    parser.add_argument("--year", type=int, help="Limit to a single year")
+    parser.add_argument(
+        "--years",
+        type=str,
+        default=None,
+        help="Comma-separated list of years to process (e.g. '2026,2025,2024'). Processed in the given order.",
+    )
     args = parser.parse_args()
 
     github_token = os.getenv("GITHUB_TOKEN", "")
@@ -233,7 +239,12 @@ def main():
             sys.exit(1)
         run_single(int(parts[0]), parts[1], parts[2], github_token)
     elif args.check or args.backfill:
-        years = [args.year] if args.year else None
+        if args.years:
+            years = [int(y.strip()) for y in args.years.split(",") if y.strip()]
+        elif args.year:
+            years = [args.year]
+        else:
+            years = None  # auto-discover, newest-first
         run_check(github_token, years)
     else:
         parser.print_help()
