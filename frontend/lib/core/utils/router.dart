@@ -6,6 +6,8 @@ import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/home/presentation/screens/pitwall_screen.dart';
 import '../../features/standings/presentation/screens/standings_screen.dart';
 import '../../features/live/presentation/screens/live_tracker_screen.dart';
+import '../../features/live/presentation/screens/practice_replay_screen.dart';
+import '../../features/live/presentation/screens/qualifying_replay_screen.dart';
 import '../../features/history/presentation/screens/history_screen.dart';
 import '../../features/predictor/presentation/screens/predictor_screen.dart';
 import '../../features/chat/presentation/screens/chat_screen.dart';
@@ -22,7 +24,7 @@ final GoRouter appRouter = GoRouter(
   redirect: (BuildContext context, GoRouterState state) async {
     final prefs = await SharedPreferences.getInstance();
     final bool onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
-    
+
     final bool isOnboardingRoute = state.uri.toString() == '/onboarding';
 
     if (!onboardingCompleted) {
@@ -86,6 +88,16 @@ final GoRouter appRouter = GoRouter(
           path: '/sessions',
           builder: (BuildContext context, GoRouterState state) {
             return const SessionsListScreen();
+          }),
+        GoRoute(
+          path: '/replay/practice/:id',
+          builder: (BuildContext context, GoRouterState state) {
+            return PracticeReplayScreen(sessionId: state.pathParameters['id']!);
+          }),
+        GoRoute(
+          path: '/replay/qualifying/:id',
+          builder: (BuildContext context, GoRouterState state) {
+            return QualifyingReplayScreen(sessionId: state.pathParameters['id']!);
           }),
       ]),
   ]);

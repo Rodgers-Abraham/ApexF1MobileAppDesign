@@ -64,14 +64,50 @@ class EventSessions {
   }
 }
 
+class LiveSessionStatus {
+  final bool isLive;
+  final String? sessionType;
+  final String? meetingName;
+
+  const LiveSessionStatus({
+    required this.isLive,
+    this.sessionType,
+    this.meetingName,
+  });
+
+  factory LiveSessionStatus.fromJson(Map<String, dynamic> j) => LiveSessionStatus(
+        isLive: j['is_live'] == true,
+        sessionType: j['session_type'] as String?,
+        meetingName: j['meeting_name'] as String?,
+      );
+}
+
 final allSessionsProvider =
     FutureProvider.autoDispose<List<EventSessions>>((ref) async {
   final dio = Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
   final resp = await dio.get('/api/timing/sessions');
-  final list = resp.data as List;
-  return list
+  // Handle both old shape (bare list) and new shape ({live, events})
+  final data = resp.data;
+  final List rawEvents;
+  if (data is Map) {
+    rawEvents = data['events'] as List;
+  } else {
+    rawEvents = data as List;
+  }
+  return rawEvents
       .map((e) => EventSessions.fromJson(e as Map<String, dynamic>))
       .toList();
+});
+
+final timingLiveStatusProvider =
+    FutureProvider.autoDispose<LiveSessionStatus>((ref) async {
+  final dio = Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
+  final resp = await dio.get('/api/timing/sessions');
+  final data = resp.data;
+  if (data is Map && data['live'] != null) {
+    return LiveSessionStatus.fromJson(data['live'] as Map<String, dynamic>);
+  }
+  return const LiveSessionStatus(isLive: false);
 });
 
 final sessionDataProvider =

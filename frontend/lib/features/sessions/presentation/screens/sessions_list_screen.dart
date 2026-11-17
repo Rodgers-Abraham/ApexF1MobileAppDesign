@@ -158,10 +158,19 @@ class SessionsListScreen extends ConsumerWidget {
     }
   }
 
-  void _openSession(
-      BuildContext context, WidgetRef ref, SessionEntry sess) {
-    ref.read(selectedReplaySessionProvider.notifier).state = sess.id;
-    context.go('/live');
+  void _openSession(BuildContext context, WidgetRef ref, SessionEntry sess) {
+    switch (sess.sessionType) {
+      case 'P1':
+      case 'P2':
+      case 'P3':
+        context.go('/replay/practice/${sess.id}');
+      case 'Q':
+      case 'SQ':
+        context.go('/replay/qualifying/${sess.id}');
+      default: // Race, Sprint
+        ref.read(selectedReplaySessionProvider.notifier).state = sess.id;
+        context.go('/live');
+    }
   }
 }
 

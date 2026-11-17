@@ -38,7 +38,7 @@ def _load_jsonb(raw) -> Optional[dict]:
 # ---------------------------------------------------------------------------
 @router.get("/sessions")
 def list_sessions():
-    """List all ready sessions grouped by year → event."""
+    """List all ready sessions grouped by year → event, plus live status."""
     with get_db_connection() as conn:
         rows = conn.execute(
             """SELECT id, year, event, session_type, session_date, status,
@@ -75,7 +75,25 @@ def list_sessions():
     for year in sorted(result.keys(), reverse=True):
         for event_data in result[year].values():
             output.append({"year": year, **event_data})
-    return output
+
+    # Best-effort live status
+    live_info: dict = {"is_live": False}
+    try:
+        from services.f1_api_client import f1_api_client
+
+        status = f1_api_client.get_session_status()
+        if status.get("is_live"):
+            live_info = {
+                "is_live": True,
+                "session_type": status.get("session_type"),
+                "meeting_name": status.get("meeting_name"),
+                "lap": status.get("current_lap"),
+                "total_laps": status.get("total_laps"),
+            }
+    except Exception:
+        pass
+
+    return {"live": live_info, "events": output}
 
 
 # ---------------------------------------------------------------------------

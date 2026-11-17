@@ -5,13 +5,24 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 from dataclasses import dataclass
 
-RAW_BASE = "https://raw.githubusercontent.com/TracingInsights/{year}/main/{path}"
+RAW_BASE = "https://raw.githubusercontent.com/{owner}/{repo}/main/{path}"
 API_BASE = "https://api.github.com"
 REQUIRED_FILES = {
     "drivers.json",
     "session_laptimes.json",
     "rcm.json",
     "session_info.json",
+}
+
+# TracingInsights is a GitHub USER account, not an org.
+# Update this when new seasons are released.
+SEASON_REPOS: dict = {
+    year: {"owner": "TracingInsights", "repo": str(year)} for year in range(2018, 2027)
+}
+# Archive mirror — fallback for seasons where the main account may be incomplete
+ARCHIVE_REPOS: dict = {
+    year: {"owner": "TracingInsights-Archive", "repo": str(year)}
+    for year in range(2018, 2026)
 }
 
 
@@ -49,7 +60,8 @@ class TracingInsightsFetcher:
 
     def list_available_years(self) -> list:
         """Return sorted list of years with TracingInsights repos."""
-        url = f"{API_BASE}/orgs/TracingInsights/repos?per_page=100&type=public"
+        # TracingInsights is a USER account — /users/ not /orgs/
+        url = f"{API_BASE}/users/TracingInsights/repos?per_page=100&type=public"
         resp = self._session.get(url, timeout=15)
         resp.raise_for_status()
         repos = resp.json()
@@ -62,7 +74,12 @@ class TracingInsightsFetcher:
 
     def list_sessions(self, year: int) -> list:
         """List all session folders available for a year with their last commit info."""
-        url = f"{API_BASE}/repos/TracingInsights/{year}/contents/"
+        repo_cfg = SEASON_REPOS.get(
+            year, {"owner": "TracingInsights", "repo": str(year)}
+        )
+        owner, repo = repo_cfg["owner"], repo_cfg["repo"]
+
+        url = f"{API_BASE}/repos/{owner}/{repo}/contents/"
         resp = self._session.get(url, timeout=15)
         if resp.status_code == 404:
             return []
@@ -74,7 +91,7 @@ class TracingInsightsFetcher:
             if event_item["type"] != "dir":
                 continue
             event = event_item["name"]
-            url2 = f"{API_BASE}/repos/TracingInsights/{year}/contents/{event}"
+            url2 = f"{API_BASE}/repos/{owner}/{repo}/contents/{event}"
             r2 = self._session.get(url2, timeout=15)
             if r2.status_code != 200:
                 continue
@@ -86,7 +103,7 @@ class TracingInsightsFetcher:
                 if not normalized:
                     continue
                 commit_url = (
-                    f"{API_BASE}/repos/TracingInsights/{year}/commits"
+                    f"{API_BASE}/repos/{owner}/{repo}/commits"
                     f"?path={event}/{raw_type}&per_page=1"
                 )
                 cr = self._session.get(commit_url, timeout=15)
@@ -115,7 +132,11 @@ class TracingInsightsFetcher:
 
     def has_required_files(self, year: int, event: str, raw_session_type: str) -> bool:
         """Check all required files exist in the session folder."""
-        url = f"{API_BASE}/repos/TracingInsights/{year}/contents/{event}/{raw_session_type}"
+        repo_cfg = SEASON_REPOS.get(
+            year, {"owner": "TracingInsights", "repo": str(year)}
+        )
+        owner, repo = repo_cfg["owner"], repo_cfg["repo"]
+        url = f"{API_BASE}/repos/{owner}/{repo}/contents/{event}/{raw_session_type}"
         resp = self._session.get(url, timeout=15)
         if resp.status_code != 200:
             return False
@@ -140,11 +161,15 @@ class TracingInsightsFetcher:
         Fetch all required files for a session.
         session_type is our DB enum (P1/Q/Race/etc.).
         """
+        repo_cfg = SEASON_REPOS.get(
+            year, {"owner": "TracingInsights", "repo": str(year)}
+        )
+        owner, repo = repo_cfg["owner"], repo_cfg["repo"]
         raw_type = self._raw_session_type(session_type)
         base = f"{year}/{event}/{raw_type}"
 
         def fetch(filename: str, required: bool = True):
-            url = RAW_BASE.format(year=year, path=f"{base}/{filename}")
+            url = RAW_BASE.format(owner=owner, repo=repo, path=f"{base}/{filename}")
             resp = self._session.get(url, timeout=20)
             if resp.status_code == 404:
                 if required:
