@@ -245,6 +245,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> updateProfile({
     String? name,
     String? favouriteDriver,
+    String? rivalDriver,
     String? newPassword,
     String? country,
   }) async {
@@ -264,6 +265,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         data: {
           if (name != null) 'name': name,
           if (favouriteDriver != null) 'favourite_driver': favouriteDriver,
+          if (rivalDriver != null) 'rival_driver': rivalDriver,
           if (country != null) 'country': country,
         },
         options: Options(headers: {'Authorization': 'Bearer $idToken'}));
@@ -274,6 +276,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         'name': data['name'] ?? state.name,
         'favourite_team': data['favourite_team'] ?? state.favouriteTeam,
         'favourite_driver': data['favourite_driver'] ?? state.favouriteDriver,
+        'rival_driver': data['rival_driver'] ?? state.rivalDriver,
         'country': data['country'] ?? state.country,
       });
       return true;

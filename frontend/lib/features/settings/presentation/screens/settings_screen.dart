@@ -24,6 +24,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String? _successMessage;
   bool _showAllTeams = false;
   bool _showAllDrivers = false;
+  bool _showAllRivalDrivers = false;
 
   bool _notifyRaceWeekend = true;
   bool _notifyQualifying = true;
@@ -626,6 +627,95 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   if (!_showAllDrivers)
                     GestureDetector(
                       onTap: () => setState(() => _showAllDrivers = true),
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 10),
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: DS.outline),
+                          color: DS.surface2),
+                        alignment: Alignment.center,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.more_horiz,
+                                size: 18, color: DS.textMuted),
+                            Text('ALL',
+                                style: DS.labelCaps(
+                                    size: 7, color: DS.textMuted)),
+                          ]))),
+                ])),
+            const SizedBox(height: 20),
+
+            // ── RIVAL DRIVER ──
+            _buildSectionHeader(
+                Icons.person_pin_outlined, 'RIVAL DRIVER', 'VS', DS.red),
+            const SizedBox(height: 10),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ...(() {
+                    final visibleRivals = _showAllRivalDrivers
+                        ? kDrivers2026List
+                        : kDrivers2026List.take(6).toList();
+                    return visibleRivals
+                        .where((d) => d.name != authState.favouriteDriver)
+                        .map((driver) {
+                      final isSelected = authState.rivalDriver == driver.name;
+                      final driverTeamColor =
+                          getTeamData(driver.team)?.primaryColor ?? DS.textMuted;
+                      return GestureDetector(
+                        onTap: () async {
+                          await ref
+                              .read(authProvider.notifier)
+                              .updateProfile(rivalDriver: driver.name);
+                          if (mounted) setState(() {});
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 10),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 160),
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: isSelected ? DS.red : DS.outline,
+                                    width: isSelected ? 2.5 : 1.5),
+                                  color: DS.surface2),
+                                child: ClipOval(
+                                  child: Image.asset(
+                                    driver.portraitAsset,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Icon(
+                                        Icons.person,
+                                        size: 28,
+                                        color: DS.textMuted)))),
+                              const SizedBox(height: 4),
+                              Text(
+                                driver.code,
+                                style: DS.labelCaps(
+                                    size: 8,
+                                    color: isSelected ? DS.red : DS.textMuted)),
+                              if (isSelected)
+                                Container(
+                                  width: 4,
+                                  height: 4,
+                                  decoration: BoxDecoration(
+                                      color: DS.red, shape: BoxShape.circle)),
+                            ])));
+                    }).toList();
+                  })(),
+                  if (!_showAllRivalDrivers)
+                    GestureDetector(
+                      onTap: () => setState(() => _showAllRivalDrivers = true),
                       child: Container(
                         margin: const EdgeInsets.only(right: 10),
                         width: 60,
