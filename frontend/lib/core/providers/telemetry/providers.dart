@@ -121,7 +121,15 @@ class ReplayLapEntry {
   final String phase; // e.g. "Q1", "Q2", "Q3", or "" for race laps
   final List<LiveTelemetry> positions;
 
-  const ReplayLapEntry({required this.lap, required this.phase, required this.positions});
+  /// Session time (s) when this lap started. Populated for TracingInsights
+  /// sessions; null for Jolpica sessions. Enables real-time speed mode.
+  final double? lapStartS;
+
+  const ReplayLapEntry(
+      {required this.lap,
+      required this.phase,
+      required this.positions,
+      this.lapStartS});
 }
 
 class DriverReplaySummary {
@@ -452,10 +460,12 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
       final entries = rawLapsList.map((lapRaw) {
         final lap = lapRaw as Map<String, dynamic>;
         final lapNum = (lap['lap'] as num?)?.toInt() ?? 0;
+        final lapStartS = (lap['lap_start_s'] as num?)?.toDouble();
         final rawPositions = (lap['positions'] as List?) ?? [];
         final positions =
             rawPositions.map((p) => _posFromTracingInsights(p as Map<String, dynamic>)).toList();
-        return ReplayLapEntry(lap: lapNum, phase: '', positions: positions);
+        return ReplayLapEntry(
+            lap: lapNum, phase: '', positions: positions, lapStartS: lapStartS);
       }).toList();
 
       // Build grid as lap 0
@@ -472,8 +482,34 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
         entries.insert(0, ReplayLapEntry(lap: 0, phase: 'GRID', positions: gridPositions));
       }
 
-      // Reconstruct race control events from per-lap flags
+      // Race control events: backend event engine output + per-lap flags
       final rcEvents = <RaceControlEvent>[];
+      final rawBackendEvents = (data['events'] as List?) ?? [];
+      for (final ev in rawBackendEvents) {
+        final evMap = ev as Map<String, dynamic>;
+        final evType = evMap['type']?.toString() ?? '';
+        final evLap = (evMap['lap'] as num?)?.toInt() ?? 0;
+        final evDrivers = (evMap['drivers'] as List?) ?? [];
+        final gainerCode =
+            evDrivers.isNotEmpty ? evDrivers.first.toString() : '';
+        if (evType == 'PENALTY') {
+          rcEvents.add(RaceControlEvent(
+            lap: evLap,
+            category: 'PENALTY',
+            flag: gainerCode,
+            message: evMap['label']?.toString() ?? '$gainerCode: penalty',
+            scope: 'Driver',
+          ));
+        } else if ({'OVERTAKE', 'PIT_GAIN', 'RETIREMENT_GAIN'}.contains(evType)) {
+          rcEvents.add(RaceControlEvent(
+            lap: evLap,
+            category: evType,
+            flag: gainerCode,
+            message: evMap['label']?.toString() ?? evType,
+            scope: 'Driver',
+          ));
+        }
+      }
       for (final lapRaw in rawLapsList) {
         final lap = lapRaw as Map<String, dynamic>;
         final lapNum = (lap['lap'] as num?)?.toInt() ?? 0;
@@ -604,6 +640,7 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
       lastLap: lapTimeStr,
       bestLap: '',
       isFastestLap: p['is_fastest_lap_of_race'] == true,
+      isFastestThisLap: p['is_fastest_this_lap'] == true,
       pitStops: (p['stint'] as num?)?.toInt() ?? 1,
       drs: false,
       speed: '',
@@ -665,11 +702,29 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
     play();
   }
 
+  /// Returns the timer interval in ms for the current lap and speed setting.
+  /// At speed -1 (real time), uses actual lap durations from [lapStartS] deltas.
+  int _lapDelayMs() {
+    if (state.speedMultiplier == -1) {
+      final curIdx =
+          state.allLaps.indexWhere((l) => l.lap == state.currentLap);
+      if (curIdx >= 0 && curIdx + 1 < state.allLaps.length) {
+        final cur = state.allLaps[curIdx].lapStartS;
+        final nxt = state.allLaps[curIdx + 1].lapStartS;
+        if (cur != null && nxt != null && nxt > cur) {
+          return ((nxt - cur) * 1000).toInt().clamp(500, 180000);
+        }
+      }
+      return 90000;
+    }
+    return 3000 ~/ state.speedMultiplier;
+  }
+
   void play() {
     _playTimer?.cancel();
     state = state.copyWith(isPlaying: true, showingGrid: false);
-    final interval = Duration(milliseconds: 2000 ~/ state.speedMultiplier);
-    _playTimer = Timer.periodic(interval, (_) {
+    final delayMs = _lapDelayMs();
+    _playTimer = Timer.periodic(Duration(milliseconds: delayMs), (_) {
       if (state.currentLap < state.totalLaps) {
         nextLap();
       } else {
@@ -683,14 +738,15 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
     state = state.copyWith(isPlaying: false);
   }
 
-  /// Cycle speed: 1x → 2x → 4x → 1x. Restarts timer if playing.
+  /// Cycle speed: 1× → 2× → 4× → RT (-1, real time) → 1×.
   void cycleSpeed() {
-    final next = state.speedMultiplier == 1 ? 2 : state.speedMultiplier == 2 ? 4 : 1;
+    final spd = state.speedMultiplier;
+    final next = spd == 1 ? 2 : spd == 2 ? 4 : spd == 4 ? -1 : 1;
     state = state.copyWith(speedMultiplier: next);
     if (state.isPlaying) {
       _playTimer?.cancel();
-      final interval = Duration(milliseconds: 2000 ~/ next);
-      _playTimer = Timer.periodic(interval, (_) {
+      final delayMs = _lapDelayMs();
+      _playTimer = Timer.periodic(Duration(milliseconds: delayMs), (_) {
         if (state.currentLap < state.totalLaps) {
           nextLap();
         } else {
