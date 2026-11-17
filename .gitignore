@@ -56,3 +56,7 @@ Thumbs.db
 # Temp scratch screenshots
 /figma_thumb*.png
 .neon
+
+# graphify output (never commit)
+graphify-out/
+.graphifyignore

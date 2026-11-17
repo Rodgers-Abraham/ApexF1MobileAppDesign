@@ -3,6 +3,9 @@
 from datetime import datetime, timezone
 from typing import Optional
 
+# Bump this whenever the payload schema changes — forces re-ingest of all existing sessions.
+SCHEMA_VERSION = "v2"
+
 
 def _safe_float(v) -> Optional[float]:
     if v is None or v == "None":
@@ -362,7 +365,10 @@ def parse_practice(files: dict) -> dict:
         (end_s - start_s) if start_s is not None and end_s is not None else None
     )
 
+    has_sector_times = any(_safe_float(r.get("s1")) is not None for r in all_rows)
+
     timeline = []
+    last_lap_timeline = []
     best_per_driver: dict = {}
     overall_best: Optional[float] = None
 
@@ -381,23 +387,39 @@ def parse_practice(files: dict) -> dict:
         if is_overall:
             overall_best = lap_time
 
+        llt_entry = {
+            "session_time_s": sess_t,
+            "code": code,
+            "team": row.get("team", d_info.get("team", "")),
+            "color": d_info.get("color", "FFFFFF"),
+            "lap_time_s": lap_time,
+            "lap": _safe_int(row.get("lap")) or 0,
+            "is_personal_best": is_pb,
+            "compound": row.get("compound", "UNKNOWN"),
+        }
+        if has_sector_times:
+            llt_entry["s1"] = _safe_float(row.get("s1"))
+            llt_entry["s2"] = _safe_float(row.get("s2"))
+            llt_entry["s3"] = _safe_float(row.get("s3"))
+        last_lap_timeline.append(llt_entry)
+
         if is_pb:
-            timeline.append(
-                {
-                    "session_time_s": sess_t,
-                    "code": code,
-                    "team": row.get("team", d_info.get("team", "")),
-                    "color": d_info.get("color", "FFFFFF"),
-                    "lap_time_s": lap_time,
-                    "s1": _safe_float(row.get("s1")),
-                    "s2": _safe_float(row.get("s2")),
-                    "s3": _safe_float(row.get("s3")),
-                    "compound": row.get("compound", "UNKNOWN"),
-                    "is_personal_best": True,
-                    "is_overall_fastest": is_overall,
-                    "laps_completed": _safe_int(row.get("lap")) or 0,
-                }
-            )
+            tl_entry = {
+                "session_time_s": sess_t,
+                "code": code,
+                "team": row.get("team", d_info.get("team", "")),
+                "color": d_info.get("color", "FFFFFF"),
+                "lap_time_s": lap_time,
+                "compound": row.get("compound", "UNKNOWN"),
+                "is_personal_best": True,
+                "is_overall_fastest": is_overall,
+                "laps_completed": _safe_int(row.get("lap")) or 0,
+            }
+            if has_sector_times:
+                tl_entry["s1"] = _safe_float(row.get("s1"))
+                tl_entry["s2"] = _safe_float(row.get("s2"))
+                tl_entry["s3"] = _safe_float(row.get("s3"))
+            timeline.append(tl_entry)
 
     leader_best = min(best_per_driver.values()) if best_per_driver else 0.0
     final_order = []
@@ -427,6 +449,8 @@ def parse_practice(files: dict) -> dict:
             "t0_date": t0,
             "start_session_time_s": start_s,
             "timeline": timeline,
+            "last_lap_timeline": last_lap_timeline,
+            "has_sector_times": has_sector_times,
             "final_order": final_order,
         },
         "rcm_events": rcm_events,
@@ -454,6 +478,8 @@ def parse_qualifying(files: dict) -> dict:
     drivers = _parse_drivers(drivers_raw)
     all_rows = _laptimes_to_rows(sl)
     rcm_events = _parse_rcm(rcm_raw, t0)
+
+    has_sector_times = any(_safe_float(r.get("s1")) is not None for r in all_rows)
 
     # Detect segment names from qs field, preserving order
     segment_names = []
@@ -504,22 +530,47 @@ def parse_qualifying(files: dict) -> dict:
             if is_overall:
                 overall_best = lt
             if is_pb:
-                timeline.append(
-                    {
-                        "session_time_s": sess_t,
-                        "segment": seg,
-                        "code": code,
-                        "team": row.get("team", d_info.get("team", "")),
-                        "color": d_info.get("color", "FFFFFF"),
-                        "lap_time_s": lt,
-                        "s1": _safe_float(row.get("s1")),
-                        "s2": _safe_float(row.get("s2")),
-                        "s3": _safe_float(row.get("s3")),
-                        "compound": row.get("compound", "UNKNOWN"),
-                        "is_personal_best": True,
-                        "is_overall_fastest": is_overall,
-                    }
-                )
+                tl_entry = {
+                    "session_time_s": sess_t,
+                    "segment": seg,
+                    "code": code,
+                    "team": row.get("team", d_info.get("team", "")),
+                    "color": d_info.get("color", "FFFFFF"),
+                    "lap_time_s": lt,
+                    "compound": row.get("compound", "UNKNOWN"),
+                    "is_personal_best": True,
+                    "is_overall_fastest": is_overall,
+                }
+                if has_sector_times:
+                    tl_entry["s1"] = _safe_float(row.get("s1"))
+                    tl_entry["s2"] = _safe_float(row.get("s2"))
+                    tl_entry["s3"] = _safe_float(row.get("s3"))
+                timeline.append(tl_entry)
+
+        # last_lap_timeline: every completed lap (not just PBs) in this segment
+        last_lap_timeline_seg = []
+        for row in sorted(rows, key=lambda r: _safe_float(r.get("sesT")) or 0):
+            code = row.get("drv", "")
+            lt = _safe_float(row.get("time"))
+            sess_t = _safe_float(row.get("sesT"))
+            if not code or not lt or not sess_t:
+                continue
+            d_info = next((d for d in drivers if d["code"] == code), {})
+            llt_entry = {
+                "session_time_s": sess_t,
+                "segment": seg,
+                "code": code,
+                "team": row.get("team", d_info.get("team", "")),
+                "color": d_info.get("color", "FFFFFF"),
+                "lap_time_s": lt,
+                "is_personal_best": lt == per_driver_best_so_far.get(code),
+                "compound": row.get("compound", "UNKNOWN"),
+            }
+            if has_sector_times:
+                llt_entry["s1"] = _safe_float(row.get("s1"))
+                llt_entry["s2"] = _safe_float(row.get("s2"))
+                llt_entry["s3"] = _safe_float(row.get("s3"))
+            last_lap_timeline_seg.append(llt_entry)
 
         final_order = sorted(
             [
@@ -532,6 +583,7 @@ def parse_qualifying(files: dict) -> dict:
 
         segments_out[seg] = {
             "timeline": timeline,
+            "last_lap_timeline": last_lap_timeline_seg,
             "final_order": [
                 {
                     "pos": i + 1,
@@ -579,6 +631,7 @@ def parse_qualifying(files: dict) -> dict:
             "segment_order": segment_names,
             "pole": pole,
             "final_grid": final_grid,
+            "has_sector_times": has_sector_times,
         },
         "rcm_events": rcm_events,
         "weather": None,
