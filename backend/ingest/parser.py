@@ -108,9 +108,11 @@ def parse_meta(
 
 def parse_race(files: dict) -> dict:
     """Parse a Race session into internal JSONB schema."""
-    import logging
-
-    from ingest.models import validate_drivers, validate_session_laptimes
+    from ingest.models import (
+        validate_critical_drivers,
+        validate_critical_laptimes,
+        validate_session_laptimes,
+    )
 
     drivers_raw = files["drivers"]
     sl = files["session_laptimes"]
@@ -119,18 +121,19 @@ def parse_race(files: dict) -> dict:
     t0 = si.get("t0_date", "")
     total_laps = si.get("total_laps") or 0
 
-    _log = logging.getLogger("ingest")
-    _valid_laps, _lap_errors = validate_session_laptimes(_laptimes_to_rows(sl))
-    if _lap_errors:
-        _log.warning(
-            f"Lap validation: {len(_lap_errors)} row(s) with issues (non-fatal): {_lap_errors[:3]}"
-        )
-    _valid_drivers, _drv_errors = validate_drivers(
+    # Critical validation — raises IngestValidationError on failure
+    validate_critical_laptimes(_laptimes_to_rows(sl), session_type="Race")
+    validate_critical_drivers(
         drivers_raw.get("drivers", []) if isinstance(drivers_raw, dict) else []
     )
-    if _drv_errors:
-        _log.warning(
-            f"Driver validation: {len(_drv_errors)} row(s) with issues: {_drv_errors[:3]}"
+
+    # Optional validation — log warnings only
+    _valid_laps, _lap_errors = validate_session_laptimes(_laptimes_to_rows(sl))
+    if _lap_errors:
+        import logging
+
+        logging.getLogger("ingest").warning(
+            f"Lap optional check: {len(_lap_errors)} row(s) with issues: {_lap_errors[:3]}"
         )
 
     drivers = _parse_drivers(drivers_raw)
@@ -325,11 +328,19 @@ def parse_race(files: dict) -> dict:
 
 def parse_practice(files: dict) -> dict:
     """Parse a Practice session (P1/P2/P3)."""
+    from ingest.models import validate_critical_drivers, validate_critical_laptimes
+
     drivers_raw = files["drivers"]
     sl = files["session_laptimes"]
     rcm_raw = files["rcm"]
     si = files["session_info"]
     t0 = si.get("t0_date", "")
+
+    # Critical validation — raises IngestValidationError on failure
+    validate_critical_laptimes(_laptimes_to_rows(sl))
+    validate_critical_drivers(
+        drivers_raw.get("drivers", []) if isinstance(drivers_raw, dict) else []
+    )
 
     drivers = _parse_drivers(drivers_raw)
     all_rows = _laptimes_to_rows(sl)
@@ -426,11 +437,19 @@ def parse_practice(files: dict) -> dict:
 
 def parse_qualifying(files: dict) -> dict:
     """Parse a Qualifying or Sprint Qualifying session."""
+    from ingest.models import validate_critical_drivers, validate_critical_laptimes
+
     drivers_raw = files["drivers"]
     sl = files["session_laptimes"]
     rcm_raw = files["rcm"]
     si = files["session_info"]
     t0 = si.get("t0_date", "")
+
+    # Critical validation — raises IngestValidationError on failure
+    validate_critical_laptimes(_laptimes_to_rows(sl))
+    validate_critical_drivers(
+        drivers_raw.get("drivers", []) if isinstance(drivers_raw, dict) else []
+    )
 
     drivers = _parse_drivers(drivers_raw)
     all_rows = _laptimes_to_rows(sl)

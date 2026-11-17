@@ -46,8 +46,14 @@ def _process_session(
         return False
 
     try:
+        from ingest.models import IngestValidationError
+
         meta = parse_meta(files["drivers"], files["session_info"], event, session_type)
         parsed = parse_session(session_type, files)
+    except IngestValidationError as e:
+        log.error(f"  VALIDATION FAILED (critical): {e}")
+        mark_failed(year, event, session_type, f"Validation error: {e}")
+        return False
     except Exception as e:
         log.error(f"  PARSE FAILED: {e}")
         mark_failed(year, event, session_type, f"Parse error: {e}")
