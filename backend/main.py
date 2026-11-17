@@ -77,7 +77,9 @@ app.include_router(
     history.router, prefix="/api/f1/history", tags=["F1 Historical Archive"]
 )
 app.include_router(picks.router, prefix="/api/user", tags=["User Predictions"])
-app.include_router(recap_sessions.router, prefix="/api/timing", tags=["Live Timing / Race Recap"])
+app.include_router(
+    recap_sessions.router, prefix="/api/timing", tags=["Live Timing / Race Recap"]
+)
 
 
 @app.get("/")

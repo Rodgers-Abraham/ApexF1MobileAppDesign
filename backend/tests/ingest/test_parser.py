@@ -3,11 +3,14 @@ Tests for the TracingInsights parser.
 These use live data fetched from the TracingInsights GitHub repo.
 Run with: pytest backend/tests/ingest/test_parser.py -v
 """
+
 import sys
 import os
 import pytest
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from ingest.parser import _laptimes_to_rows, parse_session, parse_meta
 
@@ -28,11 +31,12 @@ def test_laptimes_to_rows_empty():
 
 @pytest.mark.skipif(
     not os.getenv("GITHUB_TOKEN"),
-    reason="Requires GITHUB_TOKEN to fetch TracingInsights data"
+    reason="Requires GITHUB_TOKEN to fetch TracingInsights data",
 )
 def test_parse_race_live():
     """Integration test: fetch and parse Australian GP 2026 Race."""
     from services.tracing_insights import TracingInsightsFetcher
+
     token = os.getenv("GITHUB_TOKEN")
     fetcher = TracingInsightsFetcher(token)
     files = fetcher.fetch_session_files(2026, "Australian_Grand_Prix", "Race")
@@ -49,16 +53,19 @@ def test_parse_race_live():
     for lap_data in laps["laps"]:
         for pos in lap_data["positions"]:
             if pos["status"] == "RACING":
-                assert pos["pos"] > 0, f"RACING driver {pos['code']} has pos={pos['pos']}"
+                assert (
+                    pos["pos"] > 0
+                ), f"RACING driver {pos['code']} has pos={pos['pos']}"
 
 
 @pytest.mark.skipif(
     not os.getenv("GITHUB_TOKEN"),
-    reason="Requires GITHUB_TOKEN to fetch TracingInsights data"
+    reason="Requires GITHUB_TOKEN to fetch TracingInsights data",
 )
 def test_parse_qualifying_live():
     """Integration test: fetch and parse Australian GP 2026 Qualifying."""
     from services.tracing_insights import TracingInsightsFetcher
+
     token = os.getenv("GITHUB_TOKEN")
     fetcher = TracingInsightsFetcher(token)
     try:
@@ -76,5 +83,6 @@ def test_parse_qualifying_live():
     q1 = segments.get("Q1", {})
     q3 = segments.get("Q3", {})
     if q1 and q3:
-        assert q1.get("driver_count", 0) >= q3.get("driver_count", 0), \
-            "Q1 should have >= drivers than Q3"
+        assert q1.get("driver_count", 0) >= q3.get(
+            "driver_count", 0
+        ), "Q1 should have >= drivers than Q3"

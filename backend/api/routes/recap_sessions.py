@@ -8,6 +8,7 @@ GET /api/timing/sessions/{id}/meta  → session metadata (drivers, circuit, etc.
 GET /api/timing/sessions/{id}/data  → full timing data (laps, events, weather)
 GET /api/timing/sessions/{id}/replay → SSE stream of lap-by-lap replay
 """
+
 import json
 import asyncio
 from typing import Optional
@@ -62,11 +63,13 @@ def list_sessions():
                 "country": meta.get("country", ""),
                 "sessions": [],
             }
-        result[year][event]["sessions"].append({
-            "id": row["id"],
-            "session_type": row["session_type"],
-            "session_date": row["session_date"],
-        })
+        result[year][event]["sessions"].append(
+            {
+                "id": row["id"],
+                "session_type": row["session_type"],
+                "session_date": row["session_date"],
+            }
+        )
 
     output = []
     for year in sorted(result.keys(), reverse=True):
@@ -84,6 +87,7 @@ def get_live_session():
     # Reuse existing session status from f1_api_client
     try:
         from services.f1_api_client import f1_api_client
+
         status = f1_api_client.get_session_status()
         return {
             "is_live": status.get("is_live", False),
@@ -105,12 +109,14 @@ def get_session_meta(session_id: str):
     with get_db_connection() as conn:
         row = conn.execute(
             "SELECT id, year, event, session_type, session_date, status, meta FROM sessions WHERE id = ?",
-            (session_id,)
+            (session_id,),
         ).fetchone()
     if not row:
         raise HTTPException(status_code=404, detail="Session not found")
     if row["status"] != "ready":
-        raise HTTPException(status_code=404, detail=f"Session not ready (status={row['status']})")
+        raise HTTPException(
+            status_code=404, detail=f"Session not ready (status={row['status']})"
+        )
     meta = _load_jsonb(row["meta"]) or {}
     return {
         "id": row["id"],
@@ -133,12 +139,14 @@ def get_session_data(session_id: str):
             """SELECT id, year, event, session_type, session_date, status,
                       meta, laps, events, weather, results
                FROM sessions WHERE id = ?""",
-            (session_id,)
+            (session_id,),
         ).fetchone()
     if not row:
         raise HTTPException(status_code=404, detail="Session not found")
     if row["status"] != "ready":
-        raise HTTPException(status_code=404, detail=f"Session not ready (status={row['status']})")
+        raise HTTPException(
+            status_code=404, detail=f"Session not ready (status={row['status']})"
+        )
 
     return {
         "id": row["id"],
@@ -171,7 +179,7 @@ async def stream_replay(
     with get_db_connection() as conn:
         row = conn.execute(
             "SELECT session_type, laps, events FROM sessions WHERE id = ? AND status = 'ready'",
-            (session_id,)
+            (session_id,),
         ).fetchone()
     if not row:
         raise HTTPException(status_code=404, detail="Session not found or not ready")
@@ -233,7 +241,9 @@ async def stream_replay(
 
         for entry in timeline:
             # Compress time: each event takes proportional time at speed
-            await asyncio.sleep(0.1 / speed)  # simplified; real impl would use sesT delta
+            await asyncio.sleep(
+                0.1 / speed
+            )  # simplified; real impl would use sesT delta
             yield f"event: best_lap\ndata: {json.dumps(entry)}\n\n"
 
         yield f"event: session_complete\ndata: {json.dumps({'final_order': laps_data.get('final_order', [])})}\n\n"

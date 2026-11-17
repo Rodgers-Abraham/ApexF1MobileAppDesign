@@ -21,6 +21,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('CHOOSE YOUR TEAM'), findsOneWidget);
+    // Initial onboarding step (register mode) shows 'DRIVER CREDENTIALS'.
+    expect(find.text('DRIVER CREDENTIALS'), findsOneWidget);
   });
 }

@@ -1,7 +1,11 @@
 """Tests for the race event engine."""
+
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from ingest.event_engine import classify_lap_events, build_race_events
 
@@ -17,12 +21,28 @@ def _make_lap(lap_num, positions_list):
                 code, pos, status = item
                 is_pit = False
         else:
-            code, pos, status, is_pit = item["code"], item["pos"], item.get("status","RACING"), False
-        positions.append({
-            "code": code, "pos": pos, "status": status,
-            "is_pit_in": is_pit, "pin_s": 1.0 if is_pit else None,
-        })
-    return {"lap": lap_num, "positions": positions, "sc_active": False, "vsc_active": False, "red_flag": False}
+            code, pos, status, is_pit = (
+                item["code"],
+                item["pos"],
+                item.get("status", "RACING"),
+                False,
+            )
+        positions.append(
+            {
+                "code": code,
+                "pos": pos,
+                "status": status,
+                "is_pit_in": is_pit,
+                "pin_s": 1.0 if is_pit else None,
+            }
+        )
+    return {
+        "lap": lap_num,
+        "positions": positions,
+        "sc_active": False,
+        "vsc_active": False,
+        "red_flag": False,
+    }
 
 
 def test_simple_overtake():
@@ -38,7 +58,9 @@ def test_simple_overtake():
 def test_pit_gain():
     lap1 = _make_lap(5, [("VER", 1, "RACING", False), ("NOR", 2, "RACING", False)])
     # VER pits, NOR moves up
-    lap2 = _make_lap(6, [("NOR", 1, "RACING", False), ("VER", 2, "RACING", True)])  # VER has pit_in
+    lap2 = _make_lap(
+        6, [("NOR", 1, "RACING", False), ("VER", 2, "RACING", True)]
+    )  # VER has pit_in
     events = classify_lap_events(lap2, lap1)
     pit_gains = [e for e in events if e["type"] == "PIT_GAIN"]
     assert len(pit_gains) == 1
@@ -86,8 +108,12 @@ def test_build_race_events_sequence():
             "total_laps": 2,
             "grid": [{"pos": 1, "code": "VER"}, {"pos": 2, "code": "NOR"}],
             "laps": [
-                _make_lap(1, [("VER", 1, "RACING", False), ("NOR", 2, "RACING", False)]),
-                _make_lap(2, [("NOR", 1, "RACING", False), ("VER", 2, "RACING", False)]),
+                _make_lap(
+                    1, [("VER", 1, "RACING", False), ("NOR", 2, "RACING", False)]
+                ),
+                _make_lap(
+                    2, [("NOR", 1, "RACING", False), ("VER", 2, "RACING", False)]
+                ),
             ],
         },
         "rcm_events": [],
