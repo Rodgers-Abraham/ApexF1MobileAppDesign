@@ -66,13 +66,27 @@ def test_live_constructor_standings_endpoint(monkeypatch):
 
 def test_live_telemetry_endpoint(monkeypatch):
     # get_live_telemetry returns [] on the Sportradar trial tier; mock it
+    def _driver(pos, code, gap, color):
+        return {
+            "pos": pos,
+            "name": code,
+            "gap": gap,
+            "tyre": "SOFT",
+            "tyreLife": "12",
+            "speed": "320",
+            "gear": "7",
+            "color": color,
+            "x": 100.0,
+            "y": 200.0,
+        }
+
     def mock_get_live_telemetry():
         return [
-            {"name": "VER", "speed": 320, "x": 100.0, "y": 200.0},
-            {"name": "NOR", "speed": 318, "x": 102.0, "y": 198.0},
-            {"name": "LEC", "speed": 315, "x": 105.0, "y": 195.0},
-            {"name": "HAM", "speed": 312, "x": 108.0, "y": 192.0},
-            {"name": "RUS", "speed": 310, "x": 110.0, "y": 190.0},
+            _driver("1", "VER", "LEADER", "3671C6"),
+            _driver("2", "NOR", "+0.421", "FF8000"),
+            _driver("3", "LEC", "+1.123", "E8002D"),
+            _driver("4", "HAM", "+2.456", "27F4D2"),
+            _driver("5", "RUS", "+3.789", "27F4D2"),
         ]
 
     monkeypatch.setattr(f1_api_client, "get_live_telemetry", mock_get_live_telemetry)
@@ -141,8 +155,20 @@ def test_tire_strategy_endpoint(monkeypatch):
             "session_key": 9158,
             "total_stints": 2,
             "strategies": [
-                {"compound": "SOFT", "laps": 25, "driver": "VER"},
-                {"compound": "MEDIUM", "laps": 33, "driver": "VER"},
+                {
+                    "compound": "SOFT",
+                    "laps": 25,
+                    "avg_laps": 25,
+                    "stints_count": 1,
+                    "color": "FF0000",
+                },
+                {
+                    "compound": "MEDIUM",
+                    "laps": 33,
+                    "avg_laps": 33,
+                    "stints_count": 1,
+                    "color": "FFFF00",
+                },
             ],
         }
 
