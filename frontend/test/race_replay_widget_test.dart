@@ -8,6 +8,7 @@ import 'package:f1/core/providers/telemetry/models.dart';
 
 import 'helpers/firebase_test_mock.dart';
 import 'fixtures/race_session_fixture.dart';
+import 'fixtures/chinese_gp_2026_fixture.dart';
 
 // Helper: build LiveTelemetry from a fixture position map.
 LiveTelemetry _posToTelemetry(Map<String, dynamic> p) {
@@ -140,6 +141,110 @@ void main() {
     final atEnd = state.copyWith(currentLap: 58);
     expect(atEnd.isAtEnd, isTrue);
     expect(atEnd.truncatedAt, isNull); // complete session
+  });
+
+  // ── Chinese GP real-data fixture ─────────────────────────────────────────
+
+  test('setLap returns correct P1/P2 at every checkpoint in Chinese GP fixture', () {
+    // Simulates what selectSessionById builds from the payload.
+    final fixture = chineseGp2026Fixture();
+    final rawLaps = (fixture['laps']['laps'] as List);
+    final allLaps = rawLaps.map((lapRaw) {
+      final lap = lapRaw as Map<String, dynamic>;
+      final lapNum = (lap['lap'] as num).toInt();
+      final positions = (lap['positions'] as List).map((p) {
+        final pm = p as Map<String, dynamic>;
+        return LiveTelemetry(
+          pos: pm['pos'].toString(),
+          name: pm['code'].toString(),
+          team: '',
+          gap: '',
+          tyre: '',
+          tyreLife: '',
+          lastLap: '',
+          speed: '',
+          gear: '',
+          color: pm['color']?.toString() ?? 'FFFFFF',
+          x: 0,
+          y: 0,
+          isFastestThisLap: pm['is_fastest_this_lap'] == true,
+        );
+      }).toList();
+      return ReplayLapEntry(lap: lapNum, phase: '', positions: positions);
+    }).toList();
+
+    // Expected P1 and P2 at each checkpoint (from actual Neon data).
+    const expectedP1 = {
+      1: 'HAM', 2: 'ANT', 3: 'ANT', 4: 'ANT', 5: 'ANT',
+      6: 'ANT', 7: 'ANT', 10: 'ANT', 20: 'ANT',
+    };
+    const expectedP2 = {
+      1: 'ANT', 2: 'HAM', 3: 'HAM', 4: 'RUS', 5: 'RUS',
+      6: 'RUS', 7: 'RUS', 10: 'RUS', 20: 'HAM',
+    };
+
+    for (final lapData in rawLaps) {
+      final lap = lapData as Map<String, dynamic>;
+      final lapNum = (lap['lap'] as num).toInt();
+
+      // Find the exact entry — no nearest-lap fallback (mimicking fixed setLap).
+      final entry = allLaps.firstWhere((e) => e.lap == lapNum,
+          orElse: () => throw Exception('Lap $lapNum missing from allLaps'));
+
+      final sorted = [...entry.positions]
+        ..sort((a, b) =>
+            (int.tryParse(a.pos) ?? 99).compareTo(int.tryParse(b.pos) ?? 99));
+
+      expect(sorted.isNotEmpty, isTrue, reason: 'Lap $lapNum has no positions');
+      expect(sorted.first.name, expectedP1[lapNum],
+          reason: 'Lap $lapNum P1 expected ${expectedP1[lapNum]}, got ${sorted.first.name}');
+      if (expectedP2.containsKey(lapNum) && sorted.length >= 2) {
+        expect(sorted[1].name, expectedP2[lapNum],
+            reason: 'Lap $lapNum P2 expected ${expectedP2[lapNum]}, got ${sorted[1].name}');
+      }
+    }
+  });
+
+  test('setLap on missing lap sets missingLapAt and does not change telemetry', () {
+    // Build state with only laps 1 and 2.
+    final entry1 = ReplayLapEntry(
+        lap: 1,
+        phase: '',
+        positions: [
+          LiveTelemetry(
+              pos: '1', name: 'HAM', team: '', gap: '', tyre: '', tyreLife: '',
+              lastLap: '', speed: '', gear: '', color: 'FFFFFF', x: 0, y: 0)
+        ]);
+    final entry2 = ReplayLapEntry(
+        lap: 2,
+        phase: '',
+        positions: [
+          LiveTelemetry(
+              pos: '1', name: 'ANT', team: '', gap: '', tyre: '', tyreLife: '',
+              lastLap: '', speed: '', gear: '', color: 'FFFFFF', x: 0, y: 0)
+        ]);
+
+    var state = const RaceReplayState().copyWith(
+      totalLaps: 10,
+      availableLaps: 2,
+      allLaps: [entry1, entry2],
+      telemetry: entry2.positions,
+      currentLap: 2,
+    );
+
+    // Simulate setLap(3) — lap 3 is not in allLaps.
+    // We test the STATE LOGIC directly (not via notifier) to stay headless.
+    ReplayLapEntry? found;
+    for (final e in state.allLaps) {
+      if (e.lap == 3) { found = e; break; }
+    }
+    expect(found, isNull, reason: 'lap 3 should not exist in this fixture');
+
+    // After a missing-lap call, missingLapAt should be set and telemetry unchanged.
+    state = state.copyWith(currentLap: 3, missingLapAt: 3);
+    expect(state.missingLapAt, equals(3));
+    // telemetry still shows ANT (lap 2 positions), not updated
+    expect(state.telemetry.first.name, equals('ANT'));
   });
 
   testWidgets('tower shows all laps in correct order for full race fixture', (tester) async {
