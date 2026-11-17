@@ -172,6 +172,7 @@ class RaceReplayState {
   final RaceSummary? raceSummary;
   final int availableLaps; // actual lap entries with lap > 0
   final int? truncatedAt; // last available lap when race ended before totalLaps; null = complete
+  final int? missingLapAt; // set when setLap requests a lap absent from allLaps; null = ok
 
   const RaceReplayState({
     this.meetingName = '',
@@ -195,6 +196,7 @@ class RaceReplayState {
     this.raceSummary,
     this.availableLaps = 0,
     this.truncatedAt,
+    this.missingLapAt,
   });
 
   RaceReplayState copyWith({
@@ -222,6 +224,8 @@ class RaceReplayState {
     int? availableLaps,
     int? truncatedAt,
     bool clearTruncatedAt = false,
+    int? missingLapAt,
+    bool clearMissingLap = false,
   }) {
     return RaceReplayState(
       meetingName: meetingName ?? this.meetingName,
@@ -244,7 +248,8 @@ class RaceReplayState {
       lapEventMap: lapEventMap ?? this.lapEventMap,
       raceSummary: clearRaceSummary ? null : (raceSummary ?? this.raceSummary),
       availableLaps: availableLaps ?? this.availableLaps,
-      truncatedAt: clearTruncatedAt ? null : (truncatedAt ?? this.truncatedAt));
+      truncatedAt: clearTruncatedAt ? null : (truncatedAt ?? this.truncatedAt),
+      missingLapAt: clearMissingLap ? null : (missingLapAt ?? this.missingLapAt));
   }
 
   String get lapLabel {
@@ -690,16 +695,34 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
   }
 
   void setLap(int lap) {
-    final clamped = lap.clamp(0, state.totalLaps > 0 ? state.totalLaps : 0);
+    final maxLap = state.truncatedAt ?? state.totalLaps;
+    final clamped = lap.clamp(0, maxLap > 0 ? maxLap : 0);
     if (state.allLaps.isEmpty) return;
-    final entry = state.allLaps.firstWhere(
-      (l) => l.lap == clamped,
-      orElse: () => state.allLaps.reduce((a, b) =>
-          (a.lap - clamped).abs() < (b.lap - clamped).abs() ? a : b));
+
+    // Exact match only — no nearest-lap fallback.
+    // A missing lap is an explicit error state shown to the user; a silent
+    // fallback would freeze the tower on stale positions.
+    ReplayLapEntry? entry;
+    for (final e in state.allLaps) {
+      if (e.lap == clamped) {
+        entry = e;
+        break;
+      }
+    }
+    if (entry == null) {
+      state = state.copyWith(
+        currentLap: clamped,
+        missingLapAt: clamped,
+        showingGrid: false,
+      );
+      return;
+    }
     state = state.copyWith(
       currentLap: clamped,
       telemetry: entry.positions,
-      showingGrid: clamped == 0);
+      showingGrid: clamped == 0,
+      clearMissingLap: true,
+    );
   }
 
   void nextLap() {

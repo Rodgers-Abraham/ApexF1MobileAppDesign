@@ -538,6 +538,27 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                       ]),
                     ),
                   ],
+                  // Missing-lap banner: shown when setLap couldn't find a lap
+                  if (replayState.missingLapAt != null) ...[
+                    Container(
+                      key: const Key('replay_missing_lap_banner'),
+                      margin: const EdgeInsets.only(bottom: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: DS.red.withValues(alpha: 0.12),
+                        borderRadius: DS.aeroCornerSm,
+                        border: Border(left: BorderSide(color: DS.red, width: 3)),
+                      ),
+                      child: Row(children: [
+                        Icon(Icons.warning_amber_rounded, size: 13, color: DS.red),
+                        const SizedBox(width: 8),
+                        Text(
+                          'LAP ${replayState.missingLapAt} DATA MISSING IN PAYLOAD',
+                          style: DS.labelCaps(size: 8, color: DS.red),
+                        ),
+                      ]),
+                    ),
+                  ],
                   if (_overtakeToastText != null)
                     AnimatedOpacity(
                       opacity: 1.0,
