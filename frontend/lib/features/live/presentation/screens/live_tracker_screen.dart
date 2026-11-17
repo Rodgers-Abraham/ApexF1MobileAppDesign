@@ -941,6 +941,14 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                   'miss:${replayState.missingLapAt} has:$hasLap',
                   style: const TextStyle(color: Color(0xFFFF8C00)),
                 ),
+                // KEY DEBUG LINE: rawLapsInPayload = rawLapsList.length from selectSessionById
+                // If this equals allLaps-1 (excluding grid), parsing is correct.
+                // If this is 5 while totalLaps is 71, the HTTP response itself was truncated.
+                Text(
+                  'rawPayload:${replayState.rawLapsInPayload} '
+                  'entries:${allNums.length} totalLaps:${replayState.totalLaps}',
+                  style: const TextStyle(color: Color(0xFFFFFF00)),
+                ),
                 Text('TOP3 $top3Str',
                     style: const TextStyle(color: Color(0xFF00FF88))),
                 Text(
