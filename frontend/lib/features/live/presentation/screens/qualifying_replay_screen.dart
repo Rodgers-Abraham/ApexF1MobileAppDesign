@@ -48,6 +48,7 @@ class _QualifyingReplayScreenState
   Map<String, List<Map<String, dynamic>>> _segmentTimelines = {};
   Map<String, List<String>> _eliminated = {};
   Map<String, dynamic>? _pole;
+  // ignore: unused_field — final grid is parsed but not yet displayed (workstream A)
   List<Map<String, dynamic>> _finalGrid = [];
 
   final Map<String, int> _timelineIdx = {};
@@ -270,6 +271,7 @@ class _QualifyingReplayScreenState
         final seg = _activeSeg;
         final segBests = _driverBests[seg] ?? {};
         final eliminated = _eliminated[seg] ?? [];
+        // ignore: unused_local_variable — segment detail reserved for future panel
         final segData =
             (_segmentsData[seg] as Map<String, dynamic>?) ?? {};
         final nextSegDriverCount = seg != _segments.last

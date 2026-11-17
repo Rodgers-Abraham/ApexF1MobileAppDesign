@@ -3,6 +3,7 @@
 Cross-check parsed session data against Jolpica official results.
 Only called for Race and Sprint sessions.
 """
+
 import requests
 from typing import Optional
 
@@ -12,7 +13,9 @@ JOLPICA_BASE = "https://api.jolpi.ca/ergast/f1"
 def _jolpica_get(path: str, timeout: int = 15):
     url = f"{JOLPICA_BASE}/{path}"
     try:
-        resp = requests.get(url, timeout=timeout, headers={"Accept": "application/json"})
+        resp = requests.get(
+            url, timeout=timeout, headers={"Accept": "application/json"}
+        )
         if resp.status_code == 200:
             return resp.json()
     except Exception:
@@ -30,12 +33,18 @@ def find_jolpica_round(year: int, event: str) -> Optional[int]:
     for race in races:
         name = race.get("raceName", "").lower()
         circuit = race.get("Circuit", {}).get("circuitName", "").lower()
-        if any(part in name or part in circuit for part in event_clean.split() if len(part) > 4):
+        if any(
+            part in name or part in circuit
+            for part in event_clean.split()
+            if len(part) > 4
+        ):
             return int(race.get("round", 0))
     return None
 
 
-def get_jolpica_final_classification(year: int, round_num: int, session_type: str) -> Optional[list]:
+def get_jolpica_final_classification(
+    year: int, round_num: int, session_type: str
+) -> Optional[list]:
     """Fetch official final classification from Jolpica."""
     if session_type == "Race":
         data = _jolpica_get(f"{year}/{round_num}/results.json")
@@ -103,7 +112,8 @@ def cross_check(
 
     last_lap = parsed_positions[-1]
     parsed_order = [
-        p["code"] for p in sorted(
+        p["code"]
+        for p in sorted(
             [p for p in last_lap.get("positions", []) if p.get("status") == "RACING"],
             key=lambda p: p.get("pos", 99),
         )

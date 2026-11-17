@@ -4,7 +4,6 @@ from pydantic import field_validator
 from functools import lru_cache
 from typing import Union
 
-
 _BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _ENV_PATH = os.path.join(_BACKEND_DIR, ".env")
 
@@ -28,7 +27,9 @@ class Settings(BaseSettings):
     sportradar_api_key: str | None = None
 
     # CORS
-    allowed_origins: str = "http://localhost:3000,http://localhost:8000,http://localhost:8080"
+    allowed_origins: str = (
+        "http://localhost:3000,http://localhost:8000,http://localhost:8080"
+    )
 
     # Rate Limiting
     rate_limit_default: str = "100/minute"
@@ -50,6 +51,7 @@ class Settings(BaseSettings):
             if v.startswith("[") and v.endswith("]"):
                 try:
                     import json
+
                     return json.loads(v)
                 except Exception:
                     pass

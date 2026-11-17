@@ -7,7 +7,12 @@ from dataclasses import dataclass
 
 RAW_BASE = "https://raw.githubusercontent.com/TracingInsights/{year}/main/{path}"
 API_BASE = "https://api.github.com"
-REQUIRED_FILES = {"drivers.json", "session_laptimes.json", "rcm.json", "session_info.json"}
+REQUIRED_FILES = {
+    "drivers.json",
+    "session_laptimes.json",
+    "rcm.json",
+    "session_info.json",
+}
 
 
 @dataclass
@@ -22,9 +27,13 @@ class SessionRef:
 def normalize_session_type(raw: str) -> Optional[str]:
     """Map TracingInsights folder name to our DB session_type enum."""
     mapping = {
-        "Practice 1": "P1", "Practice 2": "P2", "Practice 3": "P3",
-        "Qualifying": "Q", "Sprint Qualifying": "SQ",
-        "Sprint": "Sprint", "Race": "Race",
+        "Practice 1": "P1",
+        "Practice 2": "P2",
+        "Practice 3": "P3",
+        "Qualifying": "Q",
+        "Sprint Qualifying": "SQ",
+        "Sprint": "Sprint",
+        "Race": "Race",
     }
     return mapping.get(raw)
 
@@ -46,7 +55,7 @@ class TracingInsightsFetcher:
         repos = resp.json()
         years = []
         for r in repos:
-            m = re.match(r'^(\d{4})$', r.get("name", ""))
+            m = re.match(r"^(\d{4})$", r.get("name", ""))
             if m:
                 years.append(int(m.group(1)))
         return sorted(years)
@@ -88,13 +97,15 @@ class TracingInsightsFetcher:
                 committed_at = datetime.fromisoformat(
                     commit["commit"]["committer"]["date"].replace("Z", "+00:00")
                 )
-                sessions.append(SessionRef(
-                    year=year,
-                    event=event,
-                    session_type=normalized,
-                    last_commit_sha=sha,
-                    last_commit_at=committed_at,
-                ))
+                sessions.append(
+                    SessionRef(
+                        year=year,
+                        event=event,
+                        session_type=normalized,
+                        last_commit_sha=sha,
+                        last_commit_at=committed_at,
+                    )
+                )
         return sessions
 
     def is_stable(self, ref: SessionRef, min_age_minutes: int = 10) -> bool:
@@ -114,9 +125,13 @@ class TracingInsightsFetcher:
     def _raw_session_type(self, normalized: str) -> str:
         """Reverse mapping from our DB enum to TracingInsights folder name."""
         reverse = {
-            "P1": "Practice 1", "P2": "Practice 2", "P3": "Practice 3",
-            "Q": "Qualifying", "SQ": "Sprint Qualifying",
-            "Sprint": "Sprint", "Race": "Race",
+            "P1": "Practice 1",
+            "P2": "Practice 2",
+            "P3": "Practice 3",
+            "Q": "Qualifying",
+            "SQ": "Sprint Qualifying",
+            "Sprint": "Sprint",
+            "Race": "Race",
         }
         return reverse[normalized]
 

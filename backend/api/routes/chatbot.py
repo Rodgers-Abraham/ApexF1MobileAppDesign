@@ -2,24 +2,30 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
 from services.gemini_pool import gemini_pool
+
 # We will import our authentication helper once created
 # For now, we stub or use a dependency placeholder
 
 router = APIRouter()
 
+
 class ChatPart(BaseModel):
-  text: str
+    text: str
+
 
 class ChatMessage(BaseModel):
-  role: str
-  parts: List[ChatPart]
+    role: str
+    parts: List[ChatPart]
+
 
 class ChatRequest(BaseModel):
-  message: str
-  history: Optional[List[ChatMessage]] = []
+    message: str
+    history: Optional[List[ChatMessage]] = []
+
 
 class ChatResponse(BaseModel):
-  response: str
+    response: str
+
 
 F1_SYSTEM_INSTRUCTION = """You are F1-IQ, a premium AI chatbot assistant built specifically for Formula 1 fans. 
 Your main responsibilities are:
@@ -30,37 +36,35 @@ Your main responsibilities are:
 5. Maintain a modern, passionate, and racing-oriented tone.
 """
 
+
 @router.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
-  if not request.message.strip():
-    raise HTTPException(status_code=400, detail="Message cannot be empty")
-  
-  # Format contents list from history + new user message
-  contents = []
-  
-  # Add past history
-  if request.history:
-    for msg in request.history:
-      contents.append({
-        "role": msg.role,
-        "parts": [{"text": part.text} for part in msg.parts]
-      })
-      
-  # Append current message
-  contents.append({
-    "role": "user",
-    "parts": [{"text": request.message}]
-  })
+    if not request.message.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
 
-  try:
-    response_text = gemini_pool.generate_content(
-      contents=contents,
-      system_instruction=F1_SYSTEM_INSTRUCTION,
-      temperature=0.3
-    )
-    return ChatResponse(response=response_text)
-  except Exception as e:
-    raise HTTPException(
-      status_code=500,
-      detail={"error": f"Failed to generate response: {str(e)}", "code": "CHAT_GENERATION_FAILED"}
-    )
+    # Format contents list from history + new user message
+    contents = []
+
+    # Add past history
+    if request.history:
+        for msg in request.history:
+            contents.append(
+                {"role": msg.role, "parts": [{"text": part.text} for part in msg.parts]}
+            )
+
+    # Append current message
+    contents.append({"role": "user", "parts": [{"text": request.message}]})
+
+    try:
+        response_text = gemini_pool.generate_content(
+            contents=contents, system_instruction=F1_SYSTEM_INSTRUCTION, temperature=0.3
+        )
+        return ChatResponse(response=response_text)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": f"Failed to generate response: {str(e)}",
+                "code": "CHAT_GENERATION_FAILED",
+            },
+        )

@@ -2,6 +2,7 @@
 F1 ML Training Pipeline using real historical data from the Ergast API.
 Replaces the synthetic data generation with actual race outcomes.
 """
+
 import os
 import pickle
 import warnings
@@ -37,9 +38,15 @@ def train_ensemble(use_real_data: bool = True):
         df = _generate_synthetic_f1_data()
 
     # Feature columns
-    feature_cols = ['grid_position', 'constructor_rank', 'average_finish_last_5', 'championship_points', 'home_race']
+    feature_cols = [
+        "grid_position",
+        "constructor_rank",
+        "average_finish_last_5",
+        "championship_points",
+        "home_race",
+    ]
     X = df[feature_cols]
-    y = df['is_winner']
+    y = df["is_winner"]
 
     print(f"Dataset: {len(df)} records, {len(feature_cols)} features")
     print(f"Winner distribution: {y.value_counts().to_dict()}")
@@ -50,7 +57,9 @@ def train_ensemble(use_real_data: bool = True):
     )
 
     # Handle class imbalance
-    scale_pos_weight = (len(y_train) - sum(y_train)) / sum(y_train) if sum(y_train) > 0 else 1.0
+    scale_pos_weight = (
+        (len(y_train) - sum(y_train)) / sum(y_train) if sum(y_train) > 0 else 1.0
+    )
 
     print("Training XGBoost Classifier...")
     xgb_model = xgb.XGBClassifier(
@@ -59,16 +68,13 @@ def train_ensemble(use_real_data: bool = True):
         learning_rate=0.1,
         scale_pos_weight=scale_pos_weight,
         random_state=42,
-        eval_metric='logloss'
+        eval_metric="logloss",
     )
     xgb_model.fit(X_train, y_train)
 
     print("Training Random Forest Classifier...")
     rf_model = RandomForestClassifier(
-        n_estimators=150,
-        max_depth=6,
-        class_weight='balanced',
-        random_state=42
+        n_estimators=150, max_depth=6, class_weight="balanced", random_state=42
     )
     rf_model.fit(X_train, y_train)
 
@@ -90,18 +96,20 @@ def train_ensemble(use_real_data: bool = True):
     print(f"  AUC-ROC:  {auc:.4f}")
     print(f"{'='*50}\n")
     print("Classification Report:")
-    print(classification_report(y_test, y_pred_binary, target_names=["Loser", "Winner"]))
+    print(
+        classification_report(y_test, y_pred_binary, target_names=["Loser", "Winner"])
+    )
 
     # Save models
     print(f"Saving XGBoost model to {XGB_PATH}...")
     xgb_model.save_model(XGB_PATH)
 
     print(f"Saving Random Forest model to {RF_PATH}...")
-    with open(RF_PATH, 'wb') as f:
+    with open(RF_PATH, "wb") as f:
         pickle.dump(rf_model, f)
 
     print("Model training pipeline complete!")
-    return {'accuracy': accuracy, 'auc': auc}
+    return {"accuracy": accuracy, "auc": auc}
 
 
 def _generate_synthetic_f1_data(num_samples=5000):
@@ -119,24 +127,26 @@ def _generate_synthetic_f1_data(num_samples=5000):
     points = np.clip(points, 0, 450)
     home_race = np.random.choice([0, 1], size=num_samples, p=[0.9, 0.1])
 
-    df = pd.DataFrame({
-        'grid_position': grid,
-        'constructor_rank': constructor,
-        'average_finish_last_5': avg_finish,
-        'championship_points': points,
-        'home_race': home_race
-    })
+    df = pd.DataFrame(
+        {
+            "grid_position": grid,
+            "constructor_rank": constructor,
+            "average_finish_last_5": avg_finish,
+            "championship_points": points,
+            "home_race": home_race,
+        }
+    )
 
     win_probability = (
-        (21 - grid) * 2.5 +
-        (11 - constructor) * 2.0 +
-        (points / 10.0) -
-        (avg_finish * 2.0) +
-        (home_race * 5.0)
+        (21 - grid) * 2.5
+        + (11 - constructor) * 2.0
+        + (points / 10.0)
+        - (avg_finish * 2.0)
+        + (home_race * 5.0)
     )
     win_probability += np.random.normal(0, 1.5, size=num_samples)
     threshold = np.percentile(win_probability, 95)
-    df['is_winner'] = (win_probability >= threshold).astype(int)
+    df["is_winner"] = (win_probability >= threshold).astype(int)
 
     return df
 

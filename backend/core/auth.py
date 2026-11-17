@@ -24,6 +24,7 @@ _key_cache: dict = {"keys": {}, "exp": 0.0}
 # Password helpers (kept for backward compat with old accounts)
 # ------------------------------------------------------------------
 
+
 def hash_password(password: str) -> str:
     salt = hashlib.sha256(os.urandom(60)).hexdigest().encode("utf-8")
     pwdhash = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100000)
@@ -45,6 +46,7 @@ def verify_password(stored_password: str, provided_password: str) -> bool:
 # Legacy JWT helpers (kept for backward compat)
 # ------------------------------------------------------------------
 
+
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -57,7 +59,8 @@ def decode_access_token(token: str) -> dict:
         return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
     except jwt.ExpiredSignatureError:
         raise HTTPException(
-            status_code=401, detail={"error": "Token has expired", "code": "TOKEN_EXPIRED"}
+            status_code=401,
+            detail={"error": "Token has expired", "code": "TOKEN_EXPIRED"},
         )
     except jwt.PyJWTError:
         raise HTTPException(
@@ -68,6 +71,7 @@ def decode_access_token(token: str) -> dict:
 # ------------------------------------------------------------------
 # Firebase token verification
 # ------------------------------------------------------------------
+
 
 def _firebase_public_keys() -> dict:
     global _key_cache
@@ -117,20 +121,27 @@ def verify_firebase_token(id_token: str) -> dict:
 # FastAPI dependency — accepts Firebase ID tokens
 # ------------------------------------------------------------------
 
+
 def get_current_user(authorization: str = Header(None)):
     from core.database import get_db_connection
 
     if not authorization:
         raise HTTPException(
             status_code=401,
-            detail={"error": "Authorization header missing", "code": "AUTH_HEADER_MISSING"},
+            detail={
+                "error": "Authorization header missing",
+                "code": "AUTH_HEADER_MISSING",
+            },
         )
 
     parts = authorization.split()
     if len(parts) != 2 or parts[0].lower() != "bearer":
         raise HTTPException(
             status_code=401,
-            detail={"error": "Invalid auth header format", "code": "INVALID_AUTH_FORMAT"},
+            detail={
+                "error": "Invalid auth header format",
+                "code": "INVALID_AUTH_FORMAT",
+            },
         )
 
     token = parts[1]
@@ -170,7 +181,10 @@ def get_current_user(authorization: str = Header(None)):
             if not legacy_email:
                 raise HTTPException(
                     status_code=401,
-                    detail={"error": "Invalid token payload", "code": "INVALID_PAYLOAD"},
+                    detail={
+                        "error": "Invalid token payload",
+                        "code": "INVALID_PAYLOAD",
+                    },
                 )
             with get_db_connection() as conn:
                 cursor = conn.cursor()

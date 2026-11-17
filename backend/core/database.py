@@ -9,6 +9,7 @@ try:
     from psycopg2.extras import DictCursor
     from psycopg2.pool import ThreadedConnectionPool
     from psycopg2 import IntegrityError as PgIntegrityError
+
     HAS_POSTGRES = True
 except ImportError:
     HAS_POSTGRES = False
@@ -28,7 +29,10 @@ DATABASE_URL = os.getenv("DATABASE_URL") or settings.database_url
 IS_POSTGRES = bool(
     HAS_POSTGRES
     and DATABASE_URL
-    and (DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://"))
+    and (
+        DATABASE_URL.startswith("postgresql://")
+        or DATABASE_URL.startswith("postgres://")
+    )
 )
 
 # Global pool for PostgreSQL connections
@@ -41,7 +45,7 @@ def _get_pg_pool():
         # Standardize connection string
         dsn = DATABASE_URL
         if dsn.startswith("postgres://"):
-            dsn = "postgresql://" + dsn[len("postgres://"):]
+            dsn = "postgresql://" + dsn[len("postgres://") :]
         _pg_pool = ThreadedConnectionPool(minconn=1, maxconn=20, dsn=dsn)
     return _pg_pool
 
@@ -71,6 +75,7 @@ def _adapt_query(query: str) -> str:
 
 class PostgresCursorWrapper:
     """Wraps psycopg2 DictCursor to support SQLite-compatible '?' placeholders."""
+
     def __init__(self, raw_cursor):
         self._cursor = raw_cursor
 
@@ -117,6 +122,7 @@ class PostgresCursorWrapper:
 
 class PostgresConnectionWrapper:
     """Wraps psycopg2 connection to expose SQLite-like convenience methods (conn.execute)."""
+
     def __init__(self, raw_conn, pool=None):
         self._conn = raw_conn
         self._pool = pool
@@ -353,7 +359,9 @@ def init_db():
                         pass
                 # Purge simulated session rows (keys 1000-1100)
                 try:
-                    cur.execute("DELETE FROM session_states WHERE session_key >= 1000 AND session_key <= 1100;")
+                    cur.execute(
+                        "DELETE FROM session_states WHERE session_key >= 1000 AND session_key <= 1100;"
+                    )
                 except Exception:
                     pass
             raw_conn.commit()
@@ -378,7 +386,9 @@ def init_db():
                 pass
 
         try:
-            cursor.execute("DELETE FROM session_states WHERE session_key >= 1000 AND session_key <= 1100;")
+            cursor.execute(
+                "DELETE FROM session_states WHERE session_key >= 1000 AND session_key <= 1100;"
+            )
         except Exception:
             pass
 

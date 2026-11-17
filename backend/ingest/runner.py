@@ -8,6 +8,7 @@ Usage:
   python -m ingest.runner --session "2026/Australian_Grand_Prix/Race"
   python -m ingest.runner --migrate            # run DB migrations
 """
+
 import argparse
 import logging
 import sys
@@ -24,14 +25,18 @@ logging.basicConfig(
 log = logging.getLogger("ingest")
 
 
-def _process_session(fetcher, year: int, event: str, session_type: str, source_hash: str) -> bool:
+def _process_session(
+    fetcher, year: int, event: str, session_type: str, source_hash: str
+) -> bool:
     """Fetch, parse, event-engine, cross-check, upsert one session."""
     from ingest.parser import parse_session, parse_meta
     from ingest.event_engine import build_race_events
     from ingest.cross_check import cross_check
     from ingest.upsert import upsert_session, mark_failed
 
-    log.info(f"Processing {year}/{event}/{session_type} (hash={source_hash[:8] if source_hash else 'n/a'})")
+    log.info(
+        f"Processing {year}/{event}/{session_type} (hash={source_hash[:8] if source_hash else 'n/a'})"
+    )
 
     try:
         files = fetcher.fetch_session_files(year, event, session_type)
@@ -56,7 +61,9 @@ def _process_session(fetcher, year: int, event: str, session_type: str, source_h
             log.warning(f"  Event engine warning: {e}")
 
     try:
-        passed, jolpica_results, err_msg = cross_check(parsed, year, event, session_type)
+        passed, jolpica_results, err_msg = cross_check(
+            parsed, year, event, session_type
+        )
     except Exception as e:
         passed, jolpica_results, err_msg = True, None, None
         log.warning(f"  Cross-check exception (non-fatal): {e}")
@@ -88,17 +95,21 @@ def _process_session(fetcher, year: int, event: str, session_type: str, source_h
 def _get_existing_hashes(year: int) -> dict:
     """Return {(year, event, session_type): source_hash} for all ready sessions."""
     from core.database import get_db_connection
+
     with get_db_connection() as conn:
         rows = conn.execute(
             "SELECT event, session_type, source_hash FROM sessions WHERE year=? AND status='ready'",
             (year,),
         ).fetchall()
-    return {(year, row["event"], row["session_type"]): row["source_hash"] for row in rows}
+    return {
+        (year, row["event"], row["session_type"]): row["source_hash"] for row in rows
+    }
 
 
 def run_check(github_token: str, years=None):
     """Detect and process new or changed sessions."""
     from services.tracing_insights import TracingInsightsFetcher
+
     fetcher = TracingInsightsFetcher(github_token)
 
     if years is None:
@@ -118,17 +129,23 @@ def run_check(github_token: str, years=None):
             if existing.get(key) == ref.last_commit_sha:
                 continue
             if not fetcher.is_stable(ref):
-                log.info(f"  Skipping {ref.event}/{ref.session_type} (committed too recently)")
+                log.info(
+                    f"  Skipping {ref.event}/{ref.session_type} (committed too recently)"
+                )
                 continue
             raw_type = fetcher._raw_session_type(ref.session_type)
             if not fetcher.has_required_files(year, ref.event, raw_type):
-                log.info(f"  Skipping {ref.event}/{ref.session_type} (missing required files)")
+                log.info(
+                    f"  Skipping {ref.event}/{ref.session_type} (missing required files)"
+                )
                 continue
             for attempt in range(3):
-                success = _process_session(fetcher, year, ref.event, ref.session_type, ref.last_commit_sha)
+                success = _process_session(
+                    fetcher, year, ref.event, ref.session_type, ref.last_commit_sha
+                )
                 if success:
                     break
-                wait = 2 ** attempt
+                wait = 2**attempt
                 log.info(f"  Retry in {wait}s...")
                 time.sleep(wait)
 
@@ -136,10 +153,18 @@ def run_check(github_token: str, years=None):
 def run_single(year: int, event: str, session_type: str, github_token: str):
     """Re-ingest a single session by force."""
     from services.tracing_insights import TracingInsightsFetcher
+
     fetcher = TracingInsightsFetcher(github_token)
     try:
         sessions = fetcher.list_sessions(year)
-        ref = next((s for s in sessions if s.event == event and s.session_type == session_type), None)
+        ref = next(
+            (
+                s
+                for s in sessions
+                if s.event == event and s.session_type == session_type
+            ),
+            None,
+        )
         source_hash = ref.last_commit_sha if ref else "manual"
     except Exception:
         source_hash = "manual"
@@ -149,22 +174,31 @@ def run_single(year: int, event: str, session_type: str, github_token: str):
 def run_migrate():
     """Run database migrations."""
     from core.database import init_db
+
     init_db()
     log.info("Migration complete.")
 
 
 def main():
     parser = argparse.ArgumentParser(description="Apex F1 Ingest Runner")
-    parser.add_argument("--check", action="store_true", help="Check and process new sessions")
-    parser.add_argument("--backfill", action="store_true", help="Backfill all available seasons")
-    parser.add_argument("--session", type=str, help="Ingest single session: 'year/event/session_type'")
+    parser.add_argument(
+        "--check", action="store_true", help="Check and process new sessions"
+    )
+    parser.add_argument(
+        "--backfill", action="store_true", help="Backfill all available seasons"
+    )
+    parser.add_argument(
+        "--session", type=str, help="Ingest single session: 'year/event/session_type'"
+    )
     parser.add_argument("--migrate", action="store_true", help="Run DB migrations")
     parser.add_argument("--year", type=int, help="Limit to specific year")
     args = parser.parse_args()
 
     github_token = os.getenv("GITHUB_TOKEN", "")
     if not args.migrate and not github_token:
-        log.warning("GITHUB_TOKEN not set — unauthenticated API calls limited to 60/hour")
+        log.warning(
+            "GITHUB_TOKEN not set — unauthenticated API calls limited to 60/hour"
+        )
 
     if args.migrate:
         run_migrate()

@@ -29,14 +29,17 @@ try:
 except Exception as e:
     print(f"Startup DB init notice: {e}")
 
+
 def _background_initial_poll():
     if os.getenv("TESTING") == "1" or "pytest" in sys.modules:
         return
     try:
         from services.f1_poller import f1_poller
+
         f1_poller.poll_jolpica_api()
     except Exception as e:
         print(f"Startup F1 API poll notice: {e}")
+
 
 threading.Thread(target=_background_initial_poll, daemon=True).start()
 
@@ -53,7 +56,9 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Configure CORS with proper allowlist
-origins = settings.allowed_origins if isinstance(settings.allowed_origins, list) else ["*"]
+origins = (
+    settings.allowed_origins if isinstance(settings.allowed_origins, list) else ["*"]
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -68,9 +73,14 @@ app.include_router(chatbot.router, prefix="/api", tags=["Chatbot"])
 app.include_router(predictor.router, prefix="/api/predictor", tags=["ML Predictor"])
 app.include_router(sessions.router, prefix="/api/sessions", tags=["Race Sessions"])
 app.include_router(telemetry.router, prefix="/api/f1", tags=["F1 Dynamic Data"])
-app.include_router(history.router, prefix="/api/f1/history", tags=["F1 Historical Archive"])
+app.include_router(
+    history.router, prefix="/api/f1/history", tags=["F1 Historical Archive"]
+)
 app.include_router(picks.router, prefix="/api/user", tags=["User Predictions"])
-app.include_router(recap_sessions.router, prefix="/api/timing", tags=["Live Timing / Race Recap"])
+app.include_router(
+    recap_sessions.router, prefix="/api/timing", tags=["Live Timing / Race Recap"]
+)
+
 
 @app.get("/")
 @app.get("/health")
@@ -81,10 +91,12 @@ def read_root():
         "version": settings.app_version,
     }
 
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Catch-all exception handler to avoid leaking internal server errors."""
     import logging
+
     logger = logging.getLogger(__name__)
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
     return JSONResponse(
@@ -92,7 +104,9 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"error": "Internal server error", "code": "INTERNAL_ERROR"},
     )
 
+
 if __name__ == "__main__":
     import uvicorn
+
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=settings.debug)

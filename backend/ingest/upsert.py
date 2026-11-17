@@ -1,5 +1,6 @@
 # backend/ingest/upsert.py
 """Write parsed session data to the Neon sessions table."""
+
 import json
 import sys
 import os
@@ -12,6 +13,7 @@ from core.database import get_db_connection, IS_POSTGRES
 
 try:
     from psycopg2.extras import Json as PgJson
+
     HAS_PG_JSON = True
 except ImportError:
     HAS_PG_JSON = False
@@ -62,10 +64,19 @@ def upsert_session(
                    meta=?, laps=?, events=?, weather=?, results=?, radio=?
                    WHERE year=? AND event=? AND session_type=?""",
                 (
-                    status, error, source_hash, now,
-                    _jsonb(meta), _jsonb(laps_data), _jsonb(events_data),
-                    _jsonb(weather_data), _jsonb(jolpica_results), _jsonb(radio_data),
-                    year, event, session_type,
+                    status,
+                    error,
+                    source_hash,
+                    now,
+                    _jsonb(meta),
+                    _jsonb(laps_data),
+                    _jsonb(events_data),
+                    _jsonb(weather_data),
+                    _jsonb(jolpica_results),
+                    _jsonb(radio_data),
+                    year,
+                    event,
+                    session_type,
                 ),
             )
             conn.commit()
@@ -79,9 +90,19 @@ def upsert_session(
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                        RETURNING id""",
                     (
-                        year, event, session_type, status, error, source_hash, now,
-                        _jsonb(meta), _jsonb(laps_data), _jsonb(events_data),
-                        _jsonb(weather_data), _jsonb(jolpica_results), _jsonb(radio_data),
+                        year,
+                        event,
+                        session_type,
+                        status,
+                        error,
+                        source_hash,
+                        now,
+                        _jsonb(meta),
+                        _jsonb(laps_data),
+                        _jsonb(events_data),
+                        _jsonb(weather_data),
+                        _jsonb(jolpica_results),
+                        _jsonb(radio_data),
                     ),
                 ).fetchone()
                 conn.commit()
@@ -93,9 +114,19 @@ def upsert_session(
                         meta, laps, events, weather, results, radio)
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (
-                        year, event, session_type, status, error, source_hash, now,
-                        _jsonb(meta), _jsonb(laps_data), _jsonb(events_data),
-                        _jsonb(weather_data), _jsonb(jolpica_results), _jsonb(radio_data),
+                        year,
+                        event,
+                        session_type,
+                        status,
+                        error,
+                        source_hash,
+                        now,
+                        _jsonb(meta),
+                        _jsonb(laps_data),
+                        _jsonb(events_data),
+                        _jsonb(weather_data),
+                        _jsonb(jolpica_results),
+                        _jsonb(radio_data),
                     ),
                 )
                 conn.commit()

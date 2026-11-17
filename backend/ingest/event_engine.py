@@ -34,7 +34,9 @@ def _get_pit_in_drivers(lap_data: dict) -> set:
 
 def _get_dnf_drivers(lap_data: dict) -> set:
     """Return codes of drivers with status=DNF this lap."""
-    return {p["code"] for p in lap_data.get("positions", []) if p.get("status") == "DNF"}
+    return {
+        p["code"] for p in lap_data.get("positions", []) if p.get("status") == "DNF"
+    }
 
 
 def classify_lap_events(lap_n: dict, lap_n1: dict) -> list:
@@ -57,13 +59,15 @@ def classify_lap_events(lap_n: dict, lap_n1: dict) -> list:
 
     # DNF events first
     for code in dnf_drivers:
-        events.append({
-            "type": "DNF",
-            "lap": lap_num,
-            "drivers": [code],
-            "detail": "Retired",
-            "label": f"{code}: Retired (Lap {lap_num})",
-        })
+        events.append(
+            {
+                "type": "DNF",
+                "lap": lap_num,
+                "drivers": [code],
+                "detail": "Retired",
+                "label": f"{code}: Retired (Lap {lap_num})",
+            }
+        )
 
     # Position changes
     gainers = []
@@ -76,8 +80,7 @@ def classify_lap_events(lap_n: dict, lap_n1: dict) -> list:
     for code, prev_pos, curr_pos, gained in gainers:
         # Find who was between curr_pos and prev_pos in lap N-1
         drivers_ahead_prev = {
-            c for c, p in pos_n1.items()
-            if curr_pos <= p < prev_pos and c != code
+            c for c, p in pos_n1.items() if curr_pos <= p < prev_pos and c != code
         }
 
         retired_ahead = drivers_ahead_prev & dnf_drivers
@@ -99,39 +102,47 @@ def classify_lap_events(lap_n: dict, lap_n1: dict) -> list:
             detail = f"{code} passes {passed}"
             label = f"{code} passes {passed} for P{curr_pos}"
 
-        events.append({
-            "type": event_type,
-            "lap": lap_num,
-            "drivers": [code],
-            "detail": detail,
-            "label": label,
-        })
+        events.append(
+            {
+                "type": event_type,
+                "lap": lap_num,
+                "drivers": [code],
+                "detail": detail,
+                "label": label,
+            }
+        )
 
     # Track status events
     if lap_n.get("sc_active"):
-        events.append({
-            "type": "SAFETY_CAR",
-            "lap": lap_num,
-            "drivers": [],
-            "detail": "SAFETY CAR",
-            "label": f"Safety Car Lap {lap_num}",
-        })
+        events.append(
+            {
+                "type": "SAFETY_CAR",
+                "lap": lap_num,
+                "drivers": [],
+                "detail": "SAFETY CAR",
+                "label": f"Safety Car Lap {lap_num}",
+            }
+        )
     elif lap_n.get("vsc_active"):
-        events.append({
-            "type": "VSC",
-            "lap": lap_num,
-            "drivers": [],
-            "detail": "VIRTUAL SAFETY CAR",
-            "label": f"Virtual Safety Car Lap {lap_num}",
-        })
+        events.append(
+            {
+                "type": "VSC",
+                "lap": lap_num,
+                "drivers": [],
+                "detail": "VIRTUAL SAFETY CAR",
+                "label": f"Virtual Safety Car Lap {lap_num}",
+            }
+        )
     elif lap_n.get("red_flag"):
-        events.append({
-            "type": "RED_FLAG",
-            "lap": lap_num,
-            "drivers": [],
-            "detail": "RED FLAG",
-            "label": f"Red Flag Lap {lap_num}",
-        })
+        events.append(
+            {
+                "type": "RED_FLAG",
+                "lap": lap_num,
+                "drivers": [],
+                "detail": "RED FLAG",
+                "label": f"Red Flag Lap {lap_num}",
+            }
+        )
 
     return events
 
@@ -155,12 +166,14 @@ def build_race_events(parsed: dict) -> list:
         lap = rcm_event.get("lap")
         if cat == "CarEvent" and lap is not None and "penalty" in msg.lower():
             driver_num = rcm_event.get("driver_number")
-            all_events.append({
-                "type": "PENALTY",
-                "lap": lap,
-                "drivers": [f"#{driver_num}"] if driver_num else [],
-                "detail": msg,
-                "label": f"Penalty: {msg}",
-            })
+            all_events.append(
+                {
+                    "type": "PENALTY",
+                    "lap": lap,
+                    "drivers": [f"#{driver_num}"] if driver_num else [],
+                    "detail": msg,
+                    "label": f"Penalty: {msg}",
+                }
+            )
 
     return all_events

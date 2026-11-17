@@ -2,12 +2,18 @@ from fastapi import APIRouter, HTTPException, Depends, Request, status
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from core.database import get_db_connection, DBIntegrityError
-from core.auth import hash_password, verify_password, create_access_token, get_current_user
+from core.auth import (
+    hash_password,
+    verify_password,
+    create_access_token,
+    get_current_user,
+)
 import sqlite3
 
 router = APIRouter()
 
 # ─── Schemas ──────────────────────────────────────────────────────────────────
+
 
 class UserRegister(BaseModel):
     email: EmailStr
@@ -17,18 +23,22 @@ class UserRegister(BaseModel):
     favourite_driver: Optional[str] = None
     country: Optional[str] = None
 
+
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+
 class ThemeUpdate(BaseModel):
     favourite_team: str
+
 
 class ProfileUpdate(BaseModel):
     name: Optional[str] = None
     favourite_driver: Optional[str] = None
     new_password: Optional[str] = None
     country: Optional[str] = None
+
 
 class AuthResponse(BaseModel):
     token: str
@@ -40,6 +50,7 @@ class AuthResponse(BaseModel):
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
+
 
 def _build_user_dict(row: sqlite3.Row) -> dict:
     return {
@@ -62,6 +73,7 @@ def _get_user_by_email(cursor, email: str):
 
 # ─── Routes ───────────────────────────────────────────────────────────────────
 
+
 @router.post("/register", response_model=AuthResponse)
 async def register(user_in: UserRegister):
     with get_db_connection() as conn:
@@ -73,13 +85,23 @@ async def register(user_in: UserRegister):
         try:
             cursor.execute(
                 "INSERT INTO users (email, password_hash, name, favourite_team, favourite_driver, country) VALUES (?, ?, ?, ?, ?, ?)",
-                (user_in.email.lower(), pwd_hash, user_in.name, user_in.favourite_team, user_in.favourite_driver, user_in.country),
+                (
+                    user_in.email.lower(),
+                    pwd_hash,
+                    user_in.name,
+                    user_in.favourite_team,
+                    user_in.favourite_driver,
+                    user_in.country,
+                ),
             )
             conn.commit()
         except DBIntegrityError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail={"error": "Email is already registered", "code": "EMAIL_ALREADY_REGISTERED"},
+                detail={
+                    "error": "Email is already registered",
+                    "code": "EMAIL_ALREADY_REGISTERED",
+                },
             )
 
         # Fetch the newly created user
@@ -115,13 +137,19 @@ async def login(user_in: UserLogin):
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"error": "Invalid email or password", "code": "INVALID_CREDENTIALS"},
+            detail={
+                "error": "Invalid email or password",
+                "code": "INVALID_CREDENTIALS",
+            },
         )
 
     if not verify_password(user["password_hash"], user_in.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"error": "Invalid email or password", "code": "INVALID_CREDENTIALS"},
+            detail={
+                "error": "Invalid email or password",
+                "code": "INVALID_CREDENTIALS",
+            },
         )
 
     token = create_access_token({"email": user["email"]})
@@ -149,7 +177,9 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 
 
 @router.put("/profile")
-async def update_profile(profile_in: ProfileUpdate, current_user: dict = Depends(get_current_user)):
+async def update_profile(
+    profile_in: ProfileUpdate, current_user: dict = Depends(get_current_user)
+):
     with get_db_connection() as conn:
         cursor = conn.cursor()
 
@@ -165,7 +195,10 @@ async def update_profile(profile_in: ProfileUpdate, current_user: dict = Depends
             updates.append("favourite_driver = ?")
             params.append(profile_in.favourite_driver)
 
-        if profile_in.new_password is not None and profile_in.new_password.strip() != "":
+        if (
+            profile_in.new_password is not None
+            and profile_in.new_password.strip() != ""
+        ):
             pwd_hash = hash_password(profile_in.new_password)
             updates.append("password_hash = ?")
             params.append(pwd_hash)
@@ -193,7 +226,9 @@ async def update_profile(profile_in: ProfileUpdate, current_user: dict = Depends
 
 
 @router.put("/theme")
-async def update_theme(theme_in: ThemeUpdate, current_user: dict = Depends(get_current_user)):
+async def update_theme(
+    theme_in: ThemeUpdate, current_user: dict = Depends(get_current_user)
+):
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -209,19 +244,25 @@ async def delete_account(current_user: dict = Depends(get_current_user)):
     with get_db_connection() as conn:
         cursor = conn.cursor()
         try:
-            cursor.execute("DELETE FROM predictions WHERE user_id = ?", (current_user["id"],))
+            cursor.execute(
+                "DELETE FROM predictions WHERE user_id = ?", (current_user["id"],)
+            )
             cursor.execute("DELETE FROM users WHERE id = ?", (current_user["id"],))
             conn.commit()
         except Exception as e:
             conn.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail={"error": f"Failed to delete account: {e}", "code": "DELETE_FAILED"},
+                detail={
+                    "error": f"Failed to delete account: {e}",
+                    "code": "DELETE_FAILED",
+                },
             )
     return {"status": "success", "message": "Account successfully deleted"}
 
 
 # ─── Firebase Auth ─────────────────────────────────────────────────────────────
+
 
 class FirebaseAuthRequest(BaseModel):
     firebase_token: str
@@ -281,9 +322,14 @@ async def firebase_auth(req: FirebaseAuthRequest):
                         "INSERT INTO users "
                         "(firebase_uid, email, name, favourite_team, favourite_driver, country) "
                         "VALUES (?, ?, ?, ?, ?, ?)",
-                        (uid, email.lower(), req.name,
-                         req.favourite_team or "Ferrari",
-                         req.favourite_driver, req.country),
+                        (
+                            uid,
+                            email.lower(),
+                            req.name,
+                            req.favourite_team or "Ferrari",
+                            req.favourite_driver,
+                            req.country,
+                        ),
                     )
                     conn.commit()
                     cursor.execute(
@@ -295,7 +341,10 @@ async def firebase_auth(req: FirebaseAuthRequest):
                 except DBIntegrityError:
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
-                        detail={"error": "Account creation failed.", "code": "CREATE_FAILED"},
+                        detail={
+                            "error": "Account creation failed.",
+                            "code": "CREATE_FAILED",
+                        },
                     )
         else:
             # Update profile if new data provided

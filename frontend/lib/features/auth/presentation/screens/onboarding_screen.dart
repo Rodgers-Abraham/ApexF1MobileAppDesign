@@ -331,7 +331,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       final ok = await ref
           .read(authProvider.notifier)
           .login(_emailCtrl.text.trim(), _passwordCtrl.text);
-      if (ok && mounted) context.go('/');
+      if (ok && context.mounted) context.go('/');
     } else {
       if (_nameCtrl.text.trim().isEmpty) return;
       setState(() => _step = OnboardingStep.selectTeam);

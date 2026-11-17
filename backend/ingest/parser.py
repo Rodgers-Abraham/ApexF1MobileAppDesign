@@ -1,4 +1,5 @@
 """Parse raw TracingInsights JSON files into normalized internal schemas."""
+
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -69,20 +70,24 @@ def _parse_rcm(rcm: dict, t0_date: str) -> list:
     for r in rows:
         iso_time = r.get("time", "")
         sess_secs = _to_session_seconds(iso_time, t0_date) if iso_time else None
-        events.append({
-            "session_time_s": sess_secs,
-            "category": r.get("cat", ""),
-            "message": r.get("msg", ""),
-            "flag": r.get("flag") if r.get("flag") != "None" else None,
-            "scope": r.get("scope") if r.get("scope") != "None" else None,
-            "sector": _safe_int(r.get("sector")),
-            "driver_number": r.get("dNum") if r.get("dNum") != "None" else None,
-            "lap": _safe_int(r.get("lap")),
-        })
+        events.append(
+            {
+                "session_time_s": sess_secs,
+                "category": r.get("cat", ""),
+                "message": r.get("msg", ""),
+                "flag": r.get("flag") if r.get("flag") != "None" else None,
+                "scope": r.get("scope") if r.get("scope") != "None" else None,
+                "sector": _safe_int(r.get("sector")),
+                "driver_number": r.get("dNum") if r.get("dNum") != "None" else None,
+                "lap": _safe_int(r.get("lap")),
+            }
+        )
     return events
 
 
-def parse_meta(drivers_raw: dict, session_info: dict, event: str, session_type: str) -> dict:
+def parse_meta(
+    drivers_raw: dict, session_info: dict, event: str, session_type: str
+) -> dict:
     """Build meta JSONB: driver list, session info, circuit."""
     drivers = _parse_drivers(drivers_raw)
     si = session_info.get("session_info", {})
@@ -127,17 +132,26 @@ def parse_race(files: dict) -> dict:
         for r in sorted_rows:
             d_code = r.get("drv", "")
             d_info = next((d for d in drivers if d["code"] == d_code), {})
-            grid.append({
-                "pos": _safe_int(r.get("pos")) or 0,
-                "code": d_code,
-                "team": r.get("team", d_info.get("team", "")),
-                "color": d_info.get("color", "FFFFFF"),
-                "number": r.get("dNum", d_info.get("number", "")),
-            })
+            grid.append(
+                {
+                    "pos": _safe_int(r.get("pos")) or 0,
+                    "code": d_code,
+                    "team": r.get("team", d_info.get("team", "")),
+                    "color": d_info.get("color", "FFFFFF"),
+                    "number": r.get("dNum", d_info.get("number", "")),
+                }
+            )
     else:
         for i, d in enumerate(drivers):
-            grid.append({"pos": i + 1, "code": d["code"], "team": d["team"],
-                         "color": d["color"], "number": d["number"]})
+            grid.append(
+                {
+                    "pos": i + 1,
+                    "code": d["code"],
+                    "team": d["team"],
+                    "color": d["color"],
+                    "number": d["number"],
+                }
+            )
 
     # DNF tracking
     driver_last_lap: dict = {}
@@ -155,7 +169,9 @@ def parse_race(files: dict) -> dict:
         status = "1"
         for i, t in enumerate(track_status_times):
             if t <= session_time_s:
-                status = str(track_status_codes[i]) if i < len(track_status_codes) else "1"
+                status = (
+                    str(track_status_codes[i]) if i < len(track_status_codes) else "1"
+                )
             else:
                 break
         return status
@@ -163,11 +179,17 @@ def parse_race(files: dict) -> dict:
     laps_out = []
     for lap_num in sorted(laps_dict.keys()):
         rows = laps_dict[lap_num]
-        racing_rows = [r for r in rows if not r.get("ff1G", False) and r.get("pos") != "None"]
+        racing_rows = [
+            r for r in rows if not r.get("ff1G", False) and r.get("pos") != "None"
+        ]
         out_rows = [r for r in rows if r.get("ff1G", False) or r.get("pos") == "None"]
         racing_rows.sort(key=lambda r: _safe_int(r.get("pos")) or 99)
 
-        lap_times = [_safe_float(r.get("time")) for r in racing_rows if _safe_float(r.get("time"))]
+        lap_times = [
+            _safe_float(r.get("time"))
+            for r in racing_rows
+            if _safe_float(r.get("time"))
+        ]
         fastest_time = min(lap_times) if lap_times else None
 
         positions = []
@@ -175,41 +197,55 @@ def parse_race(files: dict) -> dict:
             d_code = r.get("drv", "")
             d_info = next((d for d in drivers if d["code"] == d_code), {})
             lap_time = _safe_float(r.get("time"))
-            positions.append({
-                "pos": _safe_int(r.get("pos")) or 0,
-                "code": d_code,
-                "team": r.get("team", d_info.get("team", "")),
-                "color": d_info.get("color", "FFFFFF"),
-                "lap_time": lap_time,
-                "s1": _safe_float(r.get("s1")),
-                "s2": _safe_float(r.get("s2")),
-                "s3": _safe_float(r.get("s3")),
-                "compound": r.get("compound", "UNKNOWN"),
-                "life": _safe_int(r.get("life")),
-                "stint": _safe_int(r.get("stint")),
-                "is_pit_in": r.get("pin") not in (None, "None"),
-                "pin_s": _safe_float(r.get("pin")),
-                "pout_s": _safe_float(r.get("pout")),
-                "is_fastest_lap_of_race": bool(r.get("pb", False)),
-                "is_fastest_this_lap": lap_time is not None and lap_time == fastest_time,
-                "status": "RACING",
-                "deleted": bool(r.get("del", False)),
-            })
+            positions.append(
+                {
+                    "pos": _safe_int(r.get("pos")) or 0,
+                    "code": d_code,
+                    "team": r.get("team", d_info.get("team", "")),
+                    "color": d_info.get("color", "FFFFFF"),
+                    "lap_time": lap_time,
+                    "s1": _safe_float(r.get("s1")),
+                    "s2": _safe_float(r.get("s2")),
+                    "s3": _safe_float(r.get("s3")),
+                    "compound": r.get("compound", "UNKNOWN"),
+                    "life": _safe_int(r.get("life")),
+                    "stint": _safe_int(r.get("stint")),
+                    "is_pit_in": r.get("pin") not in (None, "None"),
+                    "pin_s": _safe_float(r.get("pin")),
+                    "pout_s": _safe_float(r.get("pout")),
+                    "is_fastest_lap_of_race": bool(r.get("pb", False)),
+                    "is_fastest_this_lap": lap_time is not None
+                    and lap_time == fastest_time,
+                    "status": "RACING",
+                    "deleted": bool(r.get("del", False)),
+                }
+            )
 
         for r in out_rows:
             d_code = r.get("drv", "")
             d_info = next((d for d in drivers if d["code"] == d_code), {})
-            positions.append({
-                "pos": 99, "code": d_code,
-                "team": r.get("team", d_info.get("team", "")),
-                "color": d_info.get("color", "FFFFFF"),
-                "lap_time": None, "s1": None, "s2": None, "s3": None,
-                "compound": r.get("compound", "UNKNOWN"),
-                "life": _safe_int(r.get("life")), "stint": _safe_int(r.get("stint")),
-                "is_pit_in": False, "pin_s": None, "pout_s": None,
-                "is_fastest_lap_of_race": False, "is_fastest_this_lap": False,
-                "status": "DNF", "deleted": False,
-            })
+            positions.append(
+                {
+                    "pos": 99,
+                    "code": d_code,
+                    "team": r.get("team", d_info.get("team", "")),
+                    "color": d_info.get("color", "FFFFFF"),
+                    "lap_time": None,
+                    "s1": None,
+                    "s2": None,
+                    "s3": None,
+                    "compound": r.get("compound", "UNKNOWN"),
+                    "life": _safe_int(r.get("life")),
+                    "stint": _safe_int(r.get("stint")),
+                    "is_pit_in": False,
+                    "pin_s": None,
+                    "pout_s": None,
+                    "is_fastest_lap_of_race": False,
+                    "is_fastest_this_lap": False,
+                    "status": "DNF",
+                    "deleted": False,
+                }
+            )
 
         lap_start_s = _safe_float(rows[0].get("lST")) if rows else 0
         track_status = get_track_status_at(lap_start_s or 0) if lap_start_s else "1"
@@ -221,16 +257,18 @@ def parse_race(files: dict) -> dict:
                     fastest_code = r.get("drv")
                     break
 
-        laps_out.append({
-            "lap": lap_num,
-            "positions": positions,
-            "fastest_code": fastest_code,
-            "fastest_lap_time": fastest_time,
-            "track_status": track_status,
-            "sc_active": track_status == "4",
-            "vsc_active": track_status in ("6", "7"),
-            "red_flag": track_status == "5",
-        })
+        laps_out.append(
+            {
+                "lap": lap_num,
+                "positions": positions,
+                "fastest_code": fastest_code,
+                "fastest_lap_time": fastest_time,
+                "track_status": track_status,
+                "sc_active": track_status == "4",
+                "vsc_active": track_status in ("6", "7"),
+                "red_flag": track_status == "5",
+            }
+        )
 
     all_racing_codes = set(driver_last_lap.keys())
     dns_drivers = [d for d in drivers if d["code"] not in all_racing_codes]
@@ -290,7 +328,9 @@ def parse_practice(files: dict) -> dict:
         if s in ("Finished", "Finalised", "Ends"):
             end_s = _safe_float(ss_times[i]) if i < len(ss_times) else None
 
-    session_duration_s = (end_s - start_s) if start_s is not None and end_s is not None else None
+    session_duration_s = (
+        (end_s - start_s) if start_s is not None and end_s is not None else None
+    )
 
     timeline = []
     best_per_driver: dict = {}
@@ -312,32 +352,36 @@ def parse_practice(files: dict) -> dict:
             overall_best = lap_time
 
         if is_pb:
-            timeline.append({
-                "session_time_s": sess_t,
-                "code": code,
-                "team": row.get("team", d_info.get("team", "")),
-                "color": d_info.get("color", "FFFFFF"),
-                "lap_time_s": lap_time,
-                "s1": _safe_float(row.get("s1")),
-                "s2": _safe_float(row.get("s2")),
-                "s3": _safe_float(row.get("s3")),
-                "compound": row.get("compound", "UNKNOWN"),
-                "is_personal_best": True,
-                "is_overall_fastest": is_overall,
-                "laps_completed": _safe_int(row.get("lap")) or 0,
-            })
+            timeline.append(
+                {
+                    "session_time_s": sess_t,
+                    "code": code,
+                    "team": row.get("team", d_info.get("team", "")),
+                    "color": d_info.get("color", "FFFFFF"),
+                    "lap_time_s": lap_time,
+                    "s1": _safe_float(row.get("s1")),
+                    "s2": _safe_float(row.get("s2")),
+                    "s3": _safe_float(row.get("s3")),
+                    "compound": row.get("compound", "UNKNOWN"),
+                    "is_personal_best": True,
+                    "is_overall_fastest": is_overall,
+                    "laps_completed": _safe_int(row.get("lap")) or 0,
+                }
+            )
 
     leader_best = min(best_per_driver.values()) if best_per_driver else 0.0
     final_order = []
     for code, best in sorted(best_per_driver.items(), key=lambda x: x[1]):
         d_info = next((d for d in drivers if d["code"] == code), {})
-        final_order.append({
-            "code": code,
-            "team": d_info.get("team", ""),
-            "color": d_info.get("color", "FFFFFF"),
-            "best_s": best,
-            "gap_s": best - leader_best,
-        })
+        final_order.append(
+            {
+                "code": code,
+                "team": d_info.get("team", ""),
+                "color": d_info.get("color", "FFFFFF"),
+                "best_s": best,
+                "gap_s": best - leader_best,
+            }
+        )
 
     weather_out = None
     if all_rows:
@@ -422,21 +466,29 @@ def parse_qualifying(files: dict) -> dict:
             if is_overall:
                 overall_best = lt
             if is_pb:
-                timeline.append({
-                    "session_time_s": sess_t, "segment": seg, "code": code,
-                    "team": row.get("team", d_info.get("team", "")),
-                    "color": d_info.get("color", "FFFFFF"),
-                    "lap_time_s": lt,
-                    "s1": _safe_float(row.get("s1")),
-                    "s2": _safe_float(row.get("s2")),
-                    "s3": _safe_float(row.get("s3")),
-                    "compound": row.get("compound", "UNKNOWN"),
-                    "is_personal_best": True, "is_overall_fastest": is_overall,
-                })
+                timeline.append(
+                    {
+                        "session_time_s": sess_t,
+                        "segment": seg,
+                        "code": code,
+                        "team": row.get("team", d_info.get("team", "")),
+                        "color": d_info.get("color", "FFFFFF"),
+                        "lap_time_s": lt,
+                        "s1": _safe_float(row.get("s1")),
+                        "s2": _safe_float(row.get("s2")),
+                        "s3": _safe_float(row.get("s3")),
+                        "compound": row.get("compound", "UNKNOWN"),
+                        "is_personal_best": True,
+                        "is_overall_fastest": is_overall,
+                    }
+                )
 
         final_order = sorted(
-            [{"code": c, "best_s": bt[0], "row": bt[1]} for c, bt in best_in_seg.items()],
-            key=lambda x: x["best_s"]
+            [
+                {"code": c, "best_s": bt[0], "row": bt[1]}
+                for c, bt in best_in_seg.items()
+            ],
+            key=lambda x: x["best_s"],
         )
         leader_time = final_order[0]["best_s"] if final_order else 0.0
 
@@ -444,11 +496,18 @@ def parse_qualifying(files: dict) -> dict:
             "timeline": timeline,
             "final_order": [
                 {
-                    "pos": i + 1, "code": item["code"], "best_s": item["best_s"],
+                    "pos": i + 1,
+                    "code": item["code"],
+                    "best_s": item["best_s"],
                     "gap_s": item["best_s"] - leader_time,
                     "compound": item["row"].get("compound", "UNKNOWN"),
-                    "team": next((d["team"] for d in drivers if d["code"] == item["code"]), ""),
-                    "color": next((d["color"] for d in drivers if d["code"] == item["code"]), "FFFFFF"),
+                    "team": next(
+                        (d["team"] for d in drivers if d["code"] == item["code"]), ""
+                    ),
+                    "color": next(
+                        (d["color"] for d in drivers if d["code"] == item["code"]),
+                        "FFFFFF",
+                    ),
                 }
                 for i, item in enumerate(final_order)
             ],
@@ -461,7 +520,9 @@ def parse_qualifying(files: dict) -> dict:
     for i, seg in enumerate(seg_list):
         if i + 1 < len(seg_list):
             current = set(item["code"] for item in segments_out[seg]["final_order"])
-            nxt = set(item["code"] for item in segments_out[seg_list[i + 1]]["final_order"])
+            nxt = set(
+                item["code"] for item in segments_out[seg_list[i + 1]]["final_order"]
+            )
             segments_out[seg]["eliminated"] = sorted(current - nxt)
 
     q_final = seg_list[-1] if seg_list else None
