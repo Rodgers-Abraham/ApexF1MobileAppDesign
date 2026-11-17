@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/providers/telemetry/models.dart';
 import '../../../../core/providers/telemetry/providers.dart';
 import '../../../../shared/theme/app_design_system.dart';
 import '../../../../shared/widgets/skeleton_widget.dart';
