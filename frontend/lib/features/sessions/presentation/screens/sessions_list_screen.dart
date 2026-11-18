@@ -163,13 +163,12 @@ class SessionsListScreen extends ConsumerWidget {
       case 'P1':
       case 'P2':
       case 'P3':
-        context.go('/replay/practice/${sess.id}');
+        context.go('/results/practice/${sess.id}');
       case 'Q':
       case 'SQ':
-        context.go('/replay/qualifying/${sess.id}');
+        context.go('/results/qualifying/${sess.id}');
       default: // Race, Sprint
-        ref.read(selectedReplaySessionProvider.notifier).state = sess.id;
-        context.go('/live');
+        context.go('/results/race/${sess.id}');
     }
   }
 }

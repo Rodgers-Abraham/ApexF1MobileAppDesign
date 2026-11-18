@@ -45,10 +45,42 @@ def find_jolpica_round(year: int, event: str) -> Optional[int]:
     return None
 
 
+def _enrich_result(r: dict, include_fastest_lap: bool = True) -> dict:
+    """Build a rich result entry from a Jolpica result object."""
+    drv = r.get("Driver", {})
+    con = r.get("Constructor", {})
+    pos = int(r.get("position", 99))
+    # Leader gets race time; finishers behind get a gap string like "+5.123s"
+    t = r.get("Time", {}) or {}
+    time_val = t.get("time") if t else None
+    # Fastest lap (race only)
+    fl = r.get("FastestLap", {}) or {}
+    fl_rank = fl.get("rank")
+    fl_time_obj = fl.get("Time", {}) or {}
+    fl_time = fl_time_obj.get("time")
+    fl_lap_raw = fl.get("lap")
+    return {
+        "pos": pos,
+        "code": drv.get("code", "???"),
+        "name": f"{drv.get('givenName', '')} {drv.get('familyName', '')}".strip(),
+        "team": con.get("name", ""),
+        "grid": int(r.get("grid", 0)),
+        "laps": int(r.get("laps", 0)),
+        "time": time_val,
+        "status": r.get("status", "Finished"),
+        "points": float(r.get("points", 0)),
+        "fastest_lap": fl_rank == "1" if include_fastest_lap else False,
+        "fastest_lap_time": fl_time if include_fastest_lap else None,
+        "fastest_lap_num": (
+            int(fl_lap_raw) if fl_lap_raw and include_fastest_lap else None
+        ),
+    }
+
+
 def get_jolpica_final_classification(
     year: int, round_num: int, session_type: str
 ) -> Optional[list]:
-    """Fetch official final classification from Jolpica."""
+    """Fetch official final classification from Jolpica (enriched)."""
     if session_type == "Race":
         data = _jolpica_get(f"{year}/{round_num}/results.json")
         if not data:
@@ -57,15 +89,8 @@ def get_jolpica_final_classification(
         if not races:
             return None
         results = races[0].get("Results", [])
-        return [
-            {
-                "pos": int(r.get("position", 99)),
-                "code": r.get("Driver", {}).get("code", "???"),
-                "status": r.get("status", "Finished"),
-                "laps": int(r.get("laps", 0)),
-            }
-            for r in results
-        ]
+        output = [_enrich_result(r, include_fastest_lap=True) for r in results]
+        return output if output else None
     elif session_type == "Sprint":
         data = _jolpica_get(f"{year}/{round_num}/sprint.json")
         if not data:
@@ -74,20 +99,13 @@ def get_jolpica_final_classification(
         if not races:
             return None
         results = races[0].get("SprintResults", [])
-        return [
-            {
-                "pos": int(r.get("position", 99)),
-                "code": r.get("Driver", {}).get("code", "???"),
-                "status": r.get("status", "Finished"),
-                "laps": int(r.get("laps", 0)),
-            }
-            for r in results
-        ]
+        output = [_enrich_result(r, include_fastest_lap=False) for r in results]
+        return output if output else None
     return None
 
 
 def get_jolpica_qualifying_classification(year: int, round_num: int) -> Optional[list]:
-    """Fetch official qualifying classification from Jolpica."""
+    """Fetch official qualifying classification from Jolpica (enriched with Q1/Q2/Q3 times)."""
     data = _jolpica_get(f"{year}/{round_num}/qualifying.json")
     if not data:
         return None
@@ -99,6 +117,14 @@ def get_jolpica_qualifying_classification(year: int, round_num: int) -> Optional
         {
             "pos": int(r.get("position", 99)),
             "code": r.get("Driver", {}).get("code", "???"),
+            "name": (
+                f"{r.get('Driver', {}).get('givenName', '')} "
+                f"{r.get('Driver', {}).get('familyName', '')}".strip()
+            ),
+            "team": r.get("Constructor", {}).get("name", ""),
+            "q1": r.get("Q1"),
+            "q2": r.get("Q2"),
+            "q3": r.get("Q3"),
         }
         for r in results
     ]
