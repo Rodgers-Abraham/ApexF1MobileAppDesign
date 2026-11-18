@@ -85,6 +85,7 @@ def test_critical_drivers_valid():
 
 def test_critical_drivers_tc_optional():
     # tc (team colour) is optional — entries with only driver+team are valid.
+    # Many 2024 TracingInsights datasets omit tc entirely.
     rows = [
         {"driver": "VER", "team": "Red Bull Racing"},
         {"driver": "NOR", "team": "McLaren"},
