@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/services/notification_permission_service.dart';
 import '../../../../shared/constants/f1_data.dart';
 import '../../../../shared/constants/countries.dart';
 import '../../../../shared/theme/theme_provider.dart';
@@ -17,7 +20,16 @@ class SettingsScreen extends ConsumerStatefulWidget {
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+// SharedPreferences keys for persisted toggles
+const _kNotifRaceWeekend = 'notif_race_weekend';
+const _kNotifQualifying = 'notif_qualifying';
+const _kNotifPredictionLock = 'notif_prediction_lock';
+const _kNotifTeamRadio = 'notif_team_radio';
+const _kUnitCelsius = 'unit_celsius';
+const _kUnitKph = 'unit_kph';
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen>
+    with WidgetsBindingObserver {
   late TextEditingController _nameController;
   bool _isSaving = false;
   String? _errorMessage;
@@ -33,21 +45,145 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _isCelsius = true;
   bool _isKph = true;
 
+  final _notifService = FirebaseNotificationPermissionService();
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _nameController = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _nameController.text = ref.read(authProvider).name ?? '';
       }
     });
+    _loadPrefs();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _nameController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Re-check permission when the user returns from system settings.
+    if (state == AppLifecycleState.resumed) {
+      _refreshNotifPermissionState();
+    }
+  }
+
+  Future<void> _loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _notifyRaceWeekend = prefs.getBool(_kNotifRaceWeekend) ?? true;
+      _notifyQualifying = prefs.getBool(_kNotifQualifying) ?? true;
+      _notifyPredictionLock = prefs.getBool(_kNotifPredictionLock) ?? true;
+      _notifyTeamRadio = prefs.getBool(_kNotifTeamRadio) ?? false;
+      _isCelsius = prefs.getBool(_kUnitCelsius) ?? true;
+      _isKph = prefs.getBool(_kUnitKph) ?? true;
+    });
+  }
+
+  Future<void> _saveToggle(String key, bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(key, value);
+  }
+
+  /// Re-checks notification permission status and reverts any active
+  /// notification toggle if permission is now denied (e.g. revoked from OS).
+  Future<void> _refreshNotifPermissionState() async {
+    final status = await _notifService.getStatus();
+    if (status != NotifPermissionStatus.authorized) {
+      final prefs = await SharedPreferences.getInstance();
+      if (!mounted) return;
+      // If any toggle is ON but permission is gone, turn them all off silently.
+      bool any = _notifyRaceWeekend || _notifyQualifying ||
+          _notifyPredictionLock || _notifyTeamRadio;
+      if (any) {
+        setState(() {
+          _notifyRaceWeekend = false;
+          _notifyQualifying = false;
+          _notifyPredictionLock = false;
+          _notifyTeamRadio = false;
+        });
+        await prefs.setBool(_kNotifRaceWeekend, false);
+        await prefs.setBool(_kNotifQualifying, false);
+        await prefs.setBool(_kNotifPredictionLock, false);
+        await prefs.setBool(_kNotifTeamRadio, false);
+      }
+    }
+  }
+
+  /// Handles turning a notification toggle ON. Requests permission if needed.
+  /// Returns the final value the toggle should take (true = on, false = revert).
+  Future<bool> _handleNotifToggleOn() async {
+    final status = await _notifService.getStatus();
+
+    if (status == NotifPermissionStatus.authorized) {
+      return true;
+    }
+
+    if (status == NotifPermissionStatus.permanentlyDenied) {
+      _showNotifDeniedMessage(permanent: true);
+      return false;
+    }
+
+    // notDetermined or denied — show rationale first.
+    if (!mounted) return false;
+    final proceed = await showNotificationRationaleDialog(context);
+    if (!proceed) return false;
+
+    final newStatus = await _notifService.requestPermission();
+    if (newStatus == NotifPermissionStatus.authorized) {
+      // Register the token now that we have permission.
+      final token = await _notifService.getToken();
+      if (token != null && mounted) {
+        await ref.read(authProvider.notifier).registerFcmToken(token);
+      }
+      return true;
+    }
+
+    // Denied after prompt.
+    if (!mounted) return false;
+    _showNotifDeniedMessage(permanent: false);
+    return false;
+  }
+
+  void _showNotifDeniedMessage({required bool permanent}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: const Color(0xFF1A1A22),
+        content: Row(children: [
+          const Icon(Icons.notifications_off_outlined, size: 16, color: Colors.grey),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              permanent
+                  ? 'Notifications blocked. Enable them in Settings.'
+                  : 'Notifications not enabled.',
+              style: const TextStyle(fontSize: 12, color: Colors.white70),
+            ),
+          ),
+          if (permanent)
+            TextButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                _notifService.openSettings();
+              },
+              child: const Text(
+                'OPEN SETTINGS',
+                style: TextStyle(fontSize: 10, color: Color(0xFF00E5FF)),
+              ),
+            ),
+        ]),
+        duration: Duration(seconds: permanent ? 6 : 3),
+      ),
+    );
   }
 
   String _fmtOffset(double offset) {
@@ -848,27 +984,67 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   'Race Weekend Alerts',
                   'Lights out, green flag, podium updates',
                   _notifyRaceWeekend,
-                  (v) => setState(() => _notifyRaceWeekend = v),
+                  (v) async {
+                    if (v) {
+                      final allowed = await _handleNotifToggleOn();
+                      if (!mounted) return;
+                      setState(() => _notifyRaceWeekend = allowed);
+                      await _saveToggle(_kNotifRaceWeekend, allowed);
+                    } else {
+                      setState(() => _notifyRaceWeekend = false);
+                      await _saveToggle(_kNotifRaceWeekend, false);
+                    }
+                  },
                   accentColor),
               _buildToggleRow(
                   'Qualifying Reminders',
                   'Q1 sector grid countdown sync',
                   _notifyQualifying,
-                  (v) => setState(() => _notifyQualifying = v),
+                  (v) async {
+                    if (v) {
+                      final allowed = await _handleNotifToggleOn();
+                      if (!mounted) return;
+                      setState(() => _notifyQualifying = allowed);
+                      await _saveToggle(_kNotifQualifying, allowed);
+                    } else {
+                      setState(() => _notifyQualifying = false);
+                      await _saveToggle(_kNotifQualifying, false);
+                    }
+                  },
                   accentColor,
                   badge: 'T-15M'),
               _buildToggleRow(
                   'Prediction Lock Warnings',
                   'Prior to pit lane green light',
                   _notifyPredictionLock,
-                  (v) => setState(() => _notifyPredictionLock = v),
+                  (v) async {
+                    if (v) {
+                      final allowed = await _handleNotifToggleOn();
+                      if (!mounted) return;
+                      setState(() => _notifyPredictionLock = allowed);
+                      await _saveToggle(_kNotifPredictionLock, allowed);
+                    } else {
+                      setState(() => _notifyPredictionLock = false);
+                      await _saveToggle(_kNotifPredictionLock, false);
+                    }
+                  },
                   accentColor,
                   badge: 'T-30M'),
               _buildToggleRow(
                   'Team Radio Transcripts',
                   'Live uncensored driver comms feed',
                   _notifyTeamRadio,
-                  (v) => setState(() => _notifyTeamRadio = v),
+                  (v) async {
+                    if (v) {
+                      final allowed = await _handleNotifToggleOn();
+                      if (!mounted) return;
+                      setState(() => _notifyTeamRadio = allowed);
+                      await _saveToggle(_kNotifTeamRadio, allowed);
+                    } else {
+                      setState(() => _notifyTeamRadio = false);
+                      await _saveToggle(_kNotifTeamRadio, false);
+                    }
+                  },
                   accentColor),
             ]),
             const SizedBox(height: 20),
@@ -883,14 +1059,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 'Telemetry overlay & sector speeds',
                 options: ['KM/H', 'MPH'],
                 selected: _isKph ? 0 : 1,
-                onSelect: (i) => setState(() => _isKph = i == 0),
+                onSelect: (i) {
+                  setState(() => _isKph = i == 0);
+                  _saveToggle(_kUnitKph, i == 0);
+                },
                 accentColor: accentColor),
               _buildUnitRow(
                 'Track Surface Temp',
                 'Pirelli tire carcass & asphalt thermal',
                 options: ['°C', '°F'],
                 selected: _isCelsius ? 0 : 1,
-                onSelect: (i) => setState(() => _isCelsius = i == 0),
+                onSelect: (i) {
+                  setState(() => _isCelsius = i == 0);
+                  _saveToggle(_kUnitCelsius, i == 0);
+                },
                 accentColor: accentColor),
             ]),
             const SizedBox(height: 20),
@@ -1067,7 +1249,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     String title,
     String subtitle,
     bool value,
-    ValueChanged<bool> onChanged,
+    Future<void> Function(bool) onChanged,
     Color activeColor, {
     String? badge,
   }) {
@@ -1089,7 +1271,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SizedBox(height: 2),
                 Text(subtitle, style: DS.bodySm(size: 11)),
               ])),
-          Switch(value: value, activeThumbColor: activeColor, activeTrackColor: activeColor.withValues(alpha: 0.5), onChanged: onChanged),
+          Switch(
+            value: value,
+            activeThumbColor: activeColor,
+            activeTrackColor: activeColor.withValues(alpha: 0.5),
+            onChanged: (v) => onChanged(v)),
         ]));
   }
 

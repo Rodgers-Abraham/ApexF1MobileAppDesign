@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,7 +10,7 @@ import '../utils/api_config.dart';
 import '../../shared/theme/theme_provider.dart';
 
 class AuthState {
-  final String? token; // Firebase UID
+  final String? token;
   final String? email;
   final String? name;
   final String? favouriteTeam;
@@ -59,7 +60,6 @@ class AuthState {
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final Ref _ref;
-  // Only used for backend session/picks operations — no longer for user profile.
   final Dio _dio = Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
 
   static const String _userKey = 'auth_user';
@@ -69,6 +69,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   AuthNotifier(this._ref) : super(AuthState()) {
     _tryAutoLogin();
+    FirebaseMessaging.instance.onTokenRefresh.listen(registerFcmToken);
   }
 
   Future<void> _tryAutoLogin() async {
@@ -93,7 +94,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return;
     }
 
-    // Firebase user is logged in — read profile from Firestore.
     try {
       final doc = await _firestore
           .collection(_usersCollection)
@@ -103,7 +103,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _persistAndSetState(firebaseUser.uid, firebaseUser.email ?? '', data);
     } catch (e) {
       debugPrint('Firestore auto-login error: $e');
-      // Fall back to local cache so the UI doesn't flash to onboarding.
       final prefs = await SharedPreferences.getInstance();
       final userJson = prefs.getString(_userKey);
       if (userJson != null) {
@@ -156,28 +155,29 @@ class AuthNotifier extends StateNotifier<AuthState> {
       country: data['country'] as String?,
       rivalDriver: data['rival_driver'] as String?);
     _updateAppTheme(data['favourite_team'] as String?);
+
+    _registerFcmTokenIfAvailable();
+  }
+
+  void _registerFcmTokenIfAvailable() {
+    FirebaseMessaging.instance
+        .getToken()
+        .then((token) { if (token != null) registerFcmToken(token); })
+        .catchError((_) {});
   }
 
   String _extractErrorMessage(dynamic e, String fallback) {
     if (e is FirebaseAuthException) {
       switch (e.code) {
-        case 'email-already-in-use':
-          return 'Email is already registered.';
-        case 'user-not-found':
-          return 'No account found with this email.';
+        case 'email-already-in-use': return 'Email is already registered.';
+        case 'user-not-found': return 'No account found with this email.';
         case 'wrong-password':
-        case 'invalid-credential':
-          return 'Incorrect email or password.';
-        case 'weak-password':
-          return 'Password must be at least 6 characters.';
-        case 'invalid-email':
-          return 'Invalid email address.';
-        case 'too-many-requests':
-          return 'Too many attempts. Please try again later.';
-        case 'network-request-failed':
-          return 'Network error. Check your internet connection.';
-        default:
-          return e.message ?? fallback;
+        case 'invalid-credential': return 'Incorrect email or password.';
+        case 'weak-password': return 'Password must be at least 6 characters.';
+        case 'invalid-email': return 'Invalid email address.';
+        case 'too-many-requests': return 'Too many attempts. Please try again later.';
+        case 'network-request-failed': return 'Network error. Check your internet connection.';
+        default: return e.message ?? fallback;
       }
     }
     return fallback;
@@ -199,7 +199,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         password: password);
       final user = cred.user!;
 
-      // Store profile in Firestore — this is the single source of truth.
       final profile = <String, dynamic>{
         'email': email.trim(),
         'name': name.isNotEmpty ? name : null,
@@ -211,7 +210,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         'updated_at': FieldValue.serverTimestamp(),
       };
       await _firestore.collection(_usersCollection).doc(user.uid).set(profile);
-
       await _persistAndSetState(user.uid, email.trim(), profile);
       return true;
     } catch (e) {
@@ -229,7 +227,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         password: password);
       final user = cred.user!;
 
-      // Read profile from Firestore.
       final doc = await _firestore
           .collection(_usersCollection)
           .doc(user.uid)
@@ -280,7 +277,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         rivalDriver: rivalDriver ?? state.rivalDriver,
         country: country ?? state.country);
 
-      // Update local cache.
       final prefs = await SharedPreferences.getInstance();
       final userJson = prefs.getString(_userKey);
       if (userJson != null) {
@@ -334,13 +330,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return false;
     }
     try {
-      // 1. Delete Firestore profile.
       await _firestore
           .collection(_usersCollection)
           .doc(firebaseUser.uid)
           .delete();
 
-      // 2. Best-effort: clean up backend picks/predictions.
       try {
         final idToken = await firebaseUser.getIdToken();
         await _dio.delete(
@@ -350,7 +344,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         debugPrint('Backend delete notice (proceeding): $backendErr');
       }
 
-      // 3. Delete the Firebase Auth account.
       await firebaseUser.delete();
       await logout();
       return true;
@@ -366,7 +359,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Registers the given FCM token with the backend. Best-effort.
   Future<void> registerFcmToken(String token) async {
     final firebaseUser = FirebaseAuth.instance.currentUser;
     if (firebaseUser == null) return;
@@ -408,7 +400,6 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(ref);
 });
 
-/// Returns the user's country name string if set.
 final userCountryTzProvider = Provider<dynamic>((ref) {
   final country = ref.watch(authProvider).country;
   return country;
