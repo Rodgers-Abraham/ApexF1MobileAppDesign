@@ -167,7 +167,9 @@ CREATE TABLE IF NOT EXISTS users (
     favourite_driver TEXT,
     country TEXT,
     firebase_uid TEXT,
-    rival_driver TEXT
+    rival_driver TEXT,
+    fcm_token TEXT,
+    fcm_token_updated_at TIMESTAMPTZ
 );
 
 CREATE TABLE IF NOT EXISTS predictions (
@@ -257,7 +259,9 @@ CREATE TABLE IF NOT EXISTS users (
     favourite_driver TEXT,
     country TEXT,
     firebase_uid TEXT,
-    rival_driver TEXT
+    rival_driver TEXT,
+    fcm_token TEXT,
+    fcm_token_updated_at DATETIME
 );
 
 CREATE TABLE IF NOT EXISTS predictions (
@@ -356,6 +360,8 @@ def init_db():
                     "ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;",
                     "ALTER TABLE users ALTER COLUMN email DROP NOT NULL;",
                     "CREATE UNIQUE INDEX IF NOT EXISTS users_firebase_uid_unique ON users(firebase_uid) WHERE firebase_uid IS NOT NULL;",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS fcm_token TEXT;",
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS fcm_token_updated_at TIMESTAMPTZ;",
                 ]:
                     try:
                         cur.execute(col_sql)
@@ -384,6 +390,8 @@ def init_db():
             "ALTER TABLE users ADD COLUMN country TEXT;",
             "ALTER TABLE users ADD COLUMN firebase_uid TEXT;",
             "ALTER TABLE users ADD COLUMN rival_driver TEXT;",
+            "ALTER TABLE users ADD COLUMN fcm_token TEXT;",
+            "ALTER TABLE users ADD COLUMN fcm_token_updated_at DATETIME;",
         ]:
             try:
                 cursor.execute(migration)

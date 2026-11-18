@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -65,6 +66,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   AuthNotifier(this._ref) : super(AuthState()) {
     _tryAutoLogin();
+    // Re-register the FCM token when Firebase rotates it.
+    FirebaseMessaging.instance.onTokenRefresh.listen((token) {
+      registerFcmToken(token);
+    });
   }
 
   Future<void> _tryAutoLogin() async {
@@ -143,6 +148,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
       country: data['country'],
       rivalDriver: data['rival_driver']);
     _updateAppTheme(data['favourite_team']);
+
+    // Register FCM token after sign-in if already granted.
+    _registerFcmTokenIfAvailable();
+  }
+
+  void _registerFcmTokenIfAvailable() {
+    // Fire-and-forget: get the FCM token and register it. If permission hasn't
+    // been granted yet, getToken() returns null and nothing is sent.
+    FirebaseMessaging.instance.getToken().then((token) {
+      if (token != null) registerFcmToken(token);
+    }).catchError((_) {});
   }
 
   String _extractErrorMessage(dynamic e, String fallback) {
@@ -345,7 +361,38 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Registers the given FCM token with the backend. Best-effort — never
+  /// throws. Called after successful sign-in and on token refresh.
+  Future<void> registerFcmToken(String token) async {
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    if (firebaseUser == null) return;
+    try {
+      final idToken = await firebaseUser.getIdToken();
+      await _dio.put(
+        '/api/auth/fcm-token',
+        data: {'token': token},
+        options: Options(headers: {'Authorization': 'Bearer $idToken'}));
+    } catch (e) {
+      debugPrint('FCM token register notice (non-fatal): $e');
+    }
+  }
+
+  /// Clears the FCM token on the backend. Best-effort.
+  Future<void> _deleteFcmToken() async {
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    if (firebaseUser == null) return;
+    try {
+      final idToken = await firebaseUser.getIdToken();
+      await _dio.delete(
+        '/api/auth/fcm-token',
+        options: Options(headers: {'Authorization': 'Bearer $idToken'}));
+    } catch (e) {
+      debugPrint('FCM token delete notice (non-fatal): $e');
+    }
+  }
+
   Future<void> logout() async {
+    await _deleteFcmToken();
     await FirebaseAuth.instance.signOut();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_userKey);
