@@ -68,14 +68,15 @@ class _RaceResultsBody extends StatelessWidget {
     String winner = '';
     if (hasOfficialResults) {
       final first = rawResults
-          .where((r) => r is Map && (r as Map)['pos'] == 1)
-          .firstOrNull as Map?;
+          .whereType<Map>()
+          .where((r) => r['pos'] == 1)
+          .firstOrNull;
       winner = first?['code']?.toString() ?? '';
     } else if (lastLapPositions.isNotEmpty) {
       final first = lastLapPositions
-          .where((p) =>
-              p is Map && (p as Map)['pos'].toString() == '1')
-          .firstOrNull as Map?;
+          .whereType<Map>()
+          .where((p) => p['pos'].toString() == '1')
+          .firstOrNull;
       winner = first?['code']?.toString() ?? '';
     }
 
@@ -260,10 +261,9 @@ class _RaceResultsBody extends StatelessWidget {
 
     // 4. Track events
     final trackEvents = events
-        .where((e) => e is Map &&
-            {'SAFETY_CAR', 'VSC', 'RED_FLAG', 'PENALTY', 'YELLOW_FLAG'}
-                .contains((e as Map)['type']?.toString()))
-        .map((e) => e as Map)
+        .whereType<Map>()
+        .where((e) => {'SAFETY_CAR', 'VSC', 'RED_FLAG', 'PENALTY', 'YELLOW_FLAG'}
+            .contains(e['type']?.toString()))
         .toList();
     if (trackEvents.isNotEmpty) {
       cards.add(_TrackEventsCard(
@@ -273,10 +273,8 @@ class _RaceResultsBody extends StatelessWidget {
 
     // 5. Retirements
     final retirements = events
-        .where((e) =>
-            e is Map &&
-            (e as Map)['type']?.toString() == 'DNF')
-        .map((e) => e as Map)
+        .whereType<Map>()
+        .where((e) => e['type']?.toString() == 'DNF')
         .toList();
     if (retirements.isNotEmpty) {
       cards.add(_RetirementsCard(
@@ -485,8 +483,7 @@ class _ResultRow {
 class _ResultRowWidget extends StatelessWidget {
   final _ResultRow row;
   final bool showPoints;
-  const _ResultRowWidget(
-      {super.key, required this.row, required this.showPoints});
+  const _ResultRowWidget({required this.row, required this.showPoints});
 
   @override
   Widget build(BuildContext context) {
