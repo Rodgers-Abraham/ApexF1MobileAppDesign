@@ -146,9 +146,7 @@ def validate_critical_drivers(raw: list) -> list:
             skipped.append(f"Row {i}: not a dict")
             continue
         if not entry.get("driver") or not entry.get("team"):
-            skipped.append(
-                f"Row {i}: missing driver/team (got {list(entry.keys())})"
-            )
+            skipped.append(f"Row {i}: missing driver/team (got {list(entry.keys())})")
         else:
             valid_rows.append(entry)
 

@@ -83,13 +83,15 @@ def test_critical_drivers_valid():
     assert len(result) == 1
 
 
-def test_critical_drivers_all_missing_tc():
+def test_critical_drivers_tc_optional():
+    # tc (team colour) is optional — entries with only driver+team are valid.
+    # Many 2024 TracingInsights datasets omit tc entirely.
     rows = [
         {"driver": "VER", "team": "Red Bull Racing"},
         {"driver": "NOR", "team": "McLaren"},
     ]
-    with pytest.raises(IngestValidationError, match="0 valid driver"):
-        validate_critical_drivers(rows)
+    result = validate_critical_drivers(rows)
+    assert len(result) == 2
 
 
 def test_critical_drivers_empty_list():
