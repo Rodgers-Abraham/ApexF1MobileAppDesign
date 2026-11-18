@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 # Bump this whenever the payload schema changes — forces re-ingest of all existing sessions.
-SCHEMA_VERSION = "v2"
+SCHEMA_VERSION = "v3"
 
 
 def _safe_float(v) -> Optional[float]:
