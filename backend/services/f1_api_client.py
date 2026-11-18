@@ -981,6 +981,7 @@ class F1ApiClient:
             return cached
 
         feeds = [
+            ("https://www.formula1.com/content/fom-website/en/latest/all.xml", "FORMULA 1"),
             ("https://www.autosport.com/rss/f1/news/", "AUTOSPORT"),
             ("https://www.motorsport.com/rss/f1/news/", "MOTORSPORT"),
         ]
