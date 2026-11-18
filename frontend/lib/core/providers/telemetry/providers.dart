@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../utils/api_config.dart';
+import '../../utils/api_config.dart';
 import '../session_provider.dart';
 import 'models.dart';
 
