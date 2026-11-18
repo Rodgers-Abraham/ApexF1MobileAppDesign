@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../utils/api_config.dart';
 import '../session_provider.dart';
 import 'models.dart';
 
@@ -174,6 +177,7 @@ class RaceReplayState {
   final int? truncatedAt; // last available lap when race ended before totalLaps; null = complete
   final int? missingLapAt; // set when setLap requests a lap absent from allLaps; null = ok
   final int rawLapsInPayload; // debug: rawLapsList.length from selectSessionById
+  final int respBytesInPayload; // debug: response body byte count
 
   const RaceReplayState({
     this.meetingName = '',
@@ -199,6 +203,7 @@ class RaceReplayState {
     this.truncatedAt,
     this.missingLapAt,
     this.rawLapsInPayload = 0,
+    this.respBytesInPayload = 0,
   });
 
   RaceReplayState copyWith({
@@ -229,6 +234,7 @@ class RaceReplayState {
     int? missingLapAt,
     bool clearMissingLap = false,
     int? rawLapsInPayload,
+    int? respBytesInPayload,
   }) {
     return RaceReplayState(
       meetingName: meetingName ?? this.meetingName,
@@ -253,7 +259,8 @@ class RaceReplayState {
       availableLaps: availableLaps ?? this.availableLaps,
       truncatedAt: clearTruncatedAt ? null : (truncatedAt ?? this.truncatedAt),
       missingLapAt: clearMissingLap ? null : (missingLapAt ?? this.missingLapAt),
-      rawLapsInPayload: rawLapsInPayload ?? this.rawLapsInPayload);
+      rawLapsInPayload: rawLapsInPayload ?? this.rawLapsInPayload,
+      respBytesInPayload: respBytesInPayload ?? this.respBytesInPayload);
   }
 
   String get lapLabel {
@@ -474,13 +481,30 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
       showingGrid: false,
     );
     try {
-      final client = _ref.read(apiClientProvider);
-      final resp = await client.get('/api/timing/sessions/$sessionId/data');
+      // Use a dedicated Dio with extended timeouts for session data.
+      // Race sessions are 300-500 KB; Render's free tier can take 20+ s to
+      // wake up and start sending, which trips the ApiClient's 20 s receiveTimeout.
+      final sessionDio = Dio(BaseOptions(
+        baseUrl: ApiConfig.baseUrl,
+        connectTimeout: const Duration(seconds: 60),
+        receiveTimeout: const Duration(seconds: 120),
+      ));
+      // Attach Firebase ID token (same logic as ApiClient interceptor)
+      final firebaseUser = FirebaseAuth.instance.currentUser;
+      if (firebaseUser != null) {
+        final token = await firebaseUser.getIdToken();
+        sessionDio.options.headers['Authorization'] = 'Bearer $token';
+      }
+      final resp = await sessionDio.get('/api/timing/sessions/$sessionId/data');
+      // DEBUG: record raw response size for the debug strip
+      final dbgRespBodyJson = resp.data?.toString() ?? '';
+      final dbgRespBytes = dbgRespBodyJson.length;
       final data = resp.data as Map<String, dynamic>;
 
       final rawLapsList = (data['laps'] as Map<String, dynamic>?)?['laps'] as List? ?? [];
       // DEBUG: store raw payload lap count before any processing
       final dbgRawLapsCount = rawLapsList.length;
+      debugPrint('selectSessionById: respBytes=$dbgRespBytes rawLapsList=${rawLapsList.length} totalLaps=${(data['laps'] as Map?)?['total_laps']}');
       final totalLaps =
           ((data['laps'] as Map?)?['total_laps'] as num?)?.toInt() ?? rawLapsList.length;
       final rawGrid = (data['laps'] as Map<String, dynamic>?)?['grid'] as List? ?? [];
@@ -629,6 +653,7 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
           availableLaps: actualLaps,
           truncatedAt: truncatedAt,
           rawLapsInPayload: dbgRawLapsCount,
+          respBytesInPayload: dbgRespBytes,
         );
       }
     } catch (e) {

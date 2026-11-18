@@ -946,7 +946,8 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                 // If this is 5 while totalLaps is 71, the HTTP response itself was truncated.
                 Text(
                   'rawPayload:${replayState.rawLapsInPayload} '
-                  'entries:${allNums.length} totalLaps:${replayState.totalLaps}',
+                  'entries:${allNums.length} totalLaps:${replayState.totalLaps} '
+                  'respKB:${(replayState.respBytesInPayload / 1024).toStringAsFixed(0)}',
                   style: const TextStyle(color: Color(0xFFFFFF00)),
                 ),
                 Text('TOP3 $top3Str',
