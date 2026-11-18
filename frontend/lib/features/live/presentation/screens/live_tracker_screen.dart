@@ -145,11 +145,12 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
     final flagStatusAsync = ref.watch(raceFlagStatusProvider);
     final replayState = ref.watch(raceReplayProvider);
 
-    // Auto-load session when selectedReplaySessionProvider is set (from /sessions screen)
+    // Auto-load session when selectedReplaySessionProvider is set (from /sessions screen).
+    // Force reload even when allLaps is non-empty: stale data from a previous session
+    // (truncated or from an older build) must not block the new load.
     final selectedSessionId = ref.watch(selectedReplaySessionProvider);
     if (selectedSessionId != null &&
         !replayState.isLoading &&
-        replayState.allLaps.isEmpty &&
         replayState.loadError == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -939,6 +940,16 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                   'avail:${replayState.availableLaps} trunc:${replayState.truncatedAt} '
                   'miss:${replayState.missingLapAt} has:$hasLap',
                   style: const TextStyle(color: Color(0xFFFF8C00)),
+                ),
+                // KEY DEBUG LINE: rawLapsInPayload = rawLapsList.length from selectSessionById
+                // If this equals allLaps-1 (excluding grid), parsing is correct.
+                // If this is 5 while totalLaps is 71, the HTTP response itself was truncated.
+                Text(
+                  'rawPayload:${replayState.rawLapsInPayload} '
+                  'entries:${allNums.length} totalLaps:${replayState.totalLaps} '
+                  'respKB:${(replayState.respBytesInPayload / 1024).toStringAsFixed(0)} '
+                  'err:${replayState.loadError != null ? "YES" : "no"}',
+                  style: const TextStyle(color: Color(0xFFFFFF00)),
                 ),
                 Text('TOP3 $top3Str',
                     style: const TextStyle(color: Color(0xFF00FF88))),
