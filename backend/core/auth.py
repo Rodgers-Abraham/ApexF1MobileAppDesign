@@ -85,6 +85,8 @@ def get_current_user(authorization: str = Header(None)) -> dict:
             detail={"error": "Token has no uid", "code": "INVALID_TOKEN"},
         )
 
+    email = decoded.get("email", "")
+
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -94,11 +96,32 @@ def get_current_user(authorization: str = Header(None)) -> dict:
         )
         user = cursor.fetchone()
 
+        if not user:
+            # User profile lives in Firestore. Auto-create a minimal row here
+            # so picks/predictions can store a FK. Profile fields come from Firestore.
+            from core.database import DBIntegrityError
+
+            try:
+                cursor.execute(
+                    "INSERT INTO users (firebase_uid, email, favourite_team) VALUES (?, ?, ?)",
+                    (uid, email, "Ferrari"),
+                )
+                conn.commit()
+            except DBIntegrityError:
+                pass  # race condition — another request beat us
+
+            cursor.execute(
+                "SELECT id, email, name, favourite_team, favourite_driver, rival_driver, country, firebase_uid "
+                "FROM users WHERE firebase_uid = ?",
+                (uid,),
+            )
+            user = cursor.fetchone()
+
     if not user:
         raise HTTPException(
             status_code=401,
             detail={
-                "error": "User profile not found. Please register.",
+                "error": "Failed to initialise user record.",
                 "code": "USER_NOT_FOUND",
             },
         )
