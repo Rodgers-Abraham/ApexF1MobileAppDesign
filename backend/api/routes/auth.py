@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel
 from typing import Optional
@@ -11,6 +12,10 @@ router = APIRouter()
 
 class ThemeUpdate(BaseModel):
     favourite_team: str
+
+
+class FcmTokenUpdate(BaseModel):
+    token: str
 
 
 class ProfileUpdate(BaseModel):
@@ -135,6 +140,37 @@ async def delete_account(current_user: dict = Depends(get_current_user)):
                 },
             )
     return {"status": "success", "message": "Account successfully deleted"}
+
+
+@router.put("/fcm-token")
+async def upsert_fcm_token(
+    body: FcmTokenUpdate, current_user: dict = Depends(get_current_user)
+):
+    if not body.token or len(body.token) > 4096:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": "Invalid FCM token.", "code": "INVALID_TOKEN"},
+        )
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE users SET fcm_token = ?, fcm_token_updated_at = ? WHERE id = ?",
+            (body.token, datetime.now(timezone.utc).isoformat(), current_user["id"]),
+        )
+        conn.commit()
+    return {"status": "ok"}
+
+
+@router.delete("/fcm-token")
+async def delete_fcm_token(current_user: dict = Depends(get_current_user)):
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE users SET fcm_token = NULL, fcm_token_updated_at = NULL WHERE id = ?",
+            (current_user["id"],),
+        )
+        conn.commit()
+    return {"status": "ok"}
 
 
 # ─── Firebase Auth ─────────────────────────────────────────────────────────────

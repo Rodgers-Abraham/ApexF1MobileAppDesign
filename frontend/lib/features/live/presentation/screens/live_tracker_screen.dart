@@ -16,6 +16,7 @@ import '../widgets/radio_card.dart';
 import '../widgets/session_flag_banner.dart';
 import '../widgets/track_painter.dart';
 import '../../../sessions/presentation/screens/sessions_list_screen.dart' show selectedReplaySessionProvider;
+import '../../../sessions/data/sessions_provider.dart' show allSessionsProvider, EventSessions, SessionEntry;
 import '../widgets/replay_timing_tower_widget.dart';
 
 enum LiveMode { timing, map, radio, tyres }
@@ -143,8 +144,6 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
     final sessionStatusAsync = ref.watch(sessionLiveStatusProvider);
     final flagStatusAsync = ref.watch(raceFlagStatusProvider);
     final replayState = ref.watch(raceReplayProvider);
-    // Watch calendar so the replay picker always has fresh data
-    ref.watch(calendarProvider);
 
     // Auto-load session when selectedReplaySessionProvider is set (from /sessions screen).
     // Force reload even when allLaps is non-empty: stale data from a previous session
@@ -1408,16 +1407,6 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   }
 
   void _showReplayRaceSelector(BuildContext context) {
-    final calendarAsync = ref.read(calendarProvider);
-    final pastRaces = calendarAsync.whenOrNull(
-      data: (races) => races.where((r) => r.date.isBefore(DateTime.now())).toList()) ?? [];
-
-    if (pastRaces.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No completed races available for replay.')));
-      return;
-    }
-
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF141419),
@@ -1425,15 +1414,9 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => _ReplaySessionPicker(
-        pastRaces: pastRaces,
-        selectedMeeting: _selectedReplayMeeting,
-        onSelected: (race, sessionType) {
-          setState(() => _selectedReplayMeeting = race.name);
-          ref.read(raceReplayProvider.notifier).selectSession(
-            year: race.date.year,
-            round: int.tryParse(race.round) ?? 1,
-            meetingName: race.name,
-            sessionType: sessionType);
+        currentSessionId: ref.read(raceReplayProvider).meetingName,
+        onSelected: (sessionId) {
+          ref.read(raceReplayProvider.notifier).selectSessionById(sessionId);
           Navigator.pop(ctx);
         }));
   }
@@ -1961,167 +1944,157 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
 }
 // Widget classes extracted to ../widgets/ — see imports above.
 
-/// Two-step bottom sheet: pick a race, then pick a session type.
-class _ReplaySessionPicker extends StatefulWidget {
-  final List<RaceEvent> pastRaces;
-  final String selectedMeeting;
-  final void Function(RaceEvent race, String sessionType) onSelected;
+/// Sessions-based replay picker. Loads all ingested sessions from
+/// /api/timing/sessions and lets the user pick any session by ID.
+class _ReplaySessionPicker extends ConsumerWidget {
+  final String currentSessionId;
+  final void Function(String sessionId) onSelected;
 
   const _ReplaySessionPicker({
-    required this.pastRaces,
-    required this.selectedMeeting,
+    required this.currentSessionId,
     required this.onSelected,
   });
 
-  @override
-  State<_ReplaySessionPicker> createState() => _ReplaySessionPickerState();
-}
-
-class _ReplaySessionPickerState extends State<_ReplaySessionPicker> {
-  RaceEvent? _pickedRace;
-
-  static const _allSessions = [
-    {'type': 'race', 'label': 'RACE DAY', 'icon': Icons.emoji_events_rounded},
-    {'type': 'qualifying', 'label': 'QUALIFYING', 'icon': Icons.timer_rounded},
-    {'type': 'sprint', 'label': 'SPRINT', 'icon': Icons.bolt_rounded},
-  ];
-
-  List<Map<String, dynamic>> get _sessions => _pickedRace == null
-      ? _allSessions.where((s) => s['type'] != 'sprint').toList()
-      : _allSessions.where((s) => s['type'] != 'sprint' || (_pickedRace!.hasSprint)).toList();
+  static const Map<String, Color> _typeColors = {
+    'Race': Colors.cyanAccent,
+    'Sprint': Color(0xFFFF8000),
+    'Q': Color(0xFFFFD600),
+    'SQ': Color(0xFFFFD600),
+    'P1': Color(0xFF8F909A),
+    'P2': Color(0xFF8F909A),
+    'P3': Color(0xFF8F909A),
+  };
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sessionsAsync = ref.watch(allSessionsProvider);
     return DraggableScrollableSheet(
-      initialChildSize: 0.6,
+      initialChildSize: 0.65,
       maxChildSize: 0.92,
       minChildSize: 0.4,
       expand: false,
-      builder: (ctx, scrollController) {
+      builder: (ctx, scrollCtrl) {
         return Container(
           color: const Color(0xFF141419),
-          child: Column(
-            children: [
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 10),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2))),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    if (_pickedRace != null) ...[
-                      GestureDetector(
-                        onTap: () => setState(() => _pickedRace = null),
-                        child: const Icon(Icons.chevron_left_rounded, color: Colors.cyanAccent, size: 22)),
-                      const SizedBox(width: 6),
-                    ],
-                    Expanded(
-                      child: Text(
-                        _pickedRace == null ? 'SELECT RACE' : 'SELECT SESSION',
-                        style: const TextStyle( fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white))),
-                    GestureDetector(
-                      onTap: () => Navigator.pop(ctx),
-                      child: const Icon(Icons.close, color: Colors.grey, size: 20)),
-                  ])),
-              const SizedBox(height: 4),
-              if (_pickedRace != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                  child: Text(
-                    _pickedRace!.name,
-                    style: const TextStyle( fontSize: 10, color: Colors.grey))),
-              const Divider(color: Color(0xFF202028)),
-              Expanded(
-                child: _pickedRace == null
-                    ? _buildRaceList(scrollController)
-                    : _buildSessionList()),
-            ]));
+          child: Column(children: [
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 10),
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white24, borderRadius: BorderRadius.circular(2))),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Row(children: [
+                const Text('SELECT SESSION REPLAY',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white)),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () => Navigator.pop(ctx),
+                  child: const Icon(Icons.close, color: Colors.grey, size: 20)),
+              ])),
+            const Divider(color: Color(0xFF202028)),
+            Expanded(child: sessionsAsync.when(
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: Colors.cyanAccent, strokeWidth: 2)),
+              error: (e, _) => Center(
+                child: Text('Could not load sessions',
+                    style: const TextStyle(color: Colors.grey, fontSize: 11))),
+              data: (events) {
+                if (events.isEmpty) {
+                  return const Center(
+                    child: Text('No sessions available',
+                        style: TextStyle(color: Colors.grey, fontSize: 11)));
+                }
+                // Most recent year first
+                final sorted = [...events]..sort((a, b) {
+                  final yCmp = b.year.compareTo(a.year);
+                  return yCmp != 0 ? yCmp : b.event.compareTo(a.event);
+                });
+                // Group by year
+                final byYear = <int, List<EventSessions>>{};
+                for (final ev in sorted) {
+                  byYear.putIfAbsent(ev.year, () => []).add(ev);
+                }
+                final years = byYear.keys.toList()..sort((a, b) => b.compareTo(a));
+
+                return ListView.builder(
+                  controller: scrollCtrl,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  itemCount: years.fold<int>(0, (acc, y) => acc + 1 + (byYear[y]?.length ?? 0)),
+                  itemBuilder: (context, index) {
+                    // Map flat index → (year header | event row)
+                    int i = index;
+                    for (final year in years) {
+                      if (i == 0) {
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(4, 12, 4, 6),
+                          child: Text('$year',
+                              style: const TextStyle(
+                                  fontSize: 10, fontWeight: FontWeight.w900,
+                                  color: Colors.grey, letterSpacing: 1.5)));
+                      }
+                      i--;
+                      final evList = byYear[year]!;
+                      if (i < evList.length) {
+                        return _EventRow(
+                          event: evList[i],
+                          onSelected: (id) {
+                            Navigator.pop(ctx);
+                            onSelected(id);
+                          });
+                      }
+                      i -= evList.length;
+                    }
+                    return const SizedBox.shrink();
+                  });
+              },
+            )),
+          ]));
       });
   }
+}
 
-  Widget _buildRaceList(ScrollController ctrl) {
-    final reversed = widget.pastRaces.reversed.toList();
-    return ListView.builder(
-      controller: ctrl,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      itemCount: reversed.length,
-      itemBuilder: (context, i) {
-        final race = reversed[i];
-        final isSelected = race.name == widget.selectedMeeting;
-        return ListTile(
-          dense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-          tileColor: isSelected ? Colors.cyanAccent.withValues(alpha: 0.08) : null,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          leading: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'RD ${race.round}',
-                style: const TextStyle( fontSize: 8, fontWeight: FontWeight.w900, color: Colors.grey)),
-              Text(
-                getCountryFlag(race.countryCode),
-                style: const TextStyle(fontSize: 16)),
-            ]),
-          title: Text(
-            race.name.replaceAll(' Grand Prix', ' GP'),
-            style: TextStyle( fontSize: 12,
-              fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
-              color: isSelected ? Colors.cyanAccent : Colors.white)),
-          subtitle: Text(
-            race.date.toIso8601String().substring(0, 10),
-            style: const TextStyle( fontSize: 9, color: Colors.grey)),
-          trailing: const Icon(Icons.chevron_right_rounded, color: Colors.grey, size: 18),
-          onTap: () => setState(() => _pickedRace = race));
-      });
-  }
+class _EventRow extends StatelessWidget {
+  final EventSessions event;
+  final void Function(String id) onSelected;
 
-  Widget _buildSessionList() {
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      children: [
-        for (final s in _sessions)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: GestureDetector(
-              onTap: () => widget.onSelected(_pickedRace!, s['type'] as String),
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1A1A22),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3))),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.cyanAccent.withValues(alpha: 0.1),
-                        shape: BoxShape.circle),
-                      child: Icon(s['icon'] as IconData, color: Colors.cyanAccent, size: 20)),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            s['label'] as String,
-                            style: const TextStyle( fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white)),
-                          const SizedBox(height: 2),
-                          Text(
-                            s['type'] == 'race'
-                                ? 'Lap-by-lap timing tower progression'
-                                : s['type'] == 'qualifying'
-                                    ? 'Q1 → Q2 → Q3 session breakdown'
-                                    : 'Sprint race final results',
-                            style: const TextStyle( fontSize: 9, color: Colors.grey)),
-                        ])),
-                    const Icon(Icons.play_circle_filled_rounded, color: Colors.cyanAccent, size: 22),
-                  ])))),
-      ]);
+  const _EventRow({required this.event, required this.onSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    final label = event.event.replaceAll('_', ' ').replaceAll(' Grand Prix', ' GP');
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A22),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFF282832))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6, runSpacing: 6,
+            children: event.sessions.map((s) {
+              final typeLabel = EventSessions.sessionTypeLabel(s.sessionType);
+              final color = _ReplaySessionPicker._typeColors[s.sessionType] ?? Colors.grey;
+              return GestureDetector(
+                onTap: () => onSelected(s.id),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: color.withValues(alpha: 0.5))),
+                  child: Text(typeLabel,
+                      style: TextStyle(
+                          fontSize: 9, fontWeight: FontWeight.w900, color: color))));
+            }).toList()),
+        ]));
   }
 }
 

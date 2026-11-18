@@ -6,6 +6,11 @@ import '../utils/api_config.dart';
 class ApiClient {
   final Dio _dio;
 
+  /// Test-only constructor: accepts a pre-configured Dio so tests can inject
+  /// a mock HTTP adapter without triggering Firebase interceptors.
+  @visibleForTesting
+  ApiClient.withDio(Dio dio) : _dio = dio;
+
   ApiClient()
       : _dio = Dio(
           BaseOptions(

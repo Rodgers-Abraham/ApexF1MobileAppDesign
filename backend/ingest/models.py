@@ -145,9 +145,9 @@ def validate_critical_drivers(raw: list) -> list:
         if not isinstance(entry, dict):
             skipped.append(f"Row {i}: not a dict")
             continue
-        if not entry.get("driver") or not entry.get("team") or not entry.get("tc"):
+        if not entry.get("driver") or not entry.get("team"):
             skipped.append(
-                f"Row {i}: missing driver/team/tc (got {list(entry.keys())})"
+                f"Row {i}: missing driver/team (got {list(entry.keys())})"
             )
         else:
             valid_rows.append(entry)
@@ -160,7 +160,7 @@ def validate_critical_drivers(raw: list) -> list:
     if not valid_rows:
         raise IngestValidationError(
             f"drivers.json: 0 valid driver entries out of {len(raw)} — "
-            f"all missing driver, team, or tc."
+            f"all missing driver or team."
         )
 
     return valid_rows

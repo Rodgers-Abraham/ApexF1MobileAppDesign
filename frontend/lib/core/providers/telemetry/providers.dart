@@ -346,129 +346,7 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
 
   RaceReplayNotifier(this._ref) : super(const RaceReplayState());
 
-  Future<void> selectSession({
-    required int year,
-    required int round,
-    required String meetingName,
-    required String sessionType,
-  }) async {
-    _playTimer?.cancel();
-    state = state.copyWith(
-      meetingName: meetingName,
-      sessionType: sessionType,
-      currentLap: 1,
-      isPlaying: false,
-      isLoading: true,
-      loadError: null,
-      allLaps: [],
-      telemetry: []);
-
-    try {
-      final client = _ref.read(apiClientProvider);
-      final encodedName = Uri.encodeComponent(meetingName);
-      final resp = await client.get('/api/f1/replay/$year/$round/$sessionType?race_name=$encodedName');
-      final data = resp.data as Map<String, dynamic>;
-      final rawLaps = (data['laps'] as List?) ?? [];
-      final totalLaps = (data['total_laps'] as num?)?.toInt() ?? rawLaps.length;
-
-      final entries = rawLaps.map((lapRaw) {
-        final lap = lapRaw as Map<String, dynamic>;
-        final lapNum = (lap['lap'] as num?)?.toInt() ?? 0;
-        final phase = lap['phase']?.toString() ?? '';
-        final rawPositions = (lap['positions'] as List?) ?? [];
-        final positions = rawPositions.map((p) {
-          final pos = p as Map<String, dynamic>;
-          return _posToTelemetry(pos);
-        }).toList();
-        return ReplayLapEntry(lap: lapNum, phase: phase, positions: positions);
-      }).toList();
-
-      // Parse final classification (race results — always correct)
-      final rawFinal = (data['final_classification'] as List?) ?? [];
-      final finalClassif = rawFinal.map((p) => _posToTelemetry(p as Map<String, dynamic>)).toList();
-
-      // Parse race control events from OpenF1 (empty for pre-2023/non-race)
-      final rawEvents = (data['race_control_events'] as List?) ?? [];
-      final rcEvents = rawEvents
-          .map((e) => RaceControlEvent.fromJson(e as Map<String, dynamic>))
-          .toList();
-      final lapEvtMap = <int, List<RaceControlEvent>>{};
-      for (final e in rcEvents) {
-        lapEvtMap.putIfAbsent(e.lap, () => []).add(e);
-      }
-      final flagLaps = lapEvtMap.keys
-          .where((l) => lapEvtMap[l]!.any((e) => e.isNotable))
-          .toSet();
-
-      // Parse race summary
-      RaceSummary? raceSummary;
-      final rawSummary = data['race_summary'] as Map<String, dynamic>?;
-      if (rawSummary != null) {
-        raceSummary = RaceSummary.fromJson(rawSummary);
-      }
-
-      if (mounted) {
-        // Show grid (lap 0) first; compute incident laps for ⚡ skip button
-        final gridEntry = entries.firstWhere((e) => e.lap == 0, orElse: () => entries.first);
-        final incidents = _computeIncidentLaps(entries);
-        final actualLaps = entries.where((e) => e.lap > 0).length;
-        final truncatedAt = (actualLaps < totalLaps && actualLaps > 0) ? actualLaps : null;
-        state = state.copyWith(
-          meetingName: data['race_name']?.toString() ?? meetingName,
-          circuitName: data['circuit']?.toString() ?? '',
-          sessionType: data['session_type']?.toString() ?? sessionType,
-          totalLaps: totalLaps,
-          currentLap: 0,
-          allLaps: entries,
-          finalClassification: finalClassif,
-          isLoading: false,
-          showingGrid: true,
-          incidentLaps: ({...incidents, ...flagLaps}.toList()..sort()),
-          raceControlEvents: rcEvents,
-          lapEventMap: lapEvtMap,
-          raceSummary: raceSummary,
-          telemetry: gridEntry.positions,
-          availableLaps: actualLaps,
-          truncatedAt: truncatedAt);
-      }
-    } catch (e) {
-      debugPrint('Session replay error: $e');
-      if (mounted) {
-        state = state.copyWith(
-          isLoading: false,
-          loadError: 'Timing data not yet available for this session. Try again later.');
-      }
-    }
-  }
-
-  LiveTelemetry _posToTelemetry(Map<String, dynamic> p) {
-    final teamName = p['team']?.toString() ?? '';
-    final driverData = _colorForTeam(teamName);
-    return LiveTelemetry(
-      pos: p['pos']?.toString() ?? '',
-      name: p['name']?.toString() ?? '',
-      driverNumber: 0,
-      team: teamName,
-      gap: p['gap']?.toString() ?? '',
-      interval: p['interval']?.toString() ?? '',
-      positionsGained: 0,
-      status: p['status']?.toString() ?? 'RACING',
-      dnfReason: '',
-      tyre: '',
-      tyreLife: '',
-      lastLap: p['lap_time']?.toString() ?? '',
-      bestLap: '',
-      isFastestLap: false,
-      pitStops: 0,
-      drs: false,
-      speed: '',
-      gear: '',
-      color: driverData,
-      x: 0.0,
-      y: 0.0);
-  }
-
-  /// Load a session from the new TracingInsights-sourced /api/timing/sessions endpoint.
+  /// Load a session from the TracingInsights-sourced /api/timing/sessions endpoint.
   Future<void> selectSessionById(String sessionId) async {
     _playTimer?.cancel();
     state = state.copyWith(
@@ -686,7 +564,9 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
     return LiveTelemetry(
       pos: posStr,
       name: p['code']?.toString() ?? '',
-      driverNumber: (p['number'] as num?)?.toInt() ?? 0,
+      // Grid entries store number as a JSON String (e.g. "12"); lap-position
+      // entries omit it entirely (null). int.tryParse handles both safely.
+      driverNumber: int.tryParse(p['number']?.toString() ?? '') ?? 0,
       team: p['team']?.toString() ?? '',
       gap: p['gap']?.toString() ?? '',
       interval: p['interval']?.toString() ?? '',
@@ -699,7 +579,7 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
       bestLap: '',
       isFastestLap: p['is_fastest_lap_of_race'] == true,
       isFastestThisLap: p['is_fastest_this_lap'] == true,
-      pitStops: (p['stint'] as num?)?.toInt() ?? 1,
+      pitStops: int.tryParse(p['stint']?.toString() ?? '') ?? 1,
       drs: false,
       speed: '',
       gear: '',
@@ -707,23 +587,6 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
       x: 0.0,
       y: 0.0,
     );
-  }
-
-  String _colorForTeam(String team) {
-    const colors = {
-      'Red Bull Racing': '#3671C6',
-      'Ferrari': '#E8002D',
-      'McLaren': '#FF8000',
-      'Mercedes': '#27F4D2',
-      'Aston Martin': '#229971',
-      'Alpine': '#00A1E8',
-      'Williams': '#64C4FF',
-      'Racing Bulls': '#6692FF',
-      'Haas': '#B6BABD',
-      'Audi': '#2B4562',
-      'Cadillac': '#FFFFFF',
-    };
-    return colors[team] ?? '#FFFFFF';
   }
 
   void setLap(int lap) {
@@ -880,10 +743,6 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
       state = state.copyWith(focusedDriverName: driverName);
     }
   }
-
-  // Legacy — kept so old code compiles, redirects are ignored
-  Future<void> loadLap(String meetingName, int lap) async {}
-  Future<void> selectMeeting(String meetingName) async {}
 
   @override
   void dispose() {

@@ -13,6 +13,9 @@ import '../../features/predictor/presentation/screens/predictor_screen.dart';
 import '../../features/chat/presentation/screens/chat_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/sessions/presentation/screens/sessions_list_screen.dart';
+import '../../features/sessions/presentation/screens/race_results_screen.dart';
+import '../../features/sessions/presentation/screens/practice_results_screen.dart';
+import '../../features/sessions/presentation/screens/qualifying_results_screen.dart';
 import '../../shared/widgets/dashboard_shell.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -98,6 +101,21 @@ final GoRouter appRouter = GoRouter(
           path: '/replay/qualifying/:id',
           builder: (BuildContext context, GoRouterState state) {
             return QualifyingReplayScreen(sessionId: state.pathParameters['id']!);
+          }),
+        GoRoute(
+          path: '/results/race/:id',
+          builder: (BuildContext context, GoRouterState state) {
+            return RaceResultsScreen(sessionId: state.pathParameters['id']!);
+          }),
+        GoRoute(
+          path: '/results/practice/:id',
+          builder: (BuildContext context, GoRouterState state) {
+            return PracticeResultsScreen(sessionId: state.pathParameters['id']!);
+          }),
+        GoRoute(
+          path: '/results/qualifying/:id',
+          builder: (BuildContext context, GoRouterState state) {
+            return QualifyingResultsScreen(sessionId: state.pathParameters['id']!);
           }),
       ]),
   ]);
