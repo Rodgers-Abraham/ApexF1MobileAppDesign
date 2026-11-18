@@ -146,11 +146,12 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
     // Watch calendar so the replay picker always has fresh data
     ref.watch(calendarProvider);
 
-    // Auto-load session when selectedReplaySessionProvider is set (from /sessions screen)
+    // Auto-load session when selectedReplaySessionProvider is set (from /sessions screen).
+    // Force reload even when allLaps is non-empty: stale data from a previous session
+    // (truncated or from an older build) must not block the new load.
     final selectedSessionId = ref.watch(selectedReplaySessionProvider);
     if (selectedSessionId != null &&
         !replayState.isLoading &&
-        replayState.allLaps.isEmpty &&
         replayState.loadError == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -947,7 +948,8 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
                 Text(
                   'rawPayload:${replayState.rawLapsInPayload} '
                   'entries:${allNums.length} totalLaps:${replayState.totalLaps} '
-                  'respKB:${(replayState.respBytesInPayload / 1024).toStringAsFixed(0)}',
+                  'respKB:${(replayState.respBytesInPayload / 1024).toStringAsFixed(0)} '
+                  'err:${replayState.loadError != null ? "YES" : "no"}',
                   style: const TextStyle(color: Color(0xFFFFFF00)),
                 ),
                 Text('TOP3 $top3Str',

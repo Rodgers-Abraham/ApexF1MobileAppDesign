@@ -496,9 +496,9 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
         sessionDio.options.headers['Authorization'] = 'Bearer $token';
       }
       final resp = await sessionDio.get('/api/timing/sessions/$sessionId/data');
-      // DEBUG: record raw response size for the debug strip
-      final dbgRespBodyJson = resp.data?.toString() ?? '';
-      final dbgRespBytes = dbgRespBodyJson.length;
+      // DEBUG: use Content-Length header for the actual server-reported byte count.
+      final dbgContentLen = resp.headers.value('content-length');
+      final dbgRespBytes = int.tryParse(dbgContentLen ?? '') ?? 0;
       final data = resp.data as Map<String, dynamic>;
 
       final rawLapsList = (data['laps'] as Map<String, dynamic>?)?['laps'] as List? ?? [];
