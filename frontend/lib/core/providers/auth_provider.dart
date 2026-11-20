@@ -19,6 +19,7 @@ class AuthState {
   final String? rivalDriver;
   final bool isLoading;
   final String? errorMessage;
+  final bool isInitialized;
 
   AuthState({
     this.token,
@@ -30,6 +31,7 @@ class AuthState {
     this.rivalDriver,
     this.isLoading = false,
     this.errorMessage,
+    this.isInitialized = false,
   });
 
   bool get isAuthenticated => token != null;
@@ -44,6 +46,7 @@ class AuthState {
     String? rivalDriver,
     bool? isLoading,
     String? errorMessage,
+    bool? isInitialized,
   }) {
     return AuthState(
       token: token ?? this.token,
@@ -54,7 +57,8 @@ class AuthState {
       country: country ?? this.country,
       rivalDriver: rivalDriver ?? this.rivalDriver,
       isLoading: isLoading ?? this.isLoading,
-      errorMessage: errorMessage);
+      errorMessage: errorMessage,
+      isInitialized: isInitialized ?? this.isInitialized);
   }
 }
 
@@ -73,51 +77,58 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> _tryAutoLogin() async {
-    final firebaseUser = FirebaseAuth.instance.currentUser;
-    if (firebaseUser == null) {
-      final prefs = await SharedPreferences.getInstance();
-      final userJson = prefs.getString(_userKey);
-      if (userJson != null) {
-        try {
-          final userData = jsonDecode(userJson) as Map<String, dynamic>;
-          state = AuthState(
-            token: userData['uid'] as String?,
-            email: userData['email'] as String?,
-            name: userData['name'] as String?,
-            favouriteTeam: userData['favourite_team'] as String?,
-            favouriteDriver: userData['favourite_driver'] as String?,
-            country: userData['country'] as String?,
-            rivalDriver: userData['rival_driver'] as String?);
-          _updateAppTheme(userData['favourite_team'] as String?);
-        } catch (_) {}
-      }
-      return;
-    }
-
     try {
-      final doc = await _firestore
-          .collection(_usersCollection)
-          .doc(firebaseUser.uid)
-          .get();
-      final data = doc.exists ? (doc.data() ?? {}) : <String, dynamic>{};
-      await _persistAndSetState(firebaseUser.uid, firebaseUser.email ?? '', data);
-    } catch (e) {
-      debugPrint('Firestore auto-login error: $e');
-      final prefs = await SharedPreferences.getInstance();
-      final userJson = prefs.getString(_userKey);
-      if (userJson != null) {
-        try {
-          final userData = jsonDecode(userJson) as Map<String, dynamic>;
-          state = AuthState(
-            token: userData['uid'] as String?,
-            email: userData['email'] as String?,
-            name: userData['name'] as String?,
-            favouriteTeam: userData['favourite_team'] as String?,
-            favouriteDriver: userData['favourite_driver'] as String?,
-            country: userData['country'] as String?,
-            rivalDriver: userData['rival_driver'] as String?);
-          _updateAppTheme(userData['favourite_team'] as String?);
-        } catch (_) {}
+      final firebaseUser = FirebaseAuth.instance.currentUser;
+      if (firebaseUser == null) {
+        final prefs = await SharedPreferences.getInstance();
+        final userJson = prefs.getString(_userKey);
+        if (userJson != null) {
+          try {
+            final userData = jsonDecode(userJson) as Map<String, dynamic>;
+            state = AuthState(
+              token: userData['uid'] as String?,
+              email: userData['email'] as String?,
+              name: userData['name'] as String?,
+              favouriteTeam: userData['favourite_team'] as String?,
+              favouriteDriver: userData['favourite_driver'] as String?,
+              country: userData['country'] as String?,
+              rivalDriver: userData['rival_driver'] as String?);
+            _updateAppTheme(userData['favourite_team'] as String?);
+          } catch (_) {}
+        }
+        return;
+      }
+
+      try {
+        final doc = await _firestore
+            .collection(_usersCollection)
+            .doc(firebaseUser.uid)
+            .get();
+        final data = doc.exists ? (doc.data() ?? {}) : <String, dynamic>{};
+        await _persistAndSetState(firebaseUser.uid, firebaseUser.email ?? '', data);
+      } catch (e) {
+        debugPrint('Firestore auto-login error: $e');
+        final prefs = await SharedPreferences.getInstance();
+        final userJson = prefs.getString(_userKey);
+        if (userJson != null) {
+          try {
+            final userData = jsonDecode(userJson) as Map<String, dynamic>;
+            state = AuthState(
+              token: userData['uid'] as String?,
+              email: userData['email'] as String?,
+              name: userData['name'] as String?,
+              favouriteTeam: userData['favourite_team'] as String?,
+              favouriteDriver: userData['favourite_driver'] as String?,
+              country: userData['country'] as String?,
+              rivalDriver: userData['rival_driver'] as String?);
+            _updateAppTheme(userData['favourite_team'] as String?);
+          } catch (_) {}
+        }
+      }
+    } finally {
+      // Always mark auth as initialized so the router and UI can proceed
+      if (!state.isInitialized) {
+        state = state.copyWith(isInitialized: true);
       }
     }
   }
@@ -153,7 +164,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       favouriteTeam: (data['favourite_team'] as String?) ?? 'Ferrari',
       favouriteDriver: data['favourite_driver'] as String?,
       country: data['country'] as String?,
-      rivalDriver: data['rival_driver'] as String?);
+      rivalDriver: data['rival_driver'] as String?,
+      isInitialized: true);
     _updateAppTheme(data['favourite_team'] as String?);
 
     _registerFcmTokenIfAvailable();
@@ -392,7 +404,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_userKey);
     await prefs.remove('onboarding_completed');
-    state = AuthState();
+    state = AuthState(isInitialized: true);
   }
 }
 

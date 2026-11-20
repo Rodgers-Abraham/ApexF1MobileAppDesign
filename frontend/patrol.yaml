@@ -1,0 +1,7 @@
+app_id: com.antigravity.f1
+
+android:
+  package_name: com.antigravity.f1
+
+ios:
+  bundle_id: com.antigravity.f1
