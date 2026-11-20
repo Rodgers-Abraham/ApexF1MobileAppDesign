@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,16 +29,19 @@ final GoRouter appRouter = GoRouter(
     final prefs = await SharedPreferences.getInstance();
     final bool onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
 
+    // Guard against the race condition where _tryAutoLogin() is still in-flight:
+    // Firebase persists tokens locally, so currentUser is non-null synchronously
+    // even before the async Firestore profile fetch completes.
+    bool hasFirebaseUser = false;
+    try {
+      hasFirebaseUser = FirebaseAuth.instance.currentUser != null;
+    } catch (_) {}
+
+    final bool effectivelyCompleted = onboardingCompleted || hasFirebaseUser;
     final bool isOnboardingRoute = state.uri.toString() == '/onboarding';
 
-    if (!onboardingCompleted) {
-      return '/onboarding';
-    }
-
-    if (onboardingCompleted && isOnboardingRoute) {
-      return '/';
-    }
-
+    if (!effectivelyCompleted) return '/onboarding';
+    if (effectivelyCompleted && isOnboardingRoute) return '/';
     return null;
   },
   routes: <RouteBase>[

@@ -4,6 +4,8 @@ A Formula 1 companion app for the 2026 season — live telemetry, standings, rac
 
 Built with **Flutter** (frontend) and **FastAPI** (backend).
 
+> **For agents:** See [`APP.md`](APP.md) for a full feature-by-feature reference — files, providers, API endpoints, constraints, and testing instructions — before modifying anything.
+
 ## Features
 
 - **Pit Wall** — GP countdown hero, race control flags, leader pulse, paddock news, and the full season calendar
