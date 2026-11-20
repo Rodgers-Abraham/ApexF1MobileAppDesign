@@ -149,15 +149,12 @@ void main() {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
-    final notifier = container.read(raceReplayProvider.notifier);
-
     // Inject state directly (mimics what selectSessionById writes).
     // Notifier.state is accessible via ProviderContainer in tests.
     final gridPositions = allLaps.isNotEmpty ? allLaps.first.positions : <LiveTelemetry>[];
-    container.read(raceReplayProvider.notifier);
     // Use copyWith to set state we need for setLap to work.
     // We test via the public setLap → state pipeline.
-    final seedState = const RaceReplayState().copyWith(
+    const RaceReplayState().copyWith(
       allLaps: allLaps,
       totalLaps: 71,
       availableLaps: 71,

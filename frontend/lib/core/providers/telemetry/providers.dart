@@ -341,10 +341,9 @@ class RaceReplayState {
 }
 
 class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
-  final Ref _ref;
   Timer? _playTimer;
 
-  RaceReplayNotifier(this._ref) : super(const RaceReplayState());
+  RaceReplayNotifier() : super(const RaceReplayState());
 
   /// Load a session from the TracingInsights-sourced /api/timing/sessions endpoint.
   Future<void> selectSessionById(String sessionId) async {
@@ -753,7 +752,7 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
 
 final raceReplayProvider =
     StateNotifierProvider<RaceReplayNotifier, RaceReplayState>((ref) {
-  return RaceReplayNotifier(ref);
+  return RaceReplayNotifier();
 });
 
 class TeamRadioNotifier extends StateNotifier<AsyncValue<List<TeamRadioItem>>> {

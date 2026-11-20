@@ -16,7 +16,7 @@ import '../widgets/radio_card.dart';
 import '../widgets/session_flag_banner.dart';
 import '../widgets/track_painter.dart';
 import '../../../sessions/presentation/screens/sessions_list_screen.dart' show selectedReplaySessionProvider;
-import '../../../sessions/data/sessions_provider.dart' show allSessionsProvider, EventSessions, SessionEntry;
+import '../../../sessions/data/sessions_provider.dart' show allSessionsProvider, EventSessions;
 import '../widgets/replay_timing_tower_widget.dart';
 
 enum LiveMode { timing, map, radio, tyres }
@@ -40,7 +40,6 @@ class _LiveTrackerScreenState extends ConsumerState<LiveTrackerScreen>
   late AnimationController _waveAnimController;
   final AudioPlayer _audioPlayer = AudioPlayer();
   StreamSubscription? _playerCompleteSubscription;
-  String _selectedReplayMeeting = '';
   int _playbackProgressMs = 0;
   Timer? _playbackTimer;
   // Replay position-change tracking
