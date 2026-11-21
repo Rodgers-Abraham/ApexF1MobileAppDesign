@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'package:dio/dio.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../utils/api_config.dart';
+import '../../api/api_client.dart';
 import '../session_provider.dart';
 import 'models.dart';
 
@@ -341,9 +339,10 @@ class RaceReplayState {
 }
 
 class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
+  final ApiClient _apiClient;
   Timer? _playTimer;
 
-  RaceReplayNotifier() : super(const RaceReplayState());
+  RaceReplayNotifier(this._apiClient) : super(const RaceReplayState());
 
   /// Load a session from the TracingInsights-sourced /api/timing/sessions endpoint.
   Future<void> selectSessionById(String sessionId) async {
@@ -358,21 +357,8 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
       showingGrid: false,
     );
     try {
-      // Use a dedicated Dio with extended timeouts for session data.
-      // Race sessions are 300-500 KB; Render's free tier can take 20+ s to
-      // wake up and start sending, which trips the ApiClient's 20 s receiveTimeout.
-      final sessionDio = Dio(BaseOptions(
-        baseUrl: ApiConfig.baseUrl,
-        connectTimeout: const Duration(seconds: 60),
-        receiveTimeout: const Duration(seconds: 120),
-      ));
-      // Attach Firebase ID token (same logic as ApiClient interceptor)
-      final firebaseUser = FirebaseAuth.instance.currentUser;
-      if (firebaseUser != null) {
-        final token = await firebaseUser.getIdToken();
-        sessionDio.options.headers['Authorization'] = 'Bearer $token';
-      }
-      final resp = await sessionDio.get('/api/timing/sessions/$sessionId/data');
+      final resp =
+          await _apiClient.get('/api/timing/sessions/$sessionId/data');
       // DEBUG: use Content-Length header for the actual server-reported byte count.
       final dbgContentLen = resp.headers.value('content-length');
       final dbgRespBytes = int.tryParse(dbgContentLen ?? '') ?? 0;
@@ -750,9 +736,16 @@ class RaceReplayNotifier extends StateNotifier<RaceReplayState> {
   }
 }
 
+final raceReplayApiClientProvider = Provider<ApiClient>((ref) {
+  return ApiClient(
+    connectTimeout: const Duration(seconds: 60),
+    receiveTimeout: const Duration(seconds: 120),
+  );
+});
+
 final raceReplayProvider =
     StateNotifierProvider<RaceReplayNotifier, RaceReplayState>((ref) {
-  return RaceReplayNotifier();
+  return RaceReplayNotifier(ref.watch(raceReplayApiClientProvider));
 });
 
 class TeamRadioNotifier extends StateNotifier<AsyncValue<List<TeamRadioItem>>> {
