@@ -1,20 +1,26 @@
 name: Create GitHub Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches:
+      - dev
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Release Tag (e.g. v1.0.0). Leave empty to use version from pubspec.yaml'
+        description: "Optional release tag; defaults to a versioned dev tag"
         required: false
-        default: ''
+        type: string
       prerelease:
-        description: 'Mark as pre-release'
+        description: "Mark this release as a pre-release"
         type: boolean
         required: false
-        default: false
+        default: true
+  push:
+    tags:
+      - "v*"
 
 permissions:
   contents: write
@@ -23,105 +29,134 @@ jobs:
   release:
     name: Build & Publish Release APK
     runs-on: ubuntu-latest
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push')
+    env:
+      EVENT_NAME: ${{ github.event_name }}
+      WORKFLOW_RUN_NUMBER: ${{ github.event.workflow_run.run_number }}
+      INPUT_TAG_NAME: ${{ inputs.tag_name }}
+      REF_NAME: ${{ github.ref_name }}
+      BUILD_NUMBER: ${{ github.run_number }}
+      BUILD_BRANCH: ${{ github.event.workflow_run.head_branch || github.ref_name }}
+      BUILD_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      - name: Set up Java 17
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
-          cache: 'gradle'
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.47.9'
-          channel: 'stable'
+          flutter-version: "3.47.9"
+          channel: stable
           cache: true
-
-      - name: Determine Release Tag & Version
-        id: versioning
-        run: |
-          RAW_VERSION=$(grep '^version:' frontend/pubspec.yaml | awk '{print $2}' | tr -d '\r')
-          CLEAN_VERSION="${RAW_VERSION%%+*}"
-          
-          if [ -n "${{ github.event.inputs.tag_name }}" ]; then
-            TAG="${{ github.event.inputs.tag_name }}"
-          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            TAG="${GITHUB_REF#refs/tags/}"
-          else
-            TAG="v${CLEAN_VERSION}"
-          fi
-
-          echo "RELEASE_TAG=${TAG}" >> $GITHUB_ENV
-          echo "APP_VERSION=${RAW_VERSION}" >> $GITHUB_ENV
-          echo "Determined release tag: ${TAG} (app version: ${RAW_VERSION})"
 
       - name: Cache pub dependencies
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.pub-cache
+          path: ~/.pub-cache
           key: ${{ runner.os }}-pub-${{ hashFiles('frontend/pubspec.lock') }}
           restore-keys: ${{ runner.os }}-pub-
 
       - name: Ensure environment file exists
         working-directory: frontend
-        run: |
-          if [ ! -f .env ]; then
-            echo "API_URL=https://f1-backend-41t9.onrender.com" > .env
-          fi
+        env:
+          API_URL: ${{ vars.BACKEND_URL || secrets.BACKEND_URL || 'https://f1-backend-41t9.onrender.com' }}
+        run: printf 'API_URL=%s\n' "$API_URL" > .env
 
       - name: Install dependencies
         working-directory: frontend
         run: flutter pub get
 
-      - name: Build Release APK
+      - name: Determine release tag
+        id: version
         working-directory: frontend
-        run: flutter build apk --release --android-skip-build-dependency-validation
+        run: |
+          RAW_VERSION="$(sed -n 's/^version: *//p' pubspec.yaml | head -n 1 | tr -d '\r')"
+          VERSION="${RAW_VERSION%%+*}"
 
-      - name: Prepare Named Release APK
+          if [[ -z "$VERSION" ]]; then
+            echo "Could not read the app version from pubspec.yaml."
+            exit 1
+          fi
+
+          case "$EVENT_NAME" in
+            workflow_run)
+              RELEASE_TAG="v${VERSION}-dev.${WORKFLOW_RUN_NUMBER}"
+              ;;
+            workflow_dispatch)
+              RELEASE_TAG="${INPUT_TAG_NAME:-v${VERSION}-dev.${BUILD_NUMBER}}"
+              ;;
+            push)
+              RELEASE_TAG="$REF_NAME"
+              ;;
+            *)
+              echo "Unsupported release event: $EVENT_NAME"
+              exit 1
+              ;;
+          esac
+
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9A-Za-z][0-9A-Za-z.+-]*$ ]]; then
+            echo "Invalid release tag: $RELEASE_TAG"
+            exit 1
+          fi
+
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
+          echo "Preparing $RELEASE_TAG from $BUILD_BRANCH at $BUILD_SHA"
+
+      - name: Build release APK
+        working-directory: frontend
+        run: |
+          flutter build apk --release \
+            --build-number="$BUILD_NUMBER" \
+            --android-skip-build-dependency-validation
+
+      - name: Prepare named APK
         run: |
           APK_DIR="frontend/build/app/outputs/flutter-apk"
-          NAMED_APK="${APK_DIR}/apex-f1-${{ env.RELEASE_TAG }}.apk"
-          cp "${APK_DIR}/app-release.apk" "${NAMED_APK}"
-          echo "Created named APK: ${NAMED_APK}"
+          cp "$APK_DIR/app-release.apk" "$APK_DIR/apex-f1-${RELEASE_TAG}.apk"
 
-      - name: Upload APK as Workflow Artifact
+      - name: Upload APK workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: apex-f1-${{ env.RELEASE_TAG }}
+          name: apex-f1-${{ steps.version.outputs.tag }}
           path: |
-            frontend/build/app/outputs/flutter-apk/apex-f1-${{ env.RELEASE_TAG }}.apk
+            frontend/build/app/outputs/flutter-apk/apex-f1-${{ steps.version.outputs.tag }}.apk
             frontend/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 14
 
-      - name: Create or Update GitHub Release
+      - name: Create or update GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.RELEASE_TAG }}
-          name: Apex F1 ${{ env.RELEASE_TAG }}
+          tag_name: ${{ steps.version.outputs.tag }}
+          target_commitish: ${{ env.BUILD_SHA }}
+          name: Apex F1 ${{ steps.version.outputs.tag }}
           body: |
-            ## 🏁 Apex F1 Mobile - ${{ env.RELEASE_TAG }}
-            
-            ### 📱 Download Android APK
-            * **[Download apex-f1-${{ env.RELEASE_TAG }}.apk](https://github.com/${{ github.repository }}/releases/download/${{ env.RELEASE_TAG }}/apex-f1-${{ env.RELEASE_TAG }}.apk)**
-            
-            ### 🚀 Highlights
-            * Live F1 Timing & Telemetry powered by production Render cloud backend
-            * Real-time race weekend updates, predictions, and standings
-            * Connected to Neon PostgreSQL cloud database
+            **Apex F1 Android APK** — pre-release for testing.
+
+            - Branch: `${{ env.BUILD_BRANCH }}`
+            - Build: `${{ env.BUILD_NUMBER }}`
+            - Commit: `${{ env.BUILD_SHA }}`
+
+            Download `apex-f1-${{ steps.version.outputs.tag }}.apk` below and install it on an Android device.
+            This is a testing build, not a Play Store release. If Android reports a signing conflict, uninstall the existing app first.
           files: |
-            frontend/build/app/outputs/flutter-apk/apex-f1-${{ env.RELEASE_TAG }}.apk
+            frontend/build/app/outputs/flutter-apk/apex-f1-${{ steps.version.outputs.tag }}.apk
             frontend/build/app/outputs/flutter-apk/app-release.apk
           generate_release_notes: true
-          draft: false
-          prerelease: ${{ github.event.inputs.prerelease || false }}
+          prerelease: ${{ github.event_name == 'workflow_run' || inputs.prerelease }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
