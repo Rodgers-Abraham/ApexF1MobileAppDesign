@@ -24,11 +24,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:f1/core/api/api_client.dart';
-import 'package:f1/core/providers/session_provider.dart';
 import 'package:f1/core/providers/telemetry/providers.dart';
 import 'package:f1/core/providers/telemetry/models.dart';
-
-import 'helpers/firebase_test_mock.dart';
 
 // ── Minimal HTTP mock ──────────────────────────────────────────────────────
 
@@ -64,15 +61,13 @@ ProviderContainer _makeContainer(Map<String, dynamic> fixture) {
   dio.httpClientAdapter = _FixtureAdapter(fixture);
   final fakeClient = ApiClient.withDio(dio);
   return ProviderContainer(
-    overrides: [apiClientProvider.overrideWithValue(fakeClient)],
+    overrides: [raceReplayApiClientProvider.overrideWithValue(fakeClient)],
   );
 }
 
 // ── Tests ──────────────────────────────────────────────────────────────────
 
 void main() {
-  setUpAll(setupFirebaseForTests);
-
   setUp(() {
     SharedPreferences.setMockInitialValues({'onboarding_completed': true});
   });

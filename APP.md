@@ -12,7 +12,7 @@ This document is the authoritative reference for a new agent working on this cod
 | State management | Riverpod 2.x (`StateNotifier`, `FutureProvider`, `StateNotifierProvider`) |
 | Routing | GoRouter 14 with `ShellRoute` |
 | HTTP client | Dio 5 (`api_client.dart` injects Firebase ID token) |
-| Auth | Firebase Auth (email/password) + Firestore user profiles |
+| Auth | Firebase Auth (email/password) + Firestore user profiles (`default` database ID) |
 | Push notifications | Firebase Messaging (FCM) |
 | Backend | FastAPI (Python) on Render — `https://f1-backend-41t9.onrender.com` |
 | Database | Neon Postgres |
@@ -104,13 +104,13 @@ backend/
    - **Drivers** — pick favourite + rival driver
    - **Celebration** — success screen
 2. Each step validation happens client-side before advancing.
-3. Final step calls `AuthNotifier.register(...)` → `FirebaseAuth.createUserWithEmailAndPassword` → writes Firestore doc → calls `_persistAndSetState`.
+3. Final step calls `AuthNotifier.register(...)` → `FirebaseAuth.createUserWithEmailAndPassword` → writes Firestore doc in database ID `default` → calls `_persistAndSetState`.
 
 **Login (returning user):**
 1. Tap **SIGN IN** chip in header → `_isLoginMode = true`.
 2. Enter email + password → tap **AUTHENTICATE ▶**.
 3. `_handleDetailsNext` calls `AuthNotifier.login(email, password)`.
-4. `login()` → `FirebaseAuth.signInWithEmailAndPassword` → fetches Firestore user doc → calls `_persistAndSetState`.
+4. `login()` → `FirebaseAuth.signInWithEmailAndPassword` → fetches Firestore user doc from database ID `default` → calls `_persistAndSetState`.
 5. On success: `context.go('/')`.
 6. On failure: `state.errorMessage` is set; red error banner appears below the password field.
 
@@ -157,6 +157,8 @@ if (effectivelyCompleted && isOnboardingRoute) return '/';
 ```
 
 > **Important:** Always check BOTH SP flag AND `FirebaseAuth.instance.currentUser`. Checking only SP causes a race condition where a returning user gets bounced to onboarding on cold start.
+
+> **Firestore database ID:** This Firebase project has a named database `default`; it is not the SDK's implicit `(default)` database. Profile access must use `FirebaseFirestore.instanceFor(databaseId: 'default')`.
 
 ### Error message mapping (`_extractErrorMessage`)
 

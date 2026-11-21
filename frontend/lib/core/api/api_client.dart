@@ -11,12 +11,15 @@ class ApiClient {
   @visibleForTesting
   ApiClient.withDio(Dio dio) : _dio = dio;
 
-  ApiClient()
+  ApiClient({
+    Duration connectTimeout = const Duration(seconds: 20),
+    Duration receiveTimeout = const Duration(seconds: 20),
+  })
       : _dio = Dio(
           BaseOptions(
             baseUrl: ApiConfig.baseUrl,
-            connectTimeout: const Duration(seconds: 20),
-            receiveTimeout: const Duration(seconds: 20))) {
+            connectTimeout: connectTimeout,
+            receiveTimeout: receiveTimeout)) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
